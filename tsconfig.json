@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "moduleResolution": "node",
+        "experimentalDecorators":true,
+        "emitDecoratorMetadata":true,
+        "declaration": true,   // 生成相关的d.ts
+        "alwaysStrict": true, // 严格模式编译每个文件
+        "target": "esnext",
+        "outDir": "./dist",
+        "baseUrl": ".",
+        // "paths": {
+        //     "@/*": [
+        //         "src/*"
+        //     ]
+        // }
+    },
+    "lib":["esnext"],
+    "include": [
+        "src/**/*",
+        // "test/**/*"
+    ],
+    "watch":true,
+    "exclude": [
+        "node_modules"
+    ]
+}

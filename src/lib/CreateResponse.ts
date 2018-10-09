@@ -191,37 +191,34 @@ export class CreateResponse implements Server.Response {
     public set body(val: String | Buffer | Object | Stream) {
         if (this.finished) return;
         this._body = val;
-        if (!this.status) this.status = 200
         const response = this.res as ServerResponse
         if (typeof val === 'string') {
+            if (!this.status) this.status = 200
             this.type = 'html'
-            this.length = (val as string).length
-            response.write(val)
-            response.end()
+            this.length = Buffer.byteLength(val)
+            response.end(val)
         } else if (Buffer.isBuffer(val)) {
+            if (!this.status) this.status = 200
             this.type = 'application/octet-stream'
             this.length = val.byteLength
-            response.write(val)
-            response.end()
+            response.end(val)
         } else if (val instanceof Stream) {
+            if (!this.status) this.status = 200
             this.type = 'application/octet-stream'
             response.on('error', this.onError)
+            val.pipe(response)
         } else if (Array.isArray(Array)) {
+            if (!this.status) this.status = 200
             this.type = 'json'
             const data = JSON.stringify(val)
             this.length = this.length = Buffer.byteLength(data)
-            response.write(data)
-            response.end()
+            response.end(data)
         } else if (val instanceof Object) {
+            if (!this.status) this.status = 200
             this.type = 'json'
             const data = JSON.stringify(val)
             this.length = Buffer.byteLength(data)
-            response.write(data)
-            response.end()
-        } else if (val === null) {
-            response.end()
-        } else {
-            response.end()
+            response.end(data)
         }
     }
 

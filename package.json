@@ -23,6 +23,7 @@
     "@types/chalk": "^2.2.0",
     "@types/knex": "^0.14.26",
     "@types/path-to-regexp": "^1.7.0",
+    "@types/reflect-metadata": "^0.1.0",
     "chalk": "^2.4.1",
     "knex": "^0.15.2",
     "path-to-regexp": "^2.4.0",

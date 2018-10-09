@@ -41,7 +41,7 @@ export class Server {
                 }
             },
             async requested() {
-                console.log(`Requested`)
+                // console.log(`Requested`)
             },
             async beforeResponse(ctx: Server.Context) {
                 for (let item of ctx.controllers) {
@@ -54,13 +54,13 @@ export class Server {
                 }
             },
             async responsed(ctx: Server.Context) {
-                console.log(`Responsed`)
+                // console.log(`Responsed`)
             }
         })
 
         // Assert is port
         if (options.port) {
-            this.listen(options.port || 3000)
+            this.listen(options.port)
         }
 
         // Assert is env
@@ -124,14 +124,14 @@ export class Server {
      */
     public listen(port: number) {
         if (this.listend) return;
-        // Assert is https
+        // listen https
         if (this.options.https) {
             https
                 .createServer(this.options.https, this.core.callback())
-                .listen(port)
+                .listen(port || 3000)
             this.listend = true;
-        } else {
-            this.core.listen(port)
+        } else { // http
+            this.core.listen(port || 3000)
             this.listend = true;
         }
     }

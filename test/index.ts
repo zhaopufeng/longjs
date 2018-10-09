@@ -1,19 +1,11 @@
-import TKServer, { Core } from '../src'
-import * as http from 'http'
+import { Server } from '../src'
+import { IndexController } from './controllers/IndexController';
+import { UsersController } from './controllers/UsersController';
 
-const app = new TKServer({
-    async beforeRequest() {
-        return;
-    },
-    async requested() {
-        return;
-    },
-    async beforeResponse() {
-        return;
-    },
-    async responsed() {
-        return;
-    }
+new Server({
+    port: 3000,
+    controllers: [
+        IndexController,
+        UsersController
+    ]
 })
-
-http.createServer(app.callback()).listen(3000)

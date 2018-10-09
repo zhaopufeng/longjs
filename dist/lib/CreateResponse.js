@@ -198,7 +198,7 @@ class CreateResponse {
             this.length = this.length = Buffer.byteLength(data);
             response.end(data);
         }
-        else if (val instanceof Object) {
+        else if ('object' === typeof val) {
             if (!this.status)
                 this.status = 200;
             this.type = 'json';

@@ -27,7 +27,7 @@ export class CreateResponse implements Server.Response {
         public res: ServerResponse | Http2ServerResponse,
         public app: TkServer
     ) {
-        this.set('Server', 'tkrjs/' + require('../../package.json').version)
+        this.set('Server', 'longjs/' + require('../../package.json').version)
         this.set('Expires', new Date().toUTCString())
         this.set('Cache-Control', 'max-age=60')
         this.vary('Accept-Encoding')

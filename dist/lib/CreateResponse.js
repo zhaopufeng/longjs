@@ -18,7 +18,7 @@ class CreateResponse {
         this.req = req;
         this.res = res;
         this.app = app;
-        this.set('Server', 'tkrjs/' + require('../../package.json').version);
+        this.set('Server', 'longjs/' + require('../../package.json').version);
         this.set('Expires', new Date().toUTCString());
         this.set('Cache-Control', 'max-age=60');
         this.vary('Accept-Encoding');

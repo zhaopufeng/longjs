@@ -14,10 +14,12 @@ import { IncomingMessage, ServerResponse, OutgoingHttpHeaders } from 'http'
 import { Http2ServerRequest, Http2ServerResponse, IncomingHttpHeaders } from 'http2'
 import { BodyParse } from './BodyParser';
 import { Socket } from 'net'
+import { SessionOpts } from '../lib/Session';
 export namespace Core {
 
     export interface Configs {
         bodyParser?: BodyParse.Options
+        session?: SessionOpts;
     }
 
     export interface Options {
@@ -152,6 +154,7 @@ export namespace Core {
         originalUrl: string;
         cookies: Cookies;
         files: any;
+        session?: any;
         /**
          * To bypass Koa's built-in response handling, you may explicitly set `ctx.respond = false;`
          */

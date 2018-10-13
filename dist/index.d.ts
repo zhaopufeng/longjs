@@ -11,15 +11,19 @@ import { ListenOptions } from 'net';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import { Core } from './interface';
+import { Session } from './lib/Session';
+import * as Keygrip from 'keygrip';
 export * from './interface';
+export * from './lib/SessionStore';
 export default class Server extends EventEmitter {
     options: Core.Options;
     proxy: boolean;
     subdomainOffset: number;
     env: Core.Env;
     silent: boolean;
-    keys: string | string[];
+    keys: Keygrip | string[];
     configs: Core.Configs;
+    session: Session;
     /**
      * constructor
      */

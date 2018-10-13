@@ -6,16 +6,19 @@
  */
 /// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
-import { Core as Server } from '../interface';
+import { Core } from '../interface';
 import * as httpAssert from 'http-assert';
 import * as Cookies from 'cookies';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-export declare class CreateContext implements Server.Context {
+import Server from '..';
+declare const COOKIES: unique symbol;
+export declare class CreateContext implements Core.Context {
     req: IncomingMessage | Http2ServerRequest;
     res: ServerResponse | Http2ServerResponse;
-    request: Server.Request;
-    response: Server.Response;
+    request: Core.Request;
+    response: Core.Response;
+    app: Server;
     /**
      * constructor
      * @param req IncomingMessage
@@ -23,7 +26,9 @@ export declare class CreateContext implements Server.Context {
      * @param request Request
      * @param response Response
      */
-    constructor(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse, request: Server.Request, response: Server.Response);
+    constructor(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse, request: Core.Request, response: Core.Response, app: Server);
+    [COOKIES]: Cookies;
+    session: any;
     respond: boolean;
     /**
      * @property writable
@@ -88,6 +93,10 @@ export declare class CreateContext implements Server.Context {
      * @property cookies
      * Get request cookies
      */
+    /**
+    * @property cookies
+    * Set request cookies
+    */
     cookies: Cookies;
     /**
      * @property etag

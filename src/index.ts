@@ -16,22 +16,28 @@ import { CreateRequest } from './lib/CreateRequest'
 import { BodyParser } from './lib/BodyParser'
 import { Core } from './interface'
 import * as statuses from 'statuses'
+import { Session } from './lib/Session';
+import * as Keygrip from 'keygrip';
 
 export * from './interface'
+export * from './lib/SessionStore'
 
 export default class Server extends EventEmitter {
     public proxy: boolean = false;
     public subdomainOffset: number = 2;
     public env: Core.Env = process.env.NODE_ENV as Core.Env || 'development';
     public silent: boolean;
-    public keys: string | string[];
+    public keys: Keygrip | string[] = ['long:sess']
     public configs: Core.Configs = {};
+    public session: Session;
 
     /**
      * constructor
      */
     constructor(public options: Core.Options = {}) {
         super()
+        options.configs = options.configs || {}
+        this.session = new Session(options.configs.session)
     }
 
     /**
@@ -69,7 +75,12 @@ export default class Server extends EventEmitter {
      */
     private async start(request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse): Promise<any>  {
         try {
+            // Create http/https context
             const context = this.createContext(request, response)
+            // Handler session
+            await this.session.run(context)
+
+            // Get hooks
             const { beforeRequest, requested, beforeResponse, responsed } = this.options;
 
             // Handler hook beforeRequest
@@ -87,6 +98,7 @@ export default class Server extends EventEmitter {
             // Handler hook beforeResponse
             if (typeof beforeResponse === 'function') {
                 await beforeResponse(context)
+                await this.session.refresh(context)
             }
 
             // Handler hook responsed
@@ -135,7 +147,7 @@ export default class Server extends EventEmitter {
     ): Core.Context {
         const request = new CreateRequest(req, res, this)
         const response = new CreateResponse(req, res, this)
-        const context: Core.Context = new CreateContext(req, res, request, response)
+        const context: Core.Context = new CreateContext(req, res, request, response, this)
         request.ctx = response.ctx = context;
         request.response = response;
         response.request = request;

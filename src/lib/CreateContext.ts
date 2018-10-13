@@ -6,14 +6,17 @@
  */
 
 // dependencies
-import { Core as Server } from '../interface'
+import { Core } from '../interface'
 import * as httpAssert from 'http-assert'
 import * as Cookies from 'cookies'
 import * as httpErrors from 'http-errors';
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
+import Server from '..';
 
-export class CreateContext implements Server.Context {
+const COOKIES = Symbol('context#cookies');
+
+export class CreateContext implements Core.Context {
 
     /**
      * constructor
@@ -25,9 +28,14 @@ export class CreateContext implements Server.Context {
     constructor(
         public req: IncomingMessage | Http2ServerRequest,
         public res: ServerResponse | Http2ServerResponse,
-        public request: Server.Request,
-        public response: Server.Response
+        public request: Core.Request,
+        public response: Core.Response,
+        public app: Server
     ) {}
+
+    public [COOKIES]: Cookies;
+
+    public session: any;
 
     // respond state
     public respond: boolean = true
@@ -131,7 +139,22 @@ export class CreateContext implements Server.Context {
      * @property cookies
      * Get request cookies
      */
-    public cookies = Cookies(this.req as IncomingMessage, this.res as ServerResponse);
+    public get cookies() {
+        if (!this[COOKIES]) {
+            this[COOKIES] = new Cookies(this.req as IncomingMessage, this.res as ServerResponse, {
+                keys: this.app.keys,
+                secure: this.request.secure
+            });
+        }
+        return this[COOKIES];
+    }
+    /**
+     * @property cookies
+     * Set request cookies
+     */
+    public set cookies(_cookies: Cookies) {
+        this[COOKIES] = _cookies;
+    }
 
     /**
      * @property etag

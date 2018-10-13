@@ -6,6 +6,9 @@
  * @copyright Ranyunlong 2018-09-21 0:07
  * @export Server
  */
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventEmitter = require("events");
 const http_1 = require("http");
@@ -14,6 +17,8 @@ const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
 const BodyParser_1 = require("./lib/BodyParser");
 const statuses = require("statuses");
+const Session_1 = require("./lib/Session");
+__export(require("./lib/SessionStore"));
 class Server extends EventEmitter {
     /**
      * constructor
@@ -24,7 +29,10 @@ class Server extends EventEmitter {
         this.proxy = false;
         this.subdomainOffset = 2;
         this.env = process.env.NODE_ENV || 'development';
+        this.keys = ['long:sess'];
         this.configs = {};
+        options.configs = options.configs || {};
+        this.session = new Session_1.Session(options.configs.session);
     }
     /**
      * callback
@@ -46,7 +54,11 @@ class Server extends EventEmitter {
      */
     async start(request, response) {
         try {
+            // Create http/https context
             const context = this.createContext(request, response);
+            // Handler session
+            await this.session.run(context);
+            // Get hooks
             const { beforeRequest, requested, beforeResponse, responsed } = this.options;
             // Handler hook beforeRequest
             if (typeof beforeRequest === 'function') {
@@ -61,6 +73,7 @@ class Server extends EventEmitter {
             // Handler hook beforeResponse
             if (typeof beforeResponse === 'function') {
                 await beforeResponse(context);
+                await this.session.refresh(context);
             }
             // Handler hook responsed
             if (typeof responsed === 'function') {
@@ -102,7 +115,7 @@ class Server extends EventEmitter {
     createContext(req, res) {
         const request = new CreateRequest_1.CreateRequest(req, res, this);
         const response = new CreateResponse_1.CreateResponse(req, res, this);
-        const context = new CreateContext_1.CreateContext(req, res, request, response);
+        const context = new CreateContext_1.CreateContext(req, res, request, response, this);
         request.ctx = response.ctx = context;
         request.response = response;
         response.request = request;

@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const httpAssert = require("http-assert");
 const Cookies = require("cookies");
 const httpErrors = require("http-errors");
+const COOKIES = Symbol('context#cookies');
 class CreateContext {
     /**
      * constructor
@@ -17,11 +18,12 @@ class CreateContext {
      * @param request Request
      * @param response Response
      */
-    constructor(req, res, request, response) {
+    constructor(req, res, request, response, app) {
         this.req = req;
         this.res = res;
         this.request = request;
         this.response = response;
+        this.app = app;
         // respond state
         this.respond = true;
         /**
@@ -29,11 +31,6 @@ class CreateContext {
          * Http assert
          */
         this.assert = httpAssert;
-        /**
-         * @property cookies
-         * Get request cookies
-         */
-        this.cookies = Cookies(this.req, this.res);
     }
     /**
      * @property writable
@@ -112,6 +109,26 @@ class CreateContext {
      */
     set files(val) {
         this.request.files = val;
+    }
+    /**
+     * @property cookies
+     * Get request cookies
+     */
+    get cookies() {
+        if (!this[COOKIES]) {
+            this[COOKIES] = new Cookies(this.req, this.res, {
+                keys: this.app.keys,
+                secure: this.request.secure
+            });
+        }
+        return this[COOKIES];
+    }
+    /**
+     * @property cookies
+     * Set request cookies
+     */
+    set cookies(_cookies) {
+        this[COOKIES] = _cookies;
     }
     /**
      * @property etag

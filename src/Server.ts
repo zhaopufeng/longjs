@@ -8,6 +8,7 @@
 import CoreClass, { Core } from '@longjs/core';
 import * as https from 'https'
 import * as Knex from 'knex';
+import * as pathToRegexp from 'path-to-regexp'
 
 export class Server {
     // core application
@@ -46,10 +47,12 @@ export class Server {
             async beforeResponse(ctx: Server.Context) {
                 for (let item of ctx.controllers) {
                     for (let handler of item.handlers) {
-                       let data = await item.controller[handler.propertyKey]()
-                       if (data) {
-                           ctx.body = data
-                       }
+                        const { injectParameters  } = item.target.$options
+                        const parameters =  injectParameters(ctx, handler.propertyKey)
+                        let data = await item.controller[handler.propertyKey](...parameters)
+                        if (data) {
+                            ctx.body = data
+                        }
                     }
                 }
             },
@@ -177,6 +180,7 @@ export namespace Server {
             propertyKey?: string;
             type?: RequestMethodTypes[];
             regexp?: RegExp;
+            keys?: pathToRegexp.Key[];
         };
     }
 
@@ -189,9 +193,10 @@ export namespace Server {
         parameters?: ControllerOptionsParameter;
         databases?: ControllerOptionsDatabase;
         handlers?: ControllerHandler;
-        injectServices?: (ctx: Core.Context) => any [];
-        injectPropertys?: (ctx: Core.Context) => void;
-        mixins?: Array<(ctx: Core.Context, propertyKey: string, option: Options) => any[]>;
+        injectServices?: (ctx: Context) => any [];
+        injectPropertys?: (ctx: Context) => void;
+        injectDatabases?: (config: Server.ServerDatabaseOptions) => void;
+        injectParameters?: (ctx: Context, propertyKey: string) => any;
         baseRoute?: string;
         services?: Array<{ new (...args: any[]): any }>;
         target?: Controller;

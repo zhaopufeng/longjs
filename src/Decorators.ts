@@ -117,13 +117,17 @@ export function Controller(path: string): Server.ClassDecorator {
         Object.keys(handlers).forEach((key: string) => {
             if (!/\/$/.test(key)) {
                 const path = (baseRoute + key).replace(/[\/]{2,}/g, '/')
-                handlers[key].regexp = pathToRegExp(path, [], {
+                const keys: any = []
+                handlers[key].regexp = pathToRegExp(path, keys, {
                     strict: true
                 })
+                handlers[key].keys = keys;
             } else {
-                handlers[key].regexp = pathToRegExp(baseRoute, [], {
+                const keys: any = []
+                handlers[key].regexp = pathToRegExp(baseRoute, keys, {
                     strict: true
                 })
+                handlers[key].keys = keys;
             }
         })
 
@@ -134,6 +138,10 @@ export function Controller(path: string): Server.ClassDecorator {
                 const handler = handlers[key]
                 if (handler.regexp.test(ctx.path) && !~~handler.type.indexOf(ctx.method as Server.RequestMethodTypes)) {
                     matched.push(handler as Server.ControllerHandler)
+                    const data = handler.regexp.exec(ctx.path)
+                    handler.keys.forEach((key: pathToRegExp.Key, index: number) => {
+                        ctx.params[key.name] = data[index + 1]
+                    })
                 }
             })
             if (matched.length > 0) {
@@ -148,6 +156,56 @@ export function Controller(path: string): Server.ClassDecorator {
         options.injectServices = function(ctx: Server.Context) {
             return options.services.map((K: any) => {
                 return new K(ctx)
+            })
+        }
+
+        options.injectParameters = function(ctx: Server.Context, propertyKey: string) {
+            // Get parameters decorators params.
+            const parameters = options.parameters
+            // result.
+            const params: Array<{[key: string]: any}> = []
+            // Check whether there are decorator data on the routing method.
+            if (!Array.isArray(parameters[propertyKey])) return [];
+            parameters[propertyKey].forEach((k: Server.Parameters) => {
+                params[k.parameterIndex] = params[k.parameterIndex] || {}
+                if (Array.isArray(k.args)) {
+                    k.args.forEach((value) => {
+                        const data = (ctx as any)[k.type] || (ctx.request as any)[k.type]
+                        if (typeof data === 'object') {
+                            params[k.parameterIndex][value] = data[value]
+                        }
+                    })
+                } else if (typeof k.args === 'object') {
+                    // mark
+                    // const data: object | undefined = (ctx as any)[k.type] || (ctx.request as any)[k.type]
+                    // const result: any = {}
+                    // for (let key in k.args) {
+                    //     if (!data) return;
+                    //     const d = (data as any)[key]
+                    //     if (!d) return;
+                    //     if (d instanceof (k.args as any)[key]) {
+                    //         result[key] = (data as any)[key]
+                    //     }
+                    // }
+                    // params[k.parameterIndex] = result
+                } else if (typeof k.args === 'string') {
+                    params[k.parameterIndex] = (ctx as any)[k.type][k.args] || (ctx.request as any)[k.type][k.args]
+                } else {
+                    params[k.parameterIndex] = (ctx as any)[k.type] || (ctx.request as any)[k.type]
+                }
+            })
+            return params
+        }
+
+        // Inject databases
+        options.injectDatabases = function(config: Server.ServerDatabaseOptions) {
+            const databases = options.databases
+            Object.keys(databases).forEach((key: string) => {
+                if (typeof databases[key] === 'string') {
+                    options.target.prototype[key] = Knex(config)(databases[key])
+                } else {
+                    options.target.prototype[key] = Knex(config)
+                }
             })
         }
 
@@ -173,7 +231,7 @@ export function Controller(path: string): Server.ClassDecorator {
 function createPropertyOrParameterDecorator(type: Server.PropertyDecoratorTypes) {
     function decorator(target: Object, propertyKey: string | symbol): void;
     function decorator(target: Object, propertyKey: string | symbol, parameterIndex: number): void;
-    function decorator(field: string | string [] | object): ParameterDecorator;
+    function decorator(field: string | string []): ParameterDecorator;
     function decorator(...args: any[]): any {
         function handler(options: Server.ControllerOptions, propertyKey: string | symbol, parameterIndex: number) {
             if (typeof parameterIndex === 'number') { // 参数装饰器

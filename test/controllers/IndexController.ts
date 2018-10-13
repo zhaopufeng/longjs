@@ -4,11 +4,11 @@ import { TestService } from '../services/TestService';
 @Controller('/')
 export class IndexController implements Server.Controller {
     constructor(public test: TestService) {}
-
+    @Session public ss: any;
     @Query public q: any;
     @Get
     public async index() {
-        return this.q;
+        return this.ss.name;
     }
 
     @Get
@@ -17,11 +17,11 @@ export class IndexController implements Server.Controller {
         return 'index/users'
     }
 
-    @Session public ss: any;
-
-    @Get('/admin/:id/:name')
-    public async admin(@Param(['id', 'name']) pm: any) {
-        console.log(this.ss)
+    @Get('/admin/:name')
+    public async admin(@Param(['name']) pm: any) {
+        if (pm.name) {
+            this.ss.name = pm.name
+        }
         return pm
     }
 }

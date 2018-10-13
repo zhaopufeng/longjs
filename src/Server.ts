@@ -5,7 +5,7 @@
  * @copyright Ranyunlong 2018-10-08 14:35
  * @export Server
  */
-import CoreClass, { Core } from '@longjs/core';
+import CoreClass, { Core, SessionStore } from '@longjs/core';
 import * as https from 'https'
 import * as Knex from 'knex';
 import * as pathToRegexp from 'path-to-regexp'
@@ -113,11 +113,11 @@ export class Server {
 
     // Get core keys
     public get keys() {
-        return this.core.keys
+        return this.core.keys as any
     }
 
     // Set core keys
-    public set keys(keys: string | string[]) {
+    public set keys(keys: string[]) {
         this.core.keys = keys
     }
 
@@ -145,7 +145,7 @@ export namespace Server {
         https?: https.ServerOptions;
         port?: number;
         proxy?: boolean;
-        keys?: string | string[];
+        keys?: string[];
         env?: Core.Env;
         controllers?: Controller[];
         configs?: Configs;

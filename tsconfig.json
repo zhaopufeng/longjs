@@ -9,17 +9,11 @@
         "alwaysStrict": true, // 严格模式编译每个文件
         "target": "esnext",
         "outDir": "./dist",
-        "baseUrl": ".",
-        // "paths": {
-        //     "@/*": [
-        //         "src/*"
-        //     ]
-        // }
+        "baseUrl": "."
     },
     "lib":["esnext"],
     "include": [
-        "src/**/*",
-        // "test/**/*"
+        "application/**/*"
     ],
     "watch":true,
     "exclude": [

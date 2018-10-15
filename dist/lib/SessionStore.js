@@ -15,7 +15,7 @@ class SessionStorage {
     getID(length) {
         return crypto_1.randomBytes(length).toString('hex');
     }
-    get(sid) {
+    async get(sid) {
         if (!this.sessions.has(sid))
             return undefined;
         // We are decoding data coming from our Store, so, we assume it was sanitized before storing
@@ -24,7 +24,7 @@ class SessionStorage {
             ...JSON.parse(this.sessions.get(sid))
         };
     }
-    set(session, { sid = this.getID(24), maxAge } = {}) {
+    async set(session, { sid = this.getID(24), maxAge } = {}) {
         // Just a demo how to use maxAge and some cleanup
         if (this.sessions.has(sid) && this.__timer.has(sid)) {
             const __timeout = this.__timer.get(sid);
@@ -42,7 +42,7 @@ class SessionStorage {
         }
         return sid;
     }
-    destroy(sid) {
+    async destroy(sid) {
         this.sessions.delete(sid);
         this.__timer.delete(sid);
     }

@@ -10,7 +10,7 @@ export declare class SessionStorage {
     __timer: Map<any, any>;
     constructor();
     getID(length: number): string;
-    get(sid: string): Core.Session;
-    set(session: any, { sid, maxAge }?: any): any;
-    destroy(sid: any): void;
+    get(sid: string): Promise<Core.Session>;
+    set(session: any, { sid, maxAge }?: any): Promise<string>;
+    destroy(sid: any): Promise<void>;
 }

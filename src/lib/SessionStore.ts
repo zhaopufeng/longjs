@@ -20,7 +20,7 @@ export class SessionStorage {
         return randomBytes(length).toString('hex');
     }
 
-    public get(sid: string): Core.Session {
+    public async get(sid: string): Promise<Core.Session> {
         if (!this.sessions.has(sid)) return undefined;
         // We are decoding data coming from our Store, so, we assume it was sanitized before storing
         return {
@@ -29,7 +29,7 @@ export class SessionStorage {
         };
     }
 
-    public set(session: any, { sid =  this.getID(24), maxAge }: any = {}) {
+    public async set(session: any, { sid =  this.getID(24), maxAge }: any = {}): Promise<string> {
         // Just a demo how to use maxAge and some cleanup
         if (this.sessions.has(sid) && this.__timer.has(sid)) {
             const __timeout = this.__timer.get(sid);
@@ -48,7 +48,7 @@ export class SessionStorage {
         return sid;
     }
 
-    public destroy(sid: any) {
+    public async destroy(sid: any) {
         this.sessions.delete(sid);
         this.__timer.delete(sid);
     }

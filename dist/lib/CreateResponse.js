@@ -20,7 +20,7 @@ class CreateResponse {
         this.app = app;
         this.set('Server', 'LONGJS:CORE/' + require('../../package.json').version);
         this.set('Expires', new Date().toUTCString());
-        this.set('Cache-Control', 'max-age=60');
+        this.set('Cache-Control', 'max-age=0');
         this.vary('Accept-Encoding');
         this.lastModified = new Date();
     }

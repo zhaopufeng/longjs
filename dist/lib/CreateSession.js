@@ -43,7 +43,6 @@ class CreateSession {
         const { key, store, opts } = this;
         // Get Sid from cookies
         const sid = ctx.session.sid;
-        console.log(sid);
         // Get old session
         const old = ctx._session;
         // Add refresh function

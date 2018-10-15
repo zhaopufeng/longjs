@@ -29,7 +29,7 @@ export class CreateResponse implements Core.Response {
     ) {
         this.set('Server', 'LONGJS:CORE/' + require('../../package.json').version)
         this.set('Expires', new Date().toUTCString())
-        this.set('Cache-Control', 'max-age=60')
+        this.set('Cache-Control', 'max-age=0')
         this.vary('Accept-Encoding')
         this.lastModified = new Date()
     }

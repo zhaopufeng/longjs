@@ -166,7 +166,6 @@ export namespace Core {
 
     export interface Options {
         configs?: Configs;
-        controllers?: Array<{ new (...args: any[]): any }>;
         beforeRequest?: Hook;
         requested?: Hook;
         beforeResponse?: Hook;

@@ -8,17 +8,17 @@
 /// <reference types="node" />
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { Core as Server } from '../interface';
+import { Core } from '..';
 import { Socket } from 'net';
 import { Stream } from 'stream';
 import TkServer from '..';
-export declare class CreateResponse implements Server.Response {
+export declare class CreateResponse implements Core.Response {
     req: IncomingMessage | Http2ServerRequest;
     res: ServerResponse | Http2ServerResponse;
     app: TkServer;
     private _body;
-    ctx: Server.Context;
-    request: Server.Request;
+    ctx: Core.Context;
+    request: Core.Request;
     constructor(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse, app: TkServer);
     /**
      * @property socket

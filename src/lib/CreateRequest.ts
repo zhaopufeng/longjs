@@ -6,21 +6,21 @@
  */
 
 // dependencies
-import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http'
-import { Http2ServerRequest, Http2ServerResponse } from 'http2'
-import { Core as Server } from '../interface'
+import TkServer from '..'
 import * as accepts from 'accepts'
-import { Accepts } from 'accepts'
-import { URL, format } from 'url';
 import * as qs from 'querystring'
 import * as fresh from 'fresh'
 import * as mime from 'mime-types'
 import * as typeIs from 'type-is'
-import TkServer from '..';
 import * as parseUrl from 'parseurl'
 import * as net from 'net'
+import { Core } from '..'
+import { Accepts } from 'accepts'
+import { URL, format } from 'url'
+import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http'
+import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 
-export class CreateRequest implements Server.Request {
+export class CreateRequest implements Core.Request {
     public originalUrl: string;
     private _accept: Accepts;
     private _querycache: any;
@@ -29,8 +29,8 @@ export class CreateRequest implements Server.Request {
     public files: any = {};
     public body: any = {};
     public params: any = {}
-    public ctx: Server.Context;
-    public response: Server.Response;
+    public ctx: Core.Context;
+    public response: Core.Response;
     constructor(
         public req: IncomingMessage | Http2ServerRequest,
         public res: ServerResponse | Http2ServerResponse,

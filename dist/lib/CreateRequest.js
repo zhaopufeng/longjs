@@ -7,13 +7,13 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const accepts = require("accepts");
-const url_1 = require("url");
 const qs = require("querystring");
 const fresh = require("fresh");
 const mime = require("mime-types");
 const typeIs = require("type-is");
 const parseUrl = require("parseurl");
 const net = require("net");
+const url_1 = require("url");
 class CreateRequest {
     constructor(req, res, app) {
         this.req = req;

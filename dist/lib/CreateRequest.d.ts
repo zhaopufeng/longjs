@@ -6,14 +6,14 @@
  */
 /// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
-import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http';
-import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { Core as Server } from '../interface';
-import { Accepts } from 'accepts';
-import { URL } from 'url';
 import TkServer from '..';
 import * as net from 'net';
-export declare class CreateRequest implements Server.Request {
+import { Core } from '..';
+import { Accepts } from 'accepts';
+import { URL } from 'url';
+import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'http';
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
+export declare class CreateRequest implements Core.Request {
     req: IncomingMessage | Http2ServerRequest;
     res: ServerResponse | Http2ServerResponse;
     app: TkServer;
@@ -25,8 +25,8 @@ export declare class CreateRequest implements Server.Request {
     files: any;
     body: any;
     params: any;
-    ctx: Server.Context;
-    response: Server.Response;
+    ctx: Core.Context;
+    response: Core.Response;
     constructor(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse, app: TkServer);
     /**
      * @property subdomains

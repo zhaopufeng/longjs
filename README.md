@@ -1,4 +1,4 @@
-# Longjs 1.0.0
+# @longjs/core 1.0.0
 
 [![npm (scoped)](https://img.shields.io/npm/v/@longjs/core.svg)](https://www.npmjs.com/package/@longjs/core)
 

@@ -6,13 +6,14 @@
  */
 
 // dependencies
-import { Core } from '../interface'
+
+import Server from '..'
 import * as httpAssert from 'http-assert'
 import * as Cookies from 'cookies'
-import * as httpErrors from 'http-errors';
+import * as httpErrors from 'http-errors'
+import { Core } from '..'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
-import Server from '..';
 
 const COOKIES = Symbol('context#cookies');
 

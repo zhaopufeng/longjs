@@ -18,7 +18,7 @@ class CreateResponse {
         this.req = req;
         this.res = res;
         this.app = app;
-        this.set('Server', 'longjs/' + require('../../package.json').version);
+        this.set('Server', 'LONGJS:CORE/' + require('../../package.json').version);
         this.set('Expires', new Date().toUTCString());
         this.set('Cache-Control', 'max-age=60');
         this.vary('Accept-Encoding');
@@ -203,6 +203,14 @@ class CreateResponse {
                 this.status = 200;
             this.type = 'json';
             const data = JSON.stringify(val);
+            this.length = Buffer.byteLength(data);
+            response.end(data);
+        }
+        else if (typeof val === 'number') {
+            if (!this.status)
+                this.status = 200;
+            this.type = 'html';
+            const data = val.toString();
             this.length = Buffer.byteLength(data);
             response.end(data);
         }

@@ -7,7 +7,7 @@
 
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
-import { Core as Server } from '../interface'
+import { Core } from '..'
 import { Socket } from 'net'
 import { Stream } from 'stream'
 import * as path from 'path'
@@ -18,16 +18,16 @@ import * as disposition from 'content-disposition'
 import * as statuses from 'statuses'
 import TkServer from '..';
 
-export class CreateResponse implements Server.Response {
+export class CreateResponse implements Core.Response {
     private _body: any;
-    public ctx: Server.Context;
-    public request: Server.Request;
+    public ctx: Core.Context;
+    public request: Core.Request;
     constructor(
         public req: IncomingMessage | Http2ServerRequest,
         public res: ServerResponse | Http2ServerResponse,
         public app: TkServer
     ) {
-        this.set('Server', 'longjs/' + require('../../package.json').version)
+        this.set('Server', 'LONGJS:CORE/' + require('../../package.json').version)
         this.set('Expires', new Date().toUTCString())
         this.set('Cache-Control', 'max-age=60')
         this.vary('Accept-Encoding')
@@ -217,6 +217,12 @@ export class CreateResponse implements Server.Response {
             if (!this.status) this.status = 200
             this.type = 'json'
             const data = JSON.stringify(val)
+            this.length = Buffer.byteLength(data)
+            response.end(data)
+        } else if (typeof val === 'number') {
+            if (!this.status) this.status = 200
+            this.type = 'html'
+            const data = (val as number).toString()
             this.length = Buffer.byteLength(data)
             response.end(data)
         }

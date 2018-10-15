@@ -1,6 +1,14 @@
-import { randomBytes } from 'crypto'
+/**
+ * @class SessionStorage
+ * @author ranyunlong<549510622@qq.com>
+ * @license MIT
+ * @copyright Ranyunlong 2018-10-13 11:15
+ */
 
-export class SessionStore {
+import { randomBytes } from 'crypto'
+import { Core } from '..';
+
+export class SessionStorage {
     public sessions: Map<any, any>;
     public __timer: Map<any, any>;
     constructor() {
@@ -12,10 +20,13 @@ export class SessionStore {
         return randomBytes(length).toString('hex');
     }
 
-    public get(sid: string): undefined | object {
+    public get(sid: string): Core.Session {
         if (!this.sessions.has(sid)) return undefined;
         // We are decoding data coming from our Store, so, we assume it was sanitized before storing
-        return JSON.parse(this.sessions.get(sid));
+        return {
+            sid,
+            ...JSON.parse(this.sessions.get(sid))
+        };
     }
 
     public set(session: any, { sid =  this.getID(24), maxAge }: any = {}) {

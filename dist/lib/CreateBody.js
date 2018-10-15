@@ -10,7 +10,7 @@ const os = require("os");
 const parse = require("co-body");
 const typeIs = require("type-is");
 const formidable = require("formidable");
-class BodyParser {
+class CreateBody {
     /**
      * constructor
      * @param ctx Context
@@ -33,7 +33,7 @@ class BodyParser {
      *
      * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
      */
-    async parse() {
+    async create() {
         if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(this.ctx.method)) {
             await this.parseBody();
             await this.parseFile();
@@ -100,4 +100,4 @@ class BodyParser {
         });
     }
 }
-exports.BodyParser = BodyParser;
+exports.CreateBody = CreateBody;

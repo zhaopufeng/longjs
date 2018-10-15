@@ -1,7 +1,13 @@
 "use strict";
+/**
+ * @class SessionStorage
+ * @author ranyunlong<549510622@qq.com>
+ * @license MIT
+ * @copyright Ranyunlong 2018-10-13 11:15
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = require("crypto");
-class SessionStore {
+class SessionStorage {
     constructor() {
         this.sessions = new Map();
         this.__timer = new Map();
@@ -13,7 +19,10 @@ class SessionStore {
         if (!this.sessions.has(sid))
             return undefined;
         // We are decoding data coming from our Store, so, we assume it was sanitized before storing
-        return JSON.parse(this.sessions.get(sid));
+        return {
+            sid,
+            ...JSON.parse(this.sessions.get(sid))
+        };
     }
     set(session, { sid = this.getID(24), maxAge } = {}) {
         // Just a demo how to use maxAge and some cleanup
@@ -38,4 +47,4 @@ class SessionStore {
         this.__timer.delete(sid);
     }
 }
-exports.SessionStore = SessionStore;
+exports.SessionStorage = SessionStorage;

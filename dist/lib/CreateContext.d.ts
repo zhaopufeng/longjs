@@ -6,12 +6,12 @@
  */
 /// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
-import { Core } from '../interface';
+import Server from '..';
 import * as httpAssert from 'http-assert';
 import * as Cookies from 'cookies';
+import { Core } from '..';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import Server from '..';
 declare const COOKIES: unique symbol;
 export declare class CreateContext implements Core.Context {
     req: IncomingMessage | Http2ServerRequest;
@@ -119,7 +119,7 @@ export declare class CreateContext implements Core.Context {
      * @property header
      * Get request header
      */
-    readonly header: import("http2").IncomingHttpHeaders;
+    readonly header: import("http").IncomingHttpHeaders;
     /**
      * @property headers
      * Get request headers

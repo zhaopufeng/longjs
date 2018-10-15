@@ -6,19 +6,15 @@
  * @copyright Ranyunlong 2018-09-21 0:07
  * @export Server
  */
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventEmitter = require("events");
+const statuses = require("statuses");
 const http_1 = require("http");
 const CreateContext_1 = require("./lib/CreateContext");
 const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
-const BodyParser_1 = require("./lib/BodyParser");
-const statuses = require("statuses");
-const Session_1 = require("./lib/Session");
-__export(require("./lib/SessionStore"));
+const CreateBody_1 = require("./lib/CreateBody");
+const CreateSession_1 = require("./lib/CreateSession");
 class Server extends EventEmitter {
     /**
      * constructor
@@ -31,16 +27,22 @@ class Server extends EventEmitter {
         this.env = process.env.NODE_ENV || 'development';
         this.keys = ['long:sess'];
         this.configs = {};
-        options.configs = options.configs || {};
-        this.session = new Session_1.Session(options.configs.session);
+        this.configs = options.configs = options.configs || {};
     }
     /**
      * callback
      * Handler custom http proccess
      */
     callback() {
+        let session;
+        if (this.configs.session) {
+            session = new CreateSession_1.CreateSession(this.configs.session);
+        }
+        else {
+            session = new CreateSession_1.CreateSession();
+        }
         return (request, response) => {
-            this.start(request, response);
+            this.start(request, response, session);
         };
     }
     listen(...args) {
@@ -52,19 +54,18 @@ class Server extends EventEmitter {
      * start
      * Application start method
      */
-    async start(request, response) {
+    async start(request, response, session) {
         try {
             // Create http/https context
             const context = this.createContext(request, response);
-            // Handler session
-            await this.session.run(context);
             // Get hooks
             const { beforeRequest, requested, beforeResponse, responsed } = this.options;
             // Handler hook beforeRequest
             if (typeof beforeRequest === 'function') {
+                await session.create(context);
                 await beforeRequest(context);
-                const bodyParser = new BodyParser_1.BodyParser(context, this.configs.bodyParser);
-                await bodyParser.parse();
+                const body = new CreateBody_1.CreateBody(context, this.configs.bodyParser);
+                await body.create();
             }
             // Handler hook requested
             if (typeof requested === 'function') {
@@ -73,11 +74,11 @@ class Server extends EventEmitter {
             // Handler hook beforeResponse
             if (typeof beforeResponse === 'function') {
                 await beforeResponse(context);
-                await this.session.refresh(context);
             }
             // Handler hook responsed
             if (typeof responsed === 'function') {
                 await responsed(context);
+                await session.reload(context);
             }
             // Handler not found
             if (!context.finished) {

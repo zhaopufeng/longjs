@@ -15,5 +15,7 @@
     "url": "https://www.ranyunlong.com"
   },
   "repository": "ranyunlong/longjs",
-  "dependencies": {}
+  "dependencies": {
+    "@longjs/server": "^1.0.0-beta.0.1"
+  }
 }

@@ -21,6 +21,7 @@ import { CreateResponse } from './lib/CreateResponse'
 import { CreateRequest } from './lib/CreateRequest'
 import { CreateBody } from './lib/CreateBody'
 import { CreateSession, SessionOpts } from './lib/CreateSession';
+export * from './lib/SessionStore';
 
 export default class Server extends EventEmitter {
     public proxy: boolean = false

@@ -6,6 +6,9 @@
  * @copyright Ranyunlong 2018-09-21 0:07
  * @export Server
  */
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventEmitter = require("events");
 const statuses = require("statuses");
@@ -15,6 +18,7 @@ const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
 const CreateBody_1 = require("./lib/CreateBody");
 const CreateSession_1 = require("./lib/CreateSession");
+__export(require("./lib/SessionStore"));
 class Server extends EventEmitter {
     /**
      * constructor

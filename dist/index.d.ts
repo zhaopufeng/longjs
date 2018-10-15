@@ -16,6 +16,7 @@ import { IncomingMessage, ServerResponse, OutgoingHttpHeaders, IncomingHttpHeade
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import { CreateBody } from './lib/CreateBody';
 import { SessionOpts } from './lib/CreateSession';
+export * from './lib/SessionStore';
 export default class Server extends EventEmitter {
     options: Core.Options;
     proxy: boolean;

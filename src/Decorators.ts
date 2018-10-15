@@ -7,9 +7,9 @@
  */
 
 import 'reflect-metadata'
-import * as Knex from 'knex'
-import { Server } from '.';
 import chalk from 'chalk'
+import { Server } from '.';
+import * as Knex from 'knex'
 import * as pathToRegExp from 'path-to-regexp'
 
 interface Options<T = any> {

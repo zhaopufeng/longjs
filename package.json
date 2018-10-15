@@ -21,10 +21,12 @@
   "dependencies": {
     "@longjs/core": "^1.0.0-beta.0.8",
     "@types/chalk": "^2.2.0",
+    "@types/ioredis": "^4.0.3",
     "@types/knex": "^0.14.26",
     "@types/path-to-regexp": "^1.7.0",
     "@types/reflect-metadata": "^0.1.0",
     "chalk": "^2.4.1",
+    "ioredis": "^4.0.2",
     "knex": "^0.15.2",
     "path-to-regexp": "^2.4.0",
     "reflect-metadata": "^0.1.12"

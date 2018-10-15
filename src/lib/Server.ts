@@ -22,6 +22,7 @@ export class Server {
         if (!Array.isArray(options.controllers)) return;
         this.controllers = options.controllers
         const _that = this;
+
         this.core = new CoreClass({
             configs: options.configs,
             async beforeRequest(ctx: Server.Context) {
@@ -36,7 +37,7 @@ export class Server {
                 for (let item of ctx.controllers) {
                     // Register services
                     const { injectServices, injectPropertys  } = item.target.$options
-                    const services = injectServices(ctx)
+                    const services = injectServices(ctx, _that.options.configs)
                     injectPropertys(ctx)
                     item.controller = new item.target(...services)
                 }
@@ -193,7 +194,7 @@ export namespace Server {
         parameters?: ControllerOptionsParameter;
         databases?: ControllerOptionsDatabase;
         handlers?: ControllerHandler;
-        injectServices?: (ctx: Context) => any [];
+        injectServices?: (ctx: Context, configs: Configs) => any [];
         injectPropertys?: (ctx: Context) => void;
         injectDatabases?: (config: Server.ServerDatabaseOptions) => void;
         injectParameters?: (ctx: Context, propertyKey: string) => any;

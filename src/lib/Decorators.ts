@@ -8,7 +8,7 @@
 
 import 'reflect-metadata'
 import chalk from 'chalk'
-import { Server } from '.';
+import { Server } from '..';
 import * as Knex from 'knex'
 import * as pathToRegExp from 'path-to-regexp'
 

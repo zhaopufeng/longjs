@@ -5,7 +5,7 @@
  * @copyright Ranyunlong 2018-10-08 14:35
  * @export Server
  */
-import CoreClass, { Core, SessionStore } from '@longjs/core';
+import CoreClass, { Core } from '@longjs/core';
 import * as https from 'https'
 import * as Knex from 'knex';
 import * as pathToRegexp from 'path-to-regexp'

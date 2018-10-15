@@ -1,5 +1,5 @@
 {
-  "name": "@longjs/redis-storeage",
+  "name": "@longjs/redis-storage",
   "version": "1.0.0-beta.0.1",
   "main": "./dist/index.js",
   "license": "MIT",

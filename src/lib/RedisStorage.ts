@@ -1,15 +1,17 @@
+/**
+ * @class RedisStorage
+ * @author ranyunlong<549510622@qq.com>
+ * @license MIT
+ */
 import * as Redis from 'ioredis'
-import { randomBytes } from 'crypto'
 import { Core, SessionStorage } from '@longjs/core';
+import { SessionOpts as Opts } from '@longjs/core/dist/lib/CreateSession';
 
-export class RedisStore implements SessionStorage {
+export class RedisStorage extends SessionStorage {
     public redis: Redis.Redis;
-    constructor() {
-        this.redis = new Redis();
-    }
-
-    public getID(length: number): string {
-        return randomBytes(length).toString('hex');
+    constructor(options?: Redis.RedisOptions) {
+        super()
+        this.redis = options ? new Redis(options) : new Redis(options)
     }
 
     public async get(sid: string): Promise<Core.Session> {
@@ -20,7 +22,7 @@ export class RedisStore implements SessionStorage {
         }
     }
 
-    public async set(session: Core.Session, { sid =  this.getID(24), maxAge = 1000000}: any) {
+    public async set(session: Core.Session, { sid =  this.getID(24), maxAge = 1000000}: SessionOpts): Promise<string> {
         try {
             // Use redis set EX to automatically drop expired sessions
             await this.redis.set(`SESSION:${sid}`, JSON.stringify(session), 'EX', maxAge / 1000);
@@ -32,7 +34,11 @@ export class RedisStore implements SessionStorage {
         return sid;
     }
 
-    async destroy(sid: string) {
-        return await this.redis.del(`SESSION:${sid}`);
+    public async destroy(sid: string) {
+        await this.redis.del(`SESSION:${sid}`);
     }
+}
+
+export interface SessionOpts extends Opts {
+    sid?: string;
 }

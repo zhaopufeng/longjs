@@ -19,7 +19,7 @@
   },
   "repository": "ranyunlong/longjs",
   "dependencies": {
-    "@longjs/core": "^1.0.0-beta.0.8",
+    "@longjs/core": "^1.0.0-beta.0.9",
     "@types/chalk": "^2.2.0",
     "@types/ioredis": "^4.0.3",
     "@types/knex": "^0.14.26",

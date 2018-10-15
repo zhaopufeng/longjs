@@ -1,6 +1,6 @@
-# @longjs/server 1.0.0
+# @longjs/redis-storage 1.0.0
 
-[![npm (scoped)](https://img.shields.io/npm/v/@longjs/core.svg)](https://www.npmjs.com/package/@longjs/core)
+[![npm (scoped)](https://img.shields.io/npm/v/@longjs/redis-storage.svg)](https://www.npmjs.com/package/@longjs/redis-storage)
 
 ### 介绍
 

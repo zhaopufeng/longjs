@@ -19,7 +19,7 @@
     "lib":["esnext"],
     "include": [
         "src/**/*",
-        "test/**/*"
+        // "test/**/*"
     ],
     "watch":true,
     "exclude": [

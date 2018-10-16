@@ -14,7 +14,7 @@ export declare class CreateSession {
     sessions: any;
     constructor(opts?: SessionOpts);
     create(ctx: Core.Context): Promise<void>;
-    reload(ctx: Core.Context): Promise<void>;
+    reset(ctx: Core.Context): Promise<void>;
 }
 export interface SessionOpts extends SetOption {
     key?: string;

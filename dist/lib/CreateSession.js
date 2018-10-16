@@ -39,7 +39,7 @@ class CreateSession {
         }
         ctx._session = JSON.stringify(ctx.session);
     }
-    async reload(ctx) {
+    async reset(ctx) {
         const { key, store, opts } = this;
         // Get Sid from cookies
         const sid = ctx.session.sid;

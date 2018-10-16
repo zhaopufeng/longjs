@@ -66,13 +66,13 @@ class Server extends EventEmitter {
             const context = this.createContext(request, response);
             // Get hooks
             const { beforeRequest, requested, beforeResponse, responsed } = this.options;
+            await session.create(context);
             // Handler hook beforeRequest
             if (typeof beforeRequest === 'function') {
-                await session.create(context);
                 await beforeRequest(context);
-                const body = new CreateBody_1.CreateBody(context, this.configs.bodyParser);
-                await body.create();
             }
+            const createBody = new CreateBody_1.CreateBody(context, this.configs.bodyParser);
+            await createBody.create();
             // Handler hook requested
             if (typeof requested === 'function') {
                 await requested(context);
@@ -84,39 +84,53 @@ class Server extends EventEmitter {
             // Handler hook response
             if (typeof this.options.response === 'function') {
                 await this.options.response(context);
-                await session.reload(context);
-                if (!context.writable)
-                    return;
-                let body = context.response.body;
-                const code = context.status;
-                // ignore body
-                if (statuses.empty[code]) {
-                    // strip headers
-                    context.body = null;
-                    return response.end();
+            }
+            // Handler hook responsed
+            if (typeof responsed === 'function') {
+                await responsed(context);
+            }
+            // Reset session
+            await session.reset(context);
+            // Check context writable
+            if (!context.writable)
+                return;
+            // Get response body
+            let body = context.response.body;
+            // check response statusCode
+            const code = context.status;
+            // ignore body
+            if (statuses.empty[code]) {
+                // strip headers
+                context.body = null;
+                return response.end();
+            }
+            // If request method is HEAD
+            if ('HEAD' === context.method) {
+                if (!response.headersSent && utils_1.isJSON(body)) {
+                    context.length = Buffer.byteLength(JSON.stringify(body));
                 }
-                if ('HEAD' === context.method) {
-                    if (!response.headersSent && utils_1.isJSON(body)) {
-                        context.length = Buffer.byteLength(JSON.stringify(body));
-                    }
-                    return response.end();
+                return response.end();
+            }
+            // status body
+            if (null == body) {
+                body = context.message || String(code);
+                if (!response.headersSent) {
+                    context.type = 'text';
+                    context.length = Buffer.byteLength(body);
                 }
-                // status body
-                if (null == body) {
-                    body = context.message || String(code);
-                    if (!response.headersSent) {
-                        context.type = 'text';
-                        context.length = Buffer.byteLength(body);
-                    }
-                    return response.end(body);
-                }
-                // responses
-                if (Buffer.isBuffer(body))
-                    return response.end(body);
-                if ('string' === typeof body)
-                    return response.end(body);
-                if (body instanceof stream_1.Stream)
-                    return body.pipe(response);
+                return response.end(body);
+            }
+            // responses
+            if (Buffer.isBuffer(body)) {
+                response.end(body);
+            }
+            else if ('string' === typeof body) {
+                response.end(body);
+            }
+            else if (body instanceof stream_1.Stream) {
+                body.pipe(response);
+            }
+            else {
                 // body: json
                 body = JSON.stringify(body);
                 if (!response.headersSent) {

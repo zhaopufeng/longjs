@@ -43,7 +43,7 @@ export class CreateSession {
         ctx._session = JSON.stringify(ctx.session)
     }
 
-    public async reload(ctx: Core.Context) {
+    public async reset(ctx: Core.Context) {
         const { key, store, opts} = this;
         // Get Sid from cookies
         const sid = ctx.session.sid

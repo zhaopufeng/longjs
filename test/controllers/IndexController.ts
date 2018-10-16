@@ -8,12 +8,12 @@ export class IndexController implements Server.Controller {
     @Query public q: any;
     @Get
     public async index() {
-        return this.ss.name;
+        return '{xx: 0};'
     }
 
     @Get
     public async users() {
-        console.log(this.q)
+        // console.log(this.q)
         return 'index/users'
     }
 

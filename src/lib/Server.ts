@@ -52,6 +52,7 @@ export class Server {
                         const parameters =  injectParameters(ctx, handler.propertyKey)
                         let data = await item.controller[handler.propertyKey](...parameters)
                         if (data) {
+                            ctx.status = 200
                             ctx.body = data
                         }
                     }

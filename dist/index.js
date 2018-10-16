@@ -18,6 +18,8 @@ const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
 const CreateBody_1 = require("./lib/CreateBody");
 const CreateSession_1 = require("./lib/CreateSession");
+const stream_1 = require("stream");
+const utils_1 = require("./lib/utils");
 __export(require("./lib/SessionStore"));
 class Server extends EventEmitter {
     /**
@@ -79,10 +81,52 @@ class Server extends EventEmitter {
             if (typeof beforeResponse === 'function') {
                 await beforeResponse(context);
             }
-            // Handler hook responsed
-            if (typeof responsed === 'function') {
-                await responsed(context);
+            // Handler hook response
+            if (typeof this.options.response === 'function') {
+                await this.options.response(context);
                 await session.reload(context);
+                if (!context.writable)
+                    return;
+                let body = context.response.body;
+                const code = context.status;
+                // ignore body
+                if (statuses.empty[code]) {
+                    // strip headers
+                    context.body = null;
+                    return response.end();
+                }
+                if ('HEAD' === context.method) {
+                    if (!response.headersSent && utils_1.isJSON(body)) {
+                        context.length = Buffer.byteLength(JSON.stringify(body));
+                    }
+                    return response.end();
+                }
+                // status body
+                if (null == body) {
+                    body = context.message || String(code);
+                    if (!response.headersSent) {
+                        context.type = 'text';
+                        context.length = Buffer.byteLength(body);
+                    }
+                    return response.end(body);
+                }
+                // responses
+                if (Buffer.isBuffer(body))
+                    return response.end(body);
+                if ('string' === typeof body)
+                    return response.end(body);
+                if (body instanceof stream_1.Stream)
+                    return body.pipe(response);
+                // body: json
+                body = JSON.stringify(body);
+                if (!response.headersSent) {
+                    context.length = Buffer.byteLength(body);
+                }
+                response.end(body);
+            }
+            // Handler hook response
+            if ('function' === typeof responsed) {
+                await responsed(context);
             }
             // Handler not found
             if (!context.finished) {

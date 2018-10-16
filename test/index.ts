@@ -15,8 +15,8 @@ const app = new TKServer({
     async beforeResponse() {
         return;
     },
-    async responsed(ctx) {
-        ctx.body = ctx.session.user
+    async response(ctx) {
+        ctx.body = 'xx'
         return;
     }
 })

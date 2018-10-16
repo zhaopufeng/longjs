@@ -19,6 +19,7 @@ export declare class CreateResponse implements Core.Response {
     private _body;
     ctx: Core.Context;
     request: Core.Request;
+    _explicitStatus: boolean;
     constructor(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse, app: TkServer);
     /**
      * @property socket
@@ -80,7 +81,7 @@ export declare class CreateResponse implements Core.Response {
     */
     status: number;
     /**
-     * @
+     * @property type
      * Set Content-Type response header with `type` through `mime.contentType()`
      */
     type: string;
@@ -97,6 +98,10 @@ export declare class CreateResponse implements Core.Response {
      * @property body
      * Get response body.
      */
+    /**
+    * @property body
+    * Set response body.
+    */
     /**
     * @property body
     * Set response body.

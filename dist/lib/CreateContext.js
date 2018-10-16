@@ -6,8 +6,10 @@
  * @copyright Ranyunlong 2018-09-23 0:17
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const httpAssert = require("http-assert");
+const util = require("util");
 const Cookies = require("cookies");
+const statuses = require("statuses");
+const httpAssert = require("http-assert");
 const httpErrors = require("http-errors");
 const COOKIES = Symbol('context#cookies');
 class CreateContext {
@@ -440,6 +442,49 @@ class CreateContext {
      */
     remove(field) {
         return this.response.remove(field);
+    }
+    onerror(err) {
+        // don't do anything if there is no error.
+        // this allows you to pass `this.onerror`
+        // to node-style callbacks.
+        if (null == err)
+            return;
+        if (!(err instanceof Error))
+            err = new Error(util.format('non-error thrown: %j', err));
+        let headerSent = false;
+        if (this.headerSent || !this.writable) {
+            headerSent = err.headerSent = true;
+        }
+        // delegate
+        this.app.emit('error', err, this);
+        // nothing we can do here other
+        // than delegate to the app-level
+        // handler and log.
+        if (headerSent) {
+            return;
+        }
+        const res = this.res;
+        // first unset all headers
+        /* istanbul ignore else */
+        if (typeof res.getHeaderNames === 'function') {
+            res.getHeaderNames().forEach((name) => res.removeHeader(name));
+        }
+        // then set those specified
+        this.set(err.headers);
+        // force text/plain
+        this.type = 'text';
+        // ENOENT support
+        if ('ENOENT' === err.code)
+            err.status = 404;
+        // default to 500
+        if ('number' !== typeof err.status || !statuses[err.status])
+            err.status = 500;
+        // respond
+        const code = statuses[err.status];
+        const msg = err.expose ? err.message : code;
+        this.status = err.status;
+        this.length = Buffer.byteLength(msg);
+        this.res.end(msg);
     }
     throw(...args) {
         throw httpErrors(...args);

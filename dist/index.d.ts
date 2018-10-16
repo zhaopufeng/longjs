@@ -73,6 +73,7 @@ export declare namespace Core {
         beforeRequest?: Hook;
         requested?: Hook;
         beforeResponse?: Hook;
+        response?: Hook;
         responsed?: Hook;
     }
     interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {

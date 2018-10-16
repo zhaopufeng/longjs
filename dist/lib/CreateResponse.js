@@ -6,6 +6,7 @@
  * @copyright Ranyunlong 2018-09-23 1:18
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = require("./utils");
 const stream_1 = require("stream");
 const path = require("path");
 const mime = require("mime-types");
@@ -13,6 +14,10 @@ const vary = require("vary");
 const typeIs = require("type-is");
 const disposition = require("content-disposition");
 const statuses = require("statuses");
+const onFinish = require("on-finished");
+const escape = require("escape-html");
+const destroy = require("destroy");
+const utils_2 = require("./utils");
 class CreateResponse {
     constructor(req, res, app) {
         this.req = req;
@@ -20,9 +25,9 @@ class CreateResponse {
         this.app = app;
         this.set('Server', 'LONGJS:CORE/' + require('../../package.json').version);
         this.set('Expires', new Date().toUTCString());
-        this.set('Cache-Control', 'max-age=0');
         this.vary('Accept-Encoding');
-        this.lastModified = new Date();
+        // this.set('Cache-Control', 'max-age=0')
+        // this.lastModified = new Date()
     }
     /**
      * @property socket
@@ -130,21 +135,32 @@ class CreateResponse {
      * Set response status code.
      */
     set status(val) {
+        this._explicitStatus = true;
         this.res.statusCode = val;
+        if (this.req.httpVersionMajor < 2)
+            this.res.statusMessage = statuses[val];
+        if (this.body && statuses.empty[val])
+            this.body = null;
     }
     /**
-     * @
+     * @property type
      * Set Content-Type response header with `type` through `mime.contentType()`
      */
     set type(val) {
-        this.set('Content-Type', mime.contentType(val));
+        val = utils_2.getType(val);
+        if (val) {
+            this.set('Content-Type', val);
+        }
+        else {
+            this.remove('Content-Type');
+        }
     }
     /**
      * @property message
      * Get response status message
      */
     get message() {
-        return this.res.statusMessage;
+        return this.res.statusMessage || statuses[this.status];
     }
     /**
      * @property message
@@ -164,56 +180,96 @@ class CreateResponse {
      * @property body
      * Set response body.
      */
+    // public set body(val: String | Buffer | Object | Stream) {
+    //     if (this.finished) return;
+    //     this._body = val;
+    //     const response = this.res as ServerResponse
+    //     if (typeof val === 'string') {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'html'
+    //         this.length = Buffer.byteLength(val)
+    //         response.end(val)
+    //     } else if (Buffer.isBuffer(val)) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'application/octet-stream'
+    //         this.length = val.byteLength
+    //         response.end(val)
+    //     } else if (val instanceof Stream) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'application/octet-stream'
+    //         response.on('error', this.onError)
+    //         val.pipe(response)
+    //     } else if (Array.isArray(Array)) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'json'
+    //         const data = JSON.stringify(val)
+    //         this.length = this.length = Buffer.byteLength(data)
+    //         response.end(data)
+    //     } else if ('object' === typeof val) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'json'
+    //         const data = JSON.stringify(val)
+    //         this.length = Buffer.byteLength(data)
+    //         response.end(data)
+    //     } else if (typeof val === 'number') {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'html'
+    //         const data = (val as number).toString()
+    //         this.length = Buffer.byteLength(data)
+    //         response.end(data)
+    //     }
+    // }
+    /**
+     * @property body
+     * Set response body.
+     */
     set body(val) {
         if (this.finished)
             return;
+        const original = this._body;
         this._body = val;
-        const response = this.res;
-        if (typeof val === 'string') {
-            if (!this.status)
-                this.status = 200;
-            this.type = 'html';
+        // no content
+        if (null == val) {
+            if (!statuses.empty[this.status])
+                this.status = 204;
+            this.remove('Content-Type');
+            this.remove('Content-Length');
+            this.remove('Transfer-Encoding');
+            return;
+        }
+        // set the status
+        if (!this._explicitStatus)
+            this.status = 200;
+        // set the content-type only if not yet set
+        const setType = !this.header['content-type'];
+        // string
+        if ('string' === typeof val) {
+            if (setType)
+                this.type = /^\s*</.test(val) ? 'html' : 'text';
             this.length = Buffer.byteLength(val);
-            response.end(val);
+            return;
         }
-        else if (Buffer.isBuffer(val)) {
-            if (!this.status)
-                this.status = 200;
-            this.type = 'application/octet-stream';
-            this.length = val.byteLength;
-            response.end(val);
+        // buffer
+        if (Buffer.isBuffer(val)) {
+            if (setType)
+                this.type = 'bin';
+            this.length = val.length;
+            return;
         }
-        else if (val instanceof stream_1.Stream) {
-            if (!this.status)
-                this.status = 200;
-            this.type = 'application/octet-stream';
-            response.on('error', this.onError);
-            val.pipe(response);
+        // stream
+        if (val instanceof stream_1.Stream) {
+            onFinish(this.res, destroy.bind(null, val));
+            utils_1.ensureErrorHandler(val, (err) => this.ctx.onerror(err));
+            // overwriting
+            if (null != original && original !== val)
+                this.remove('Content-Length');
+            if (setType)
+                this.type = 'bin';
+            return;
         }
-        else if (Array.isArray(Array)) {
-            if (!this.status)
-                this.status = 200;
-            this.type = 'json';
-            const data = JSON.stringify(val);
-            this.length = this.length = Buffer.byteLength(data);
-            response.end(data);
-        }
-        else if ('object' === typeof val) {
-            if (!this.status)
-                this.status = 200;
-            this.type = 'json';
-            const data = JSON.stringify(val);
-            this.length = Buffer.byteLength(data);
-            response.end(data);
-        }
-        else if (typeof val === 'number') {
-            if (!this.status)
-                this.status = 200;
-            this.type = 'html';
-            const data = val.toString();
-            this.length = Buffer.byteLength(data);
-            response.end(data);
-        }
+        // json
+        this.remove('Content-Length');
+        this.type = 'json';
     }
     /**
      * Get the ETag of a response.

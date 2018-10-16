@@ -21,6 +21,8 @@ import { CreateResponse } from './lib/CreateResponse'
 import { CreateRequest } from './lib/CreateRequest'
 import { CreateBody } from './lib/CreateBody'
 import { CreateSession, SessionOpts } from './lib/CreateSession';
+import { Stream } from 'stream';
+import { isJSON } from './lib/utils';
 export * from './lib/SessionStore';
 
 export default class Server extends EventEmitter {
@@ -103,10 +105,56 @@ export default class Server extends EventEmitter {
                 await beforeResponse(context)
             }
 
-            // Handler hook responsed
-            if (typeof responsed === 'function') {
-                await responsed(context)
+            // Handler hook response
+            if (typeof this.options.response === 'function') {
+                await this.options.response(context)
                 await session.reload(context)
+
+                if (!context.writable) return;
+
+                let body = context.response.body;
+                const code = context.status;
+
+                // ignore body
+                if (statuses.empty[code]) {
+                    // strip headers
+                    context.body = null;
+                    return response.end();
+                }
+
+                if ('HEAD' === context.method) {
+                    if (!response.headersSent && isJSON(body)) {
+                        context.length = Buffer.byteLength(JSON.stringify(body));
+                    }
+                    return response.end();
+                }
+
+                // status body
+                if (null == body) {
+                    body = context.message || String(code);
+                    if (!response.headersSent) {
+                        context.type = 'text';
+                        context.length = Buffer.byteLength(body);
+                    }
+                    return response.end(body);
+                }
+
+                // responses
+                if (Buffer.isBuffer(body)) return (response as ServerResponse).end(body);
+                if ('string' === typeof body) return (response as ServerResponse).end(body);
+                if (body instanceof Stream) return body.pipe(response as ServerResponse);
+
+                 // body: json
+                body = JSON.stringify(body);
+                if (!response.headersSent) {
+                    context.length = Buffer.byteLength(body);
+                }
+                response.end(body);
+            }
+
+            // Handler hook response
+            if ('function' === typeof responsed) {
+                await responsed(context)
             }
 
             // Handler not found
@@ -170,6 +218,7 @@ export namespace Core {
         beforeRequest?: Hook;
         requested?: Hook;
         beforeResponse?: Hook;
+        response?: Hook;
         responsed?: Hook;
     }
 

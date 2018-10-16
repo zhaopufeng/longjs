@@ -7,6 +7,7 @@
 
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
+import { ensureErrorHandler } from './utils';
 import { Core } from '..'
 import { Socket } from 'net'
 import { Stream } from 'stream'
@@ -16,12 +17,17 @@ import * as vary from 'vary'
 import * as typeIs from 'type-is'
 import * as disposition from 'content-disposition'
 import * as statuses from 'statuses'
+import * as onFinish from 'on-finished'
+import * as escape from 'escape-html'
+import destroy = require('destroy')
 import TkServer from '..';
+import { getType } from './utils';
 
 export class CreateResponse implements Core.Response {
     private _body: any;
     public ctx: Core.Context;
     public request: Core.Request;
+    public _explicitStatus: boolean;
     constructor(
         public req: IncomingMessage | Http2ServerRequest,
         public res: ServerResponse | Http2ServerResponse,
@@ -29,9 +35,9 @@ export class CreateResponse implements Core.Response {
     ) {
         this.set('Server', 'LONGJS:CORE/' + require('../../package.json').version)
         this.set('Expires', new Date().toUTCString())
-        this.set('Cache-Control', 'max-age=0')
         this.vary('Accept-Encoding')
-        this.lastModified = new Date()
+        // this.set('Cache-Control', 'max-age=0')
+        // this.lastModified = new Date()
     }
 
     /**
@@ -149,15 +155,23 @@ export class CreateResponse implements Core.Response {
      * Set response status code.
      */
     public set status(val: number) {
+        this._explicitStatus = true
         this.res.statusCode = val
+        if ((this.req as IncomingMessage).httpVersionMajor < 2) this.res.statusMessage = statuses[val];
+        if (this.body && statuses.empty[val]) this.body = null;
     }
 
     /**
-     * @
+     * @property type
      * Set Content-Type response header with `type` through `mime.contentType()`
      */
     public set type(val: string) {
-        this.set('Content-Type', mime.contentType(val) as string)
+        val = getType(val)
+        if (val) {
+            this.set('Content-Type', val);
+        } else {
+            this.remove('Content-Type');
+        }
     }
 
     /**
@@ -165,7 +179,7 @@ export class CreateResponse implements Core.Response {
      * Get response status message
      */
     public get message() {
-        return this.res.statusMessage
+        return this.res.statusMessage || statuses[this.status];
     }
 
     /**
@@ -188,44 +202,100 @@ export class CreateResponse implements Core.Response {
      * @property body
      * Set response body.
      */
+    // public set body(val: String | Buffer | Object | Stream) {
+    //     if (this.finished) return;
+    //     this._body = val;
+    //     const response = this.res as ServerResponse
+    //     if (typeof val === 'string') {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'html'
+    //         this.length = Buffer.byteLength(val)
+    //         response.end(val)
+    //     } else if (Buffer.isBuffer(val)) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'application/octet-stream'
+    //         this.length = val.byteLength
+    //         response.end(val)
+    //     } else if (val instanceof Stream) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'application/octet-stream'
+    //         response.on('error', this.onError)
+    //         val.pipe(response)
+    //     } else if (Array.isArray(Array)) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'json'
+    //         const data = JSON.stringify(val)
+    //         this.length = this.length = Buffer.byteLength(data)
+    //         response.end(data)
+    //     } else if ('object' === typeof val) {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'json'
+    //         const data = JSON.stringify(val)
+    //         this.length = Buffer.byteLength(data)
+    //         response.end(data)
+    //     } else if (typeof val === 'number') {
+    //         if (!this.status) this.status = 200
+    //         this.type = 'html'
+    //         const data = (val as number).toString()
+    //         this.length = Buffer.byteLength(data)
+    //         response.end(data)
+    //     }
+    // }
+
+    /**
+     * @property body
+     * Set response body.
+     */
     public set body(val: String | Buffer | Object | Stream) {
         if (this.finished) return;
+
+        const original = this._body;
         this._body = val;
-        const response = this.res as ServerResponse
-        if (typeof val === 'string') {
-            if (!this.status) this.status = 200
-            this.type = 'html'
-            this.length = Buffer.byteLength(val)
-            response.end(val)
-        } else if (Buffer.isBuffer(val)) {
-            if (!this.status) this.status = 200
-            this.type = 'application/octet-stream'
-            this.length = val.byteLength
-            response.end(val)
-        } else if (val instanceof Stream) {
-            if (!this.status) this.status = 200
-            this.type = 'application/octet-stream'
-            response.on('error', this.onError)
-            val.pipe(response)
-        } else if (Array.isArray(Array)) {
-            if (!this.status) this.status = 200
-            this.type = 'json'
-            const data = JSON.stringify(val)
-            this.length = this.length = Buffer.byteLength(data)
-            response.end(data)
-        } else if ('object' === typeof val) {
-            if (!this.status) this.status = 200
-            this.type = 'json'
-            const data = JSON.stringify(val)
-            this.length = Buffer.byteLength(data)
-            response.end(data)
-        } else if (typeof val === 'number') {
-            if (!this.status) this.status = 200
-            this.type = 'html'
-            const data = (val as number).toString()
-            this.length = Buffer.byteLength(data)
-            response.end(data)
+
+        // no content
+        if (null == val) {
+            if (!statuses.empty[this.status]) this.status = 204;
+            this.remove('Content-Type');
+            this.remove('Content-Length');
+            this.remove('Transfer-Encoding');
+            return;
         }
+
+        // set the status
+        if (!this._explicitStatus) this.status = 200;
+
+        // set the content-type only if not yet set
+        const setType = !this.header['content-type'];
+
+        // string
+        if ('string' === typeof val) {
+            if (setType) this.type = /^\s*</.test(val) ? 'html' : 'text';
+            this.length = Buffer.byteLength(val);
+            return;
+        }
+
+         // buffer
+        if (Buffer.isBuffer(val)) {
+            if (setType) this.type = 'bin';
+            this.length = val.length;
+            return;
+        }
+
+        // stream
+        if (val instanceof Stream) {
+            onFinish(this.res as ServerResponse, destroy.bind(null, val));
+            ensureErrorHandler(val, (err: any) => this.ctx.onerror(err))
+
+            // overwriting
+            if (null != original && original !== val) this.remove('Content-Length');
+
+            if (setType) this.type = 'bin';
+            return;
+        }
+
+        // json
+        this.remove('Content-Length');
+        this.type = 'json';
     }
 
     /**

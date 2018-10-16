@@ -7,8 +7,8 @@
 /// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
 import Server from '..';
-import * as httpAssert from 'http-assert';
 import * as Cookies from 'cookies';
+import * as httpAssert from 'http-assert';
 import { Core } from '..';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
@@ -308,6 +308,7 @@ export declare class CreateContext implements Core.Context {
      * Response remove header field
      */
     remove(field: string): void;
+    onerror(err: any): void;
     /**
      * @method throw
      * Throw http exception

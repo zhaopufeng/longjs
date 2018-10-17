@@ -111,7 +111,11 @@ export class Server {
         }
     }
 
-    public async beforeRequest(ctx: Server.Context) {
+    /**
+     * Hook beforeRequest
+     * @param { Server.Context } ctx
+     */
+    private async beforeRequest(ctx: Server.Context) {
         ctx.routes = []
 
         // Handler routes
@@ -123,14 +127,19 @@ export class Server {
         for (let item of ctx.controllers) {
             // Register services
             const { injectServices, injectPropertys, injectDatabases  } = item.target.$options
-            injectDatabases(this.options.configs.database)
-            const services = injectServices(ctx, this.options.configs)
+            const { configs } = this.options
+            injectDatabases(configs.database)
+            const services = injectServices(ctx, configs)
             injectPropertys(ctx)
             item.controller = new item.target(...services)
         }
     }
 
-    public async beforeResponse(ctx: Server.Context) {
+    /**
+     * Hook beforeResponse
+     * @param { Server.Context } ctx
+     */
+    private async beforeResponse(ctx: Server.Context) {
         for (let item of ctx.controllers) {
             for (let handler of item.handlers) {
                 const { injectParameters } = item.target.$options

@@ -6,9 +6,10 @@ export class IndexController implements Server.Controller {
     constructor(public test: TestService) {}
     @Session public ss: any;
     @Query public q: any;
+
     @Get
     public async index() {
-        return {xx: 0}
+        return '100'
     }
 
     @Get

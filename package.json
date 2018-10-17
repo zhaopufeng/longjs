@@ -1,6 +1,6 @@
 {
   "name": "@longjs/server",
-  "version": "1.0.0-beta.0.4",
+  "version": "1.0.0-beta.0.5",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {

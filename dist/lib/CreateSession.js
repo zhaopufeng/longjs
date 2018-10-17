@@ -23,11 +23,6 @@ class CreateSession {
         if (!sid) {
             // Not sid
             ctx.session = { sid };
-            // Create a new sid
-            sid = await store.set(ctx.session, opts);
-            ctx.session.sid = sid;
-            // Set a new sid for cookie
-            ctx.cookies.set(key, sid, opts);
         }
         else {
             // Get Sid from store
@@ -68,10 +63,11 @@ class CreateSession {
             return;
         }
         // set/update session
-        await store.set(ctx.session, {
+        const ssid = await store.set(ctx.session, {
             ...opts,
             sid
         });
+        ctx.cookies.set(key, ssid, opts);
     }
 }
 exports.CreateSession = CreateSession;

@@ -167,7 +167,7 @@ export default class Server extends EventEmitter {
             }
 
             // Handler not found
-            if (!context.finished) {
+            if (!context.finished && body == null) {
                 context.throw(404)
             }
         } catch (error) {
@@ -196,6 +196,7 @@ export default class Server extends EventEmitter {
 
             const data = statuses[status]
             response.setHeader('Content-Length', Buffer.byteLength(data))
+            response.statusCode = status
             ; (response as ServerResponse).end(data);
         }
     }

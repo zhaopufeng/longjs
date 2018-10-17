@@ -111,8 +111,17 @@ export function Controller(path: string): Server.ClassDecorator {
         const baseRoute = options.baseRoute = (path + '/').replace(/[\/]{2,}/g, '/')
         options.target.$options = options
         const handlers = options.handlers
-        if (handlers['/index']) {
-            handlers[baseRoute] = JSON.parse(JSON.stringify(handlers['/index']))
+        // Check controller default handler
+        if (typeof options.target.prototype.index === 'function') {
+            if (handlers['/index']) {
+                handlers[baseRoute] = JSON.parse(JSON.stringify(handlers['/index']))
+            } else {
+                // If controller default handler not method decorator, default method is ALL
+                handlers[baseRoute] = {
+                    propertyKey: 'index',
+                    type: ['ALL']
+                }
+            }
         }
         Object.keys(handlers).forEach((key: string) => {
             if (!/\/$/.test(key)) {
@@ -136,7 +145,7 @@ export function Controller(path: string): Server.ClassDecorator {
             const matched: Server.ControllerHandler[] = []
             Object.keys(handlers).forEach((key: string) => {
                 const handler = handlers[key]
-                if (handler.regexp.test(ctx.path) && !~~handler.type.indexOf(ctx.method as Server.RequestMethodTypes)) {
+                if (handler.regexp.test(ctx.path) && (!~~handler.type.indexOf(ctx.method as Server.RequestMethodTypes) || !~~handler.type.indexOf('ALL'))) {
                     matched.push(handler as Server.ControllerHandler)
                     const data = handler.regexp.exec(ctx.path)
                     handler.keys.forEach((key: pathToRegExp.Key, index: number) => {
@@ -323,23 +332,27 @@ function createRequestMethodDecorator(type: Server.RequestMethodTypes) {
     function decorator(route: string): MethodDecorator;
     function decorator(...args: any[]): any {
         function handler(options: Server.ControllerOptions, propertyKey: string, descriptor: TypedPropertyDescriptor<any>, path: string) {
-            // 如果路径不是以 '/' 开头 添加 '/'
+            // If the path does not start with '/', before '/'.
+            // If route path is not '/'
             if (!/^\//.test(path)) {
                 path = '/' + path
             }
-            // 检测路由集合中是否已包含该方法
+            // Check the method is included in the router.
             if (options.handlers[path]) {
-                // 如果method 存在 说明该路由已包含一种请求方式
+                // If method exists, it means that the route contains a request mode.
                 if (options.handlers[path].type) {
-                    // 如果为数组说明已经包含2个及以上的请求方式
+                    // If it is an array, it means that 2 or more requests are already included.
                     if (Array.isArray(options.handlers[path].type)) {
                         const types  = options.handlers[path].type as Server.RequestMethodTypes[]
-                        if ((types.indexOf(type) !== -1)) {
+                        if (!~types.indexOf(type)) {
                             throw new Error(chalk.redBright(`router path ${path} ${type} is repeat in method ${descriptor.value.name}`))
                         }
                         types.push(type)
                     } else {
-                        options.handlers[path].type = [...options.handlers[path].type, type]
+                        // If All is not included, add this method type.
+                        if (!~options.handlers[path].type.indexOf('ALL')) {
+                            options.handlers[path].type = [...options.handlers[path].type, type]
+                        }
                     }
                 }
             } else {

@@ -15,42 +15,15 @@ class Server {
         if (!Array.isArray(options.controllers))
             return;
         this.controllers = options.controllers;
-        const _that = this;
+        options.configs = options.configs || {};
+        let { beforeRequest, beforeResponse } = this;
+        beforeRequest = beforeRequest.bind(this);
+        beforeResponse = beforeResponse.bind(this);
+        // Init Core
         this.core = new core_1.default({
             configs: options.configs,
-            async beforeRequest(ctx) {
-                ctx.routes = [];
-                // Handler routes
-                _that.controllers.forEach((Controller) => {
-                    Controller.$options.match(ctx);
-                });
-                // New Controller
-                for (let item of ctx.controllers) {
-                    // Register services
-                    const { injectServices, injectPropertys } = item.target.$options;
-                    const services = injectServices(ctx);
-                    injectPropertys(ctx);
-                    item.controller = new item.target(...services);
-                }
-            },
-            async requested() {
-                // console.log(`Requested`)
-            },
-            async beforeResponse(ctx) {
-                for (let item of ctx.controllers) {
-                    for (let handler of item.handlers) {
-                        const { injectParameters } = item.target.$options;
-                        const parameters = injectParameters(ctx, handler.propertyKey);
-                        let data = await item.controller[handler.propertyKey](...parameters);
-                        if (data) {
-                            ctx.body = data;
-                        }
-                    }
-                }
-            },
-            async responsed(ctx) {
-                // console.log(`Responsed`)
-            }
+            beforeRequest,
+            beforeResponse
         });
         // Assert is port
         if (options.port) {
@@ -118,6 +91,35 @@ class Server {
         else { // http
             this.core.listen(port || 3000);
             this.listend = true;
+        }
+    }
+    async beforeRequest(ctx) {
+        ctx.routes = [];
+        // Handler routes
+        this.controllers.forEach((Controller) => {
+            Controller.$options.match(ctx);
+        });
+        // New Controller
+        for (let item of ctx.controllers) {
+            // Register services
+            const { injectServices, injectPropertys, injectDatabases } = item.target.$options;
+            injectDatabases(this.options.configs.database);
+            const services = injectServices(ctx, this.options.configs);
+            injectPropertys(ctx);
+            item.controller = new item.target(...services);
+        }
+    }
+    async beforeResponse(ctx) {
+        for (let item of ctx.controllers) {
+            for (let handler of item.handlers) {
+                const { injectParameters } = item.target.$options;
+                const parameters = injectParameters(ctx, handler.propertyKey);
+                let data = await item.controller[handler.propertyKey](...parameters);
+                if (data) {
+                    ctx.status = 200;
+                    ctx.body = data;
+                }
+            }
         }
     }
 }

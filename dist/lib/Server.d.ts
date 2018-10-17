@@ -25,6 +25,8 @@ export declare class Server {
      * @param { Number } port
      */
     listen(port: number): void;
+    beforeRequest(ctx: Server.Context): Promise<void>;
+    beforeResponse(ctx: Server.Context): Promise<void>;
 }
 export declare namespace Server {
     interface Options {
@@ -37,7 +39,8 @@ export declare namespace Server {
         configs?: Configs;
     }
     interface Configs extends Core.Configs {
-        staticOptions: any;
+        staticOpts?: any;
+        database?: ServerDatabaseOptions;
     }
     type ClassDecorator = <C>(target: C) => C | void;
     type Decorator = ClassDecorator | ParameterDecorator | MethodDecorator | PropertyDecorator;
@@ -70,7 +73,7 @@ export declare namespace Server {
         parameters?: ControllerOptionsParameter;
         databases?: ControllerOptionsDatabase;
         handlers?: ControllerHandler;
-        injectServices?: (ctx: Context) => any[];
+        injectServices?: (ctx: Context, configs: Configs) => any[];
         injectPropertys?: (ctx: Context) => void;
         injectDatabases?: (config: Server.ServerDatabaseOptions) => void;
         injectParameters?: (ctx: Context, propertyKey: string) => any;

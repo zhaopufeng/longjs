@@ -6,7 +6,7 @@
  * @export Decorators
  */
 import 'reflect-metadata';
-import { Server } from '.';
+import { Server } from '..';
 declare type CreateDecoratorCallback = (options: Server.ControllerOptions, propertyKey?: string | symbol, descriptorOrIndex?: TypedPropertyDescriptor<any> | number) => void;
 /**
  * 自定义指令方法

@@ -166,6 +166,12 @@ export class Server {
                 }
             }
         }
+        // Static responses
+        if (!ctx.finished) {
+            if (this.staticServe) {
+                await this.staticServe.deferHandler(ctx)
+            }
+        }
     }
 
     /**
@@ -173,12 +179,7 @@ export class Server {
      * @param { Server.Context } ctx
      */
     private async responsed(ctx: Server.Context) {
-        // Static responses
-        if (!ctx.finished) {
-            if (this.staticServe) {
-                await this.staticServe.deferHandler(ctx)
-            }
-        }
+        return;
     }
 }
 

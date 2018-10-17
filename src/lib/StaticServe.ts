@@ -23,6 +23,8 @@ export class StaticServe {
         opts.root = resolve(root)
         if (opts.index !== false) this.opts.index = opts.index || 'index.html'
     }
+
+    // Run before controller runs
     public async handler(ctx: Server.Context) {
         if (this.opts.defer) return;
         if (ctx.method === 'HEAD' || ctx.method === 'GET') {
@@ -36,11 +38,12 @@ export class StaticServe {
         }
     }
 
+    // Run after controller operation
     public async deferHandler(ctx: Server.Context) {
         if (!this.opts.defer) return;
         if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return
         // response is already handled
-        if (ctx.response.body != null || ctx.status !== 404) return // eslint-disable-line
+        if (ctx.response.body != null || ctx.status === 404) return // eslint-disable-line
         try {
             await send(ctx, ctx.path, this.opts)
         } catch (err) {

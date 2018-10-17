@@ -14,7 +14,7 @@ import { join, normalize, resolve, sep } from 'path'
 
 const UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
 
-export default function(rootPath: string, relativePath?: string) {
+export default function(rootPath: string, relativePath?: string): string {
     let path = relativePath
     let root = rootPath
 
@@ -46,7 +46,7 @@ export default function(rootPath: string, relativePath?: string) {
     }
 
     // path should never be absolute
-    if (!absolute(path)) {
+    if (absolute(path)) {
         throw httpError(400, 'Malicious Path')
     }
 

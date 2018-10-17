@@ -7,6 +7,7 @@
  * @export Server
  */
 import CoreClass, { Core } from '@longjs/core';
+import { StaticServe } from './StaticServe';
 import * as https from 'https';
 import * as Knex from 'knex';
 import * as pathToRegexp from 'path-to-regexp';
@@ -15,6 +16,7 @@ export declare class Server {
     core: CoreClass;
     listend: boolean;
     controllers: Server.Controller[];
+    staticServe: StaticServe;
     constructor(options: Server.Options);
     env: Core.Env;
     subdomainOffset: number;
@@ -25,8 +27,21 @@ export declare class Server {
      * @param { Number } port
      */
     listen(port: number): void;
-    beforeRequest(ctx: Server.Context): Promise<void>;
-    beforeResponse(ctx: Server.Context): Promise<void>;
+    /**
+     * Hook beforeRequest
+     * @param { Server.Context } ctx
+     */
+    private beforeRequest;
+    /**
+     * Hook beforeResponse
+     * @param { Server.Context } ctx
+     */
+    private beforeResponse;
+    /**
+     * Hook responsed
+     * @param { Server.Context } ctx
+     */
+    private responsed;
 }
 export declare namespace Server {
     interface Options {
@@ -39,7 +54,7 @@ export declare namespace Server {
         configs?: Configs;
     }
     interface Configs extends Core.Configs {
-        staticOpts?: any;
+        staticServeOpts?: StaticServe.Opts;
         database?: ServerDatabaseOptions;
     }
     type ClassDecorator = <C>(target: C) => C | void;

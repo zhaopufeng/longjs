@@ -8,6 +8,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @export Server
  */
 const core_1 = require("@longjs/core");
+const StaticServe_1 = require("./StaticServe");
 const https = require("https");
 class Server {
     constructor(options) {
@@ -15,15 +16,21 @@ class Server {
         if (!Array.isArray(options.controllers))
             return;
         this.controllers = options.controllers;
-        options.configs = options.configs || {};
-        let { beforeRequest, beforeResponse } = this;
+        const configs = options.configs = options.configs || {};
+        // Create static serve
+        if (configs.staticServeOpts)
+            this.staticServe = new StaticServe_1.StaticServe(configs.staticServeOpts);
+        let { beforeRequest, beforeResponse, responsed } = this;
+        // Bind hooks
         beforeRequest = beforeRequest.bind(this);
         beforeResponse = beforeResponse.bind(this);
+        responsed = responsed.bind(this);
         // Init Core
         this.core = new core_1.default({
             configs: options.configs,
             beforeRequest,
-            beforeResponse
+            beforeResponse,
+            responsed
         });
         // Assert is port
         if (options.port) {
@@ -93,22 +100,37 @@ class Server {
             this.listend = true;
         }
     }
+    /**
+     * Hook beforeRequest
+     * @param { Server.Context } ctx
+     */
     async beforeRequest(ctx) {
-        ctx.routes = [];
-        // Handler routes
-        this.controllers.forEach((Controller) => {
-            Controller.$options.match(ctx);
-        });
-        // New Controller
-        for (let item of ctx.controllers) {
-            // Register services
-            const { injectServices, injectPropertys, injectDatabases } = item.target.$options;
-            injectDatabases(this.options.configs.database);
-            const services = injectServices(ctx, this.options.configs);
-            injectPropertys(ctx);
-            item.controller = new item.target(...services);
+        // Static responses
+        if (this.staticServe) {
+            await this.staticServe.handler(ctx);
+        }
+        if (!ctx.finished) {
+            ctx.routes = [];
+            // Handler routes
+            this.controllers.forEach((Controller) => {
+                Controller.$options.match(ctx);
+            });
+            // New Controller
+            for (let item of ctx.controllers) {
+                // Register services
+                const { injectServices, injectPropertys, injectDatabases } = item.target.$options;
+                const { configs } = this.options;
+                injectDatabases(configs.database);
+                const services = injectServices(ctx, configs);
+                injectPropertys(ctx);
+                item.controller = new item.target(...services);
+            }
         }
     }
+    /**
+     * Hook beforeResponse
+     * @param { Server.Context } ctx
+     */
     async beforeResponse(ctx) {
         for (let item of ctx.controllers) {
             for (let handler of item.handlers) {
@@ -119,6 +141,18 @@ class Server {
                     ctx.status = 200;
                     ctx.body = data;
                 }
+            }
+        }
+    }
+    /**
+     * Hook responsed
+     * @param { Server.Context } ctx
+     */
+    async responsed(ctx) {
+        // Static responses
+        if (!ctx.finished) {
+            if (this.staticServe) {
+                await this.staticServe.deferHandler(ctx);
             }
         }
     }

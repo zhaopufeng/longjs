@@ -1,5 +1,5 @@
 /**
- * @class Decorators
+ * Decorators
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
  * @copyright Ranyunlong 2018-10-08 14:35

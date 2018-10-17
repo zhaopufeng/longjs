@@ -19,7 +19,6 @@
   },
   "repository": "ranyunlong/longjs",
   "dependencies": {
-    "@longjs/core": "^1.0.0-beta.1.5",
     "@types/ioredis": "^4.0.3",
     "ioredis": "^4.0.2"
   }

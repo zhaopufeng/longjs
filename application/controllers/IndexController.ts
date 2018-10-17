@@ -1,13 +1,14 @@
-import { Controller, Get, Session, Param } from '@longjs/server'
+import { Controller, Get, Session, Param, Database, Server } from '@longjs/server'
 import { Core } from '@longjs/core';
 
 @Controller('/')
 export class IndexController {
     @Session public sess: Core.Session
+    @Database('users') public db: Server.Database
 
     @Get
     public async index() {
-        return this.sess.user
+        this.sess.user = 'xx'
     }
 
     @Get('/set/:name')

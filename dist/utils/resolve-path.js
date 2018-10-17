@@ -37,7 +37,7 @@ function default_1(rootPath, relativePath) {
         throw httpError(400, 'Malicious Path');
     }
     // path should never be absolute
-    if (path_is_absolute_1.default(path)) {
+    if (!path_is_absolute_1.default(path)) {
         throw httpError(400, 'Malicious Path');
     }
     // path outside root

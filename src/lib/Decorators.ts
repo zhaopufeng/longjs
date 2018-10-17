@@ -209,6 +209,7 @@ export function Controller(path: string): Server.ClassDecorator {
         // Inject databases
         options.injectDatabases = function(config: Server.ServerDatabaseOptions) {
             const databases = options.databases
+            if (JSON.stringify(databases) !== '{}' && !config) throw new Error(chalk.redBright('Database is not configure!'))
             Object.keys(databases).forEach((key: string) => {
                 if (typeof databases[key] === 'string') {
                     options.target.prototype[key] = Knex(config)(databases[key])

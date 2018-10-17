@@ -8,7 +8,7 @@ export class IndexController implements Server.Controller {
     @Query public q: any;
     @Get
     public async index() {
-        return '{xx: 0};'
+        return {xx: 0}
     }
 
     @Get

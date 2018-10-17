@@ -111,11 +111,6 @@ export default class Server extends EventEmitter {
                 await this.options.response(context)
             }
 
-            // Handler hook responsed
-            if (typeof responsed === 'function') {
-                await responsed(context)
-            }
-
             // Reset session
             await session.reset(context)
 
@@ -143,30 +138,27 @@ export default class Server extends EventEmitter {
                 return response.end();
             }
 
-            // status body
-            if (null == body) {
-                body = context.message || String(code);
-                if (!response.headersSent) {
-                    context.type = 'text';
-                    context.length = Buffer.byteLength(body);
-                }
-                return response.end(body);
-            }
-
             // responses
-            if (Buffer.isBuffer(body)) {
-                (response as ServerResponse).end(body)
-            } else if ('string' === typeof body) {
-                (response as ServerResponse).end(body);
-            } else if (body instanceof Stream) {
-                body.pipe(response as ServerResponse);
-            } else {
-                // body: json
-                body = JSON.stringify(body);
-                if (!response.headersSent) {
-                    context.length = Buffer.byteLength(body);
+            if (body) {
+                if (Buffer.isBuffer(body)) {
+                    (response as ServerResponse).end(body)
+                } else if ('string' === typeof body) {
+                    (response as ServerResponse).end(body);
+                } else if (body instanceof Stream) {
+                    body.pipe(response as ServerResponse);
+                } else if ('object' === typeof body) {
+                    // body: json
+                    body = JSON.stringify(body);
+                    if (!response.headersSent) {
+                        context.length = Buffer.byteLength(body);
+                    }
+                    response.end(body);
+                } else if ('number' === typeof body) {
+                    body = body.toString()
+                    context.type = 'text';
+                    context.length = Buffer.byteLength(body)
+                    response.end(body)
                 }
-                response.end(body);
             }
 
             // Handler hook response
@@ -179,7 +171,7 @@ export default class Server extends EventEmitter {
                 context.throw(404)
             }
         } catch (error) {
-           this.exception(response, error)
+            this.exception(response, error)
         }
     }
 
@@ -187,7 +179,7 @@ export default class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    private async exception(response: ServerResponse | Http2ServerResponse, error: Error) {
+    private exception(response: ServerResponse | Http2ServerResponse, error: Error) {
         let status: number;
 
         // If not number
@@ -200,8 +192,11 @@ export default class Server extends EventEmitter {
         if ('development' === this.env && !status) console.log(error)
 
         if (!response.finished) {
-            response.statusCode = status || 500;
-            (response as ServerResponse).end(statuses[status || 500]);
+            status = status || 500
+
+            const data = statuses[status]
+            response.setHeader('Content-Length', Buffer.byteLength(data))
+            ; (response as ServerResponse).end(data);
         }
     }
 

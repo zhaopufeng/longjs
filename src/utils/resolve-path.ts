@@ -9,7 +9,7 @@
  */
 
 import * as httpError from 'http-errors'
-import { posix, win32} from './path-is-absolute'
+import absolute from './path-is-absolute'
 import { join, normalize, resolve, sep } from 'path'
 
 const UP_PATH_REGEXP = /(?:^|[\\/])\.\.(?:[\\/]|$)/
@@ -41,12 +41,12 @@ export default function(rootPath: string, relativePath?: string) {
     }
 
     // containing NULL bytes is malicious
-    if (path.indexOf('\0') !== -1) {
+    if (!!~path.indexOf('\0')) {
         throw httpError(400, 'Malicious Path')
     }
 
     // path should never be absolute
-    if (posix(path) || win32(path)) {
+    if (absolute(path)) {
         throw httpError(400, 'Malicious Path')
     }
 

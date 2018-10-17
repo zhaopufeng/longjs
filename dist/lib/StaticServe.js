@@ -20,8 +20,9 @@ class StaticServe {
         assert(root, 'root directory is required to serve files');
         opts.root = path_1.resolve(root);
         if (opts.index !== false)
-            opts.index = opts.index || 'index.html';
+            this.opts.index = opts.index || 'index.html';
     }
+    // Run before controller runs
     async handler(ctx) {
         if (this.opts.defer)
             return;
@@ -36,13 +37,14 @@ class StaticServe {
             }
         }
     }
+    // Run after controller operation
     async deferHandler(ctx) {
         if (!this.opts.defer)
             return;
         if (ctx.method !== 'HEAD' && ctx.method !== 'GET')
             return;
         // response is already handled
-        if (ctx.body != null || ctx.status !== 404)
+        if (ctx.response.body != null || ctx.status === 404)
             return; // eslint-disable-line
         try {
             await send_1.default(ctx, ctx.path, this.opts);

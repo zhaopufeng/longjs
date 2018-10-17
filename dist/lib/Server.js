@@ -143,18 +143,19 @@ class Server {
                 }
             }
         }
-    }
-    /**
-     * Hook responsed
-     * @param { Server.Context } ctx
-     */
-    async responsed(ctx) {
         // Static responses
         if (!ctx.finished) {
             if (this.staticServe) {
                 await this.staticServe.deferHandler(ctx);
             }
         }
+    }
+    /**
+     * Hook responsed
+     * @param { Server.Context } ctx
+     */
+    async responsed(ctx) {
+        return;
     }
 }
 exports.Server = Server;

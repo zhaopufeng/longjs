@@ -85,10 +85,6 @@ class Server extends EventEmitter {
             if (typeof this.options.response === 'function') {
                 await this.options.response(context);
             }
-            // Handler hook responsed
-            if (typeof responsed === 'function') {
-                await responsed(context);
-            }
             // Reset session
             await session.reset(context);
             // Check context writable
@@ -111,32 +107,31 @@ class Server extends EventEmitter {
                 }
                 return response.end();
             }
-            // status body
-            if (null == body) {
-                body = context.message || String(code);
-                if (!response.headersSent) {
+            // responses
+            if (body) {
+                if (Buffer.isBuffer(body)) {
+                    response.end(body);
+                }
+                else if ('string' === typeof body) {
+                    response.end(body);
+                }
+                else if (body instanceof stream_1.Stream) {
+                    body.pipe(response);
+                }
+                else if ('object' === typeof body) {
+                    // body: json
+                    body = JSON.stringify(body);
+                    if (!response.headersSent) {
+                        context.length = Buffer.byteLength(body);
+                    }
+                    response.end(body);
+                }
+                else if ('number' === typeof body) {
+                    body = body.toString();
                     context.type = 'text';
                     context.length = Buffer.byteLength(body);
+                    response.end(body);
                 }
-                return response.end(body);
-            }
-            // responses
-            if (Buffer.isBuffer(body)) {
-                response.end(body);
-            }
-            else if ('string' === typeof body) {
-                response.end(body);
-            }
-            else if (body instanceof stream_1.Stream) {
-                body.pipe(response);
-            }
-            else {
-                // body: json
-                body = JSON.stringify(body);
-                if (!response.headersSent) {
-                    context.length = Buffer.byteLength(body);
-                }
-                response.end(body);
             }
             // Handler hook response
             if ('function' === typeof responsed) {
@@ -155,7 +150,7 @@ class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    async exception(response, error) {
+    exception(response, error) {
         let status;
         // If not number
         if (isNaN(error.message)) {
@@ -167,8 +162,10 @@ class Server extends EventEmitter {
         if ('development' === this.env && !status)
             console.log(error);
         if (!response.finished) {
-            response.statusCode = status || 500;
-            response.end(statuses[status || 500]);
+            status = status || 500;
+            const data = statuses[status];
+            response.setHeader('Content-Length', Buffer.byteLength(data));
+            response.end(data);
         }
     }
     /**

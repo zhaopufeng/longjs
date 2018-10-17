@@ -274,7 +274,7 @@ export class CreateResponse implements Core.Response {
             return;
         }
 
-         // buffer
+        // buffer
         if (Buffer.isBuffer(val)) {
             if (setType) this.type = 'bin';
             this.length = val.length;

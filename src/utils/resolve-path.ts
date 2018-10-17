@@ -46,7 +46,7 @@ export default function(rootPath: string, relativePath?: string) {
     }
 
     // path should never be absolute
-    if (absolute(path)) {
+    if (!absolute(path)) {
         throw httpError(400, 'Malicious Path')
     }
 

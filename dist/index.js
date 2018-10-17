@@ -138,7 +138,7 @@ class Server extends EventEmitter {
                 await responsed(context);
             }
             // Handler not found
-            if (!context.finished) {
+            if (!context.finished && body == null) {
                 context.throw(404);
             }
         }
@@ -165,6 +165,7 @@ class Server extends EventEmitter {
             status = status || 500;
             const data = statuses[status];
             response.setHeader('Content-Length', Buffer.byteLength(data));
+            response.statusCode = status;
             response.end(data);
         }
     }

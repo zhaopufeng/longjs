@@ -46,14 +46,8 @@ export default class Server extends EventEmitter {
      * Handler custom http proccess
      */
     public callback() {
-        let session: CreateSession;
-        if (this.configs.session) {
-            session = new CreateSession(this.configs.session)
-        } else {
-            session = new CreateSession()
-        }
         return (request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse) => {
-            this.start(request, response, session)
+            this.start(request, response, this.configs.session ? new CreateSession(this.configs.session) : new CreateSession())
         }
     }
 
@@ -84,94 +78,107 @@ export default class Server extends EventEmitter {
         try {
             // Create http/https context
             const context = this.createContext(request, response)
+
             // Get hooks
             const { beforeRequest, requested, beforeResponse, responsed } = this.options;
 
+            // Load session
             await session.create(context)
-            // Handler hook beforeRequest
-            if (typeof beforeRequest === 'function') {
-                await beforeRequest(context)
-            }
 
+            // Handler hook beforeRequest
+            if (typeof beforeRequest === 'function') await beforeRequest(context)
+
+            // Lood request body
             const createBody = new CreateBody(context, this.configs.bodyParser)
+            // Create body
             await createBody.create()
 
             // Handler hook requested
-            if (typeof requested === 'function') {
-                await requested(context)
-            }
+            if (typeof requested === 'function') await requested(context)
 
             // Handler hook beforeResponse
-            if (typeof beforeResponse === 'function') {
-                await beforeResponse(context)
-            }
+            if (typeof beforeResponse === 'function') await beforeResponse(context)
 
             // Handler hook response
-            if (typeof this.options.response === 'function') {
-                await this.options.response(context)
-            }
+            if (typeof this.options.response === 'function') await this.options.response(context)
 
             // Reset session
             await session.reset(context)
 
-            // Check context writable
-            if (!context.writable) return;
-
-            // Get response body
-            let body = context.response.body;
-
-            // check response statusCode
-            const code = context.status;
-
-            // ignore body
-            if (statuses.empty[code]) {
-                // strip headers
-                context.body = null;
-                return response.end();
-            }
-
-            // If request method is HEAD
-            if ('HEAD' === context.method) {
-                if (!response.headersSent && isJSON(body)) {
-                    context.length = Buffer.byteLength(JSON.stringify(body));
-                }
-                return response.end();
-            }
-
-            // responses
-            if (body) {
-                if (Buffer.isBuffer(body)) {
-                    (response as ServerResponse).end(body)
-                } else if ('string' === typeof body) {
-                    (response as ServerResponse).end(body);
-                } else if (body instanceof Stream) {
-                    body.pipe(response as ServerResponse);
-                } else if ('object' === typeof body) {
-                    // body: json
-                    body = JSON.stringify(body);
-                    if (!response.headersSent) {
-                        context.length = Buffer.byteLength(body);
-                    }
-                    response.end(body);
-                } else if ('number' === typeof body) {
-                    body = body.toString()
-                    context.type = 'text';
-                    context.length = Buffer.byteLength(body)
-                    response.end(body)
-                }
-            }
+            // Responses
+            await this.respond(context, response as ServerResponse)
 
             // Handler hook response
-            if ('function' === typeof responsed) {
-                await responsed(context)
+            if ('function' === typeof responsed) await responsed(context)
+
+            /**
+             * Handler not found
+             * 1. Response is not finished
+             * 2. Response is not headerSent
+             * 3. Response is writable
+             * 4. response body == null
+             */
+            if (!context.finished && !context.headerSent && context.writable && context.response.body == null) context.throw(404)
+
+        } catch (error) {
+            // Handler exception
+            this.exception(response, error)
+            this.emit('exception', error)
+        }
+    }
+
+    /**
+     * respond
+     * Application respond
+     */
+    private async respond(context: Core.Context, response: ServerResponse): Promise<any> {
+        // Check context writable
+        if (!context.writable) return;
+
+        // Get response body
+        let body = context.response.body;
+
+        // check response statusCode
+        const code = context.status;
+
+        // ignore body
+        if (statuses.empty[code]) {
+            // strip headers
+            context.body = null;
+            return response.end();
+        }
+
+        // If request method is HEAD
+        if ('HEAD' === context.method) {
+            if (!response.headersSent && isJSON(body)) {
+                context.length = Buffer.byteLength(JSON.stringify(body));
+            }
+            return response.end();
+        }
+
+        // responses
+        if (body) {
+            if (Buffer.isBuffer(body)) return response.end(body)
+
+            if (typeof body === 'string') return response.end(body)
+
+            if (body instanceof Stream) return body.pipe(response)
+
+            if (typeof body === 'object') {
+                // body: json
+                body = JSON.stringify(body);
+                if (!response.headersSent) {
+                    context.length = Buffer.byteLength(body);
+                }
+                return response.end(body);
             }
 
-            // Handler not found
-            if (!context.finished && body == null) {
-                context.throw(404)
+            if ('number' === typeof body) {
+                body = body.toString()
+                context.type = 'text';
+                context.length = Buffer.byteLength(body)
+                return response.end(body)
             }
-        } catch (error) {
-            this.exception(response, error)
         }
     }
 

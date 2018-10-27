@@ -48,8 +48,10 @@ export default class Server extends EventEmitter {
      * Handler custom http proccess
      */
     public callback() {
+        let session: CreateSession;
+        this.configs.session ? session =  new CreateSession(this.configs.session) : session = new CreateSession()
         return (request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse) => {
-            this.start(request, response, this.configs.session ? new CreateSession(this.configs.session) : new CreateSession())
+            this.start(request, response, session)
         }
     }
 

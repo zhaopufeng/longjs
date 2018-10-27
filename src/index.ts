@@ -32,8 +32,7 @@ export default class Server extends EventEmitter {
     public silent: boolean
     public keys: Keygrip | string[] = ['long:sess']
     public configs: Core.Configs = {}
-    private _beforeRequest: Core.HttpHandle
-    private _response: Core.HttpHandle
+    public _handleResponse: Core.HttpHandle
 
     /**
      * constructor
@@ -74,12 +73,8 @@ export default class Server extends EventEmitter {
         return this;
     }
 
-    public beforeRequest(callback: Core.HttpHandle) {
-        this._beforeRequest = callback
-    }
-
-    public response(callback: Core.HttpHandle) {
-        this._response = callback
+    public handleResponse(callback: Core.HttpHandle) {
+        this._handleResponse = callback
     }
 
     /**
@@ -94,18 +89,16 @@ export default class Server extends EventEmitter {
             // Load session
             await session.create(context)
 
-            const { _beforeRequest, _response } = this
+            const { _handleResponse } = this
 
-            // Handler hook beforeRequest
-            if (typeof _beforeRequest === 'function') await _beforeRequest(context)
-
-            // Lood request body
+            // Load request body
             const createBody = new CreateBody(context, this.configs.bodyParser)
+
             // Create body
             await createBody.create()
 
             // Handler hook response
-            if (typeof _response === 'function') await _response(context)
+            if (typeof _handleResponse === 'function') await _handleResponse(context)
 
             // Reset session
             await session.reset(context)

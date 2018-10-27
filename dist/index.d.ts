@@ -25,8 +25,7 @@ export default class Server extends EventEmitter {
     silent: boolean;
     keys: Keygrip | string[];
     configs: Core.Configs;
-    private _beforeRequest;
-    private _response;
+    _handleResponse: Core.HttpHandle;
     /**
      * constructor
      */
@@ -49,8 +48,7 @@ export default class Server extends EventEmitter {
     listen(options: ListenOptions, listeningListener?: () => void): this;
     listen(handle: any, backlog?: number, listeningListener?: () => void): this;
     listen(handle: any, listeningListener?: () => void): this;
-    beforeRequest(callback: Core.HttpHandle): void;
-    response(callback: Core.HttpHandle): void;
+    handleResponse(callback: Core.HttpHandle): void;
     /**
      * start
      * Application start method

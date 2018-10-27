@@ -51,11 +51,8 @@ class Server extends EventEmitter {
             .listen(...args);
         return this;
     }
-    beforeRequest(callback) {
-        this._beforeRequest = callback;
-    }
-    response(callback) {
-        this._response = callback;
+    handleResponse(callback) {
+        this._handleResponse = callback;
     }
     /**
      * start
@@ -67,17 +64,14 @@ class Server extends EventEmitter {
             const context = this.createContext(request, response);
             // Load session
             await session.create(context);
-            const { _beforeRequest, _response } = this;
-            // Handler hook beforeRequest
-            if (typeof _beforeRequest === 'function')
-                await _beforeRequest(context);
-            // Lood request body
+            const { _handleResponse } = this;
+            // Load request body
             const createBody = new CreateBody_1.CreateBody(context, this.configs.bodyParser);
             // Create body
             await createBody.create();
             // Handler hook response
-            if (typeof _response === 'function')
-                await _response(context);
+            if (typeof _handleResponse === 'function')
+                await _handleResponse(context);
             // Reset session
             await session.reset(context);
             // Responses

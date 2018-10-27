@@ -239,11 +239,6 @@ export namespace Core {
 
     export interface Options {
         configs?: Configs;
-        beforeRequest?: Hook;
-        requested?: Hook;
-        beforeResponse?: Hook;
-        response?: Hook;
-        responsed?: Hook;
     }
 
     export interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {

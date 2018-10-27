@@ -25,6 +25,8 @@ export default class Server extends EventEmitter {
     silent: boolean;
     keys: Keygrip | string[];
     configs: Core.Configs;
+    private _beforeRequest;
+    private _response;
     /**
      * constructor
      */
@@ -47,11 +49,18 @@ export default class Server extends EventEmitter {
     listen(options: ListenOptions, listeningListener?: () => void): this;
     listen(handle: any, backlog?: number, listeningListener?: () => void): this;
     listen(handle: any, listeningListener?: () => void): this;
+    beforeRequest(callback: Core.HttpHandle): void;
+    response(callback: Core.HttpHandle): void;
     /**
      * start
      * Application start method
      */
     private start;
+    /**
+     * respond
+     * Application respond
+     */
+    private respond;
     /**
      * exception
      * Exception handler method
@@ -64,6 +73,9 @@ export default class Server extends EventEmitter {
     protected createContext(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse): Core.Context;
 }
 export declare namespace Core {
+    interface HttpHandle {
+        (ctx?: Context): Promise<any>;
+    }
     interface Configs {
         bodyParser?: CreateBody.Options;
         session?: SessionOpts;

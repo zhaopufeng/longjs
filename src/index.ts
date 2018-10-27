@@ -32,6 +32,8 @@ export default class Server extends EventEmitter {
     public silent: boolean
     public keys: Keygrip | string[] = ['long:sess']
     public configs: Core.Configs = {}
+    private _beforeRequest: Core.HttpHandle
+    private _response: Core.HttpHandle
 
     /**
      * constructor
@@ -70,6 +72,14 @@ export default class Server extends EventEmitter {
         return this;
     }
 
+    public beforeRequest(callback: Core.HttpHandle) {
+        this._beforeRequest = callback
+    }
+
+    public response(callback: Core.HttpHandle) {
+        this._response = callback
+    }
+
     /**
      * start
      * Application start method
@@ -79,37 +89,27 @@ export default class Server extends EventEmitter {
             // Create http/https context
             const context = this.createContext(request, response)
 
-            // Get hooks
-            const { beforeRequest, requested, beforeResponse, responsed } = this.options;
-
             // Load session
             await session.create(context)
 
+            const { _beforeRequest, _response } = this
+
             // Handler hook beforeRequest
-            if (typeof beforeRequest === 'function') await beforeRequest(context)
+            if (typeof _beforeRequest === 'function') await _beforeRequest(context)
 
             // Lood request body
             const createBody = new CreateBody(context, this.configs.bodyParser)
             // Create body
             await createBody.create()
 
-            // Handler hook requested
-            if (typeof requested === 'function') await requested(context)
-
-            // Handler hook beforeResponse
-            if (typeof beforeResponse === 'function') await beforeResponse(context)
-
             // Handler hook response
-            if (typeof this.options.response === 'function') await this.options.response(context)
+            if (typeof _response === 'function') await _response(context)
 
             // Reset session
             await session.reset(context)
 
             // Responses
             await this.respond(context, response as ServerResponse)
-
-            // Handler hook response
-            if ('function' === typeof responsed) await responsed(context)
 
             /**
              * Handler not found
@@ -227,6 +227,10 @@ export default class Server extends EventEmitter {
 }
 
 export namespace Core {
+
+    export interface HttpHandle {
+        (ctx?: Context): Promise<any>
+    }
 
     export interface Configs {
         bodyParser?: CreateBody.Options;

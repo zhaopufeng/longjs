@@ -40,8 +40,10 @@ class Server extends EventEmitter {
      * Handler custom http proccess
      */
     callback() {
+        let session;
+        this.configs.session ? session = new CreateSession_1.CreateSession(this.configs.session) : session = new CreateSession_1.CreateSession();
         return (request, response) => {
-            this.start(request, response, this.configs.session ? new CreateSession_1.CreateSession(this.configs.session) : new CreateSession_1.CreateSession());
+            this.start(request, response, session);
         };
     }
     listen(...args) {

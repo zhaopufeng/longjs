@@ -3,16 +3,18 @@ import { Core } from '@longjs/core';
 
 @Controller('/')
 export class IndexController {
-    @Session public sess: Core.Session
+    @Session public sess: any
     @Database('users') public db: Server.Database
 
     @Get
     public async index() {
-        this.sess.user = 'xx'
+        console.log(this.sess)
+        return this.sess.user
     }
 
     @Get('/set/:name')
     public async set(@Param(['name']) pm: any) {
+        console.log(pm)
         this.sess.user = pm.name
     }
 }

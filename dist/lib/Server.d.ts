@@ -13,7 +13,7 @@ import * as Knex from 'knex';
 import * as pathToRegexp from 'path-to-regexp';
 export declare class Server {
     options: Server.Options;
-    core: CoreClass;
+    app: CoreClass;
     listend: boolean;
     controllers: Server.Controller[];
     staticServe: StaticServe;
@@ -37,11 +37,6 @@ export declare class Server {
      * @param { Server.Context } ctx
      */
     private beforeResponse;
-    /**
-     * Hook responsed
-     * @param { Server.Context } ctx
-     */
-    private responsed;
 }
 export declare namespace Server {
     interface Options {

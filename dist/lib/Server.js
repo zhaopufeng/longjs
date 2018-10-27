@@ -20,18 +20,15 @@ class Server {
         // Create static serve
         if (configs.staticServeOpts)
             this.staticServe = new StaticServe_1.StaticServe(configs.staticServeOpts);
-        let { beforeRequest, beforeResponse, responsed } = this;
+        let { beforeRequest, beforeResponse } = this;
         // Bind hooks
         beforeRequest = beforeRequest.bind(this);
         beforeResponse = beforeResponse.bind(this);
-        responsed = responsed.bind(this);
         // Init Core
-        this.core = new core_1.default({
-            configs: options.configs,
-            beforeRequest,
-            beforeResponse,
-            responsed
-        });
+        this.app = new core_1.default({ configs: options.configs });
+        const { app } = this;
+        app.beforeRequest(beforeRequest.bind(this));
+        app.response(beforeResponse.bind(this));
         // Assert is port
         if (options.port) {
             this.listen(options.port);
@@ -51,35 +48,35 @@ class Server {
     }
     // Get core env
     get env() {
-        return this.core.env;
+        return this.app.env;
     }
     // Set core env
     set env(env) {
-        this.core.env = env;
+        this.app.env = env;
     }
     // Set core subdomainOffset
     set subdomainOffset(offset) {
-        this.core.subdomainOffset = offset;
+        this.app.subdomainOffset = offset;
     }
     // Get core subdomainOffset
     get subdomainOffset() {
-        return this.core.subdomainOffset;
+        return this.app.subdomainOffset;
     }
     // Get core proxy state
     get proxy() {
-        return this.core.proxy;
+        return this.app.proxy;
     }
     // Set core proxy state
     set proxy(proxy) {
-        this.core.proxy = proxy;
+        this.app.proxy = proxy;
     }
     // Get core keys
     get keys() {
-        return this.core.keys;
+        return this.app.keys;
     }
     // Set core keys
     set keys(keys) {
-        this.core.keys = keys;
+        this.app.keys = keys;
     }
     /**
      * http/https listen port
@@ -91,12 +88,12 @@ class Server {
         // listen https
         if (this.options.https) {
             https
-                .createServer(this.options.https, this.core.callback())
+                .createServer(this.options.https, this.app.callback())
                 .listen(port || 3000);
             this.listend = true;
         }
         else { // http
-            this.core.listen(port || 3000);
+            this.app.listen(port || 3000);
             this.listend = true;
         }
     }
@@ -149,13 +146,6 @@ class Server {
                 await this.staticServe.deferHandler(ctx);
             }
         }
-    }
-    /**
-     * Hook responsed
-     * @param { Server.Context } ctx
-     */
-    async responsed(ctx) {
-        return;
     }
 }
 exports.Server = Server;

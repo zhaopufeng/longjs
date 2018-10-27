@@ -13,7 +13,7 @@ import * as pathToRegexp from 'path-to-regexp'
 
 export class Server {
     // core application
-    public core: CoreClass;
+    public app: CoreClass;
     // https/http listen state
     public listend: boolean;
     // controllers
@@ -26,20 +26,18 @@ export class Server {
         const configs = options.configs = options.configs || {}
         // Create static serve
         if (configs.staticServeOpts) this.staticServe = new StaticServe(configs.staticServeOpts)
-        let { beforeRequest, beforeResponse, responsed } = this
+        let { beforeRequest, beforeResponse } = this
 
         // Bind hooks
         beforeRequest = beforeRequest.bind(this)
         beforeResponse = beforeResponse.bind(this)
-        responsed = responsed.bind(this)
 
         // Init Core
-        this.core = new CoreClass({
-            configs: options.configs,
-            beforeRequest,
-            beforeResponse,
-            responsed
-        })
+        this.app = new CoreClass({ configs: options.configs })
+        const { app } = this
+
+        app.beforeRequest(beforeRequest.bind(this))
+        app.response(beforeResponse.bind(this))
 
         // Assert is port
         if (options.port) {
@@ -64,41 +62,41 @@ export class Server {
 
     // Get core env
     public get env() {
-        return this.core.env
+        return this.app.env
     }
 
     // Set core env
     public set env(env: Core.Env) {
-        this.core.env = env
+        this.app.env = env
     }
 
     // Set core subdomainOffset
     public set subdomainOffset(offset: number) {
-        this.core.subdomainOffset = offset
+        this.app.subdomainOffset = offset
     }
     // Get core subdomainOffset
     public get subdomainOffset() {
-        return this.core.subdomainOffset;
+        return this.app.subdomainOffset;
     }
 
     // Get core proxy state
     public get proxy() {
-        return this.core.proxy
+        return this.app.proxy
     }
 
     // Set core proxy state
     public set proxy(proxy: boolean) {
-        this.core.proxy = proxy
+        this.app.proxy = proxy
     }
 
     // Get core keys
     public get keys() {
-        return this.core.keys as any
+        return this.app.keys as any
     }
 
     // Set core keys
     public set keys(keys: string[]) {
-        this.core.keys = keys
+        this.app.keys = keys
     }
 
     /**
@@ -110,11 +108,11 @@ export class Server {
         // listen https
         if (this.options.https) {
             https
-                .createServer(this.options.https, this.core.callback())
+                .createServer(this.options.https, this.app.callback())
                 .listen(port || 3000)
             this.listend = true;
         } else { // http
-            this.core.listen(port || 3000)
+            this.app.listen(port || 3000)
             this.listend = true;
         }
     }
@@ -172,14 +170,6 @@ export class Server {
                 await this.staticServe.deferHandler(ctx)
             }
         }
-    }
-
-    /**
-     * Hook responsed
-     * @param { Server.Context } ctx
-     */
-    private async responsed(ctx: Server.Context) {
-        return;
     }
 }
 

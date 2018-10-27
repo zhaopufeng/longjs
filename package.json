@@ -1,6 +1,6 @@
 {
   "name": "@longjs/server",
-  "version": "1.0.0-beta.0.7",
+  "version": "1.0.0-beta.0.8",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -23,7 +23,6 @@
     "@types/ioredis": "^4.0.3",
     "@types/knex": "^0.14.26",
     "@types/mz": "^0.0.32",
-    "@types/reflect-metadata": "^0.1.0",
     "chalk": "^2.4.1",
     "ioredis": "^4.0.2",
     "knex": "^0.15.2",

@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@longjs/redis-storage": "^1.0.0-beta.0.4",
-    "@longjs/server": "^1.0.0-beta.0.8",
+    "@longjs/server": "^1.0.0-beta.0.9",
     "mysql": "^2.16.0"
   }
 }

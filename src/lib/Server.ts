@@ -26,18 +26,13 @@ export class Server {
         const configs = options.configs = options.configs || {}
         // Create static serve
         if (configs.staticServeOpts) this.staticServe = new StaticServe(configs.staticServeOpts)
-        let { beforeRequest, beforeResponse } = this
-
-        // Bind hooks
-        beforeRequest = beforeRequest.bind(this)
-        beforeResponse = beforeResponse.bind(this)
+        let { handleResponse } = this
 
         // Init Core
         this.app = new CoreClass({ configs: options.configs })
         const { app } = this
 
-        app.beforeRequest(beforeRequest.bind(this))
-        app.response(beforeResponse.bind(this))
+        app.handleResponse(handleResponse.bind(this))
 
         // Assert is port
         if (options.port) {
@@ -118,13 +113,14 @@ export class Server {
     }
 
     /**
-     * Hook beforeRequest
+     * handleResponse
      * @param { Server.Context } ctx
      */
-    private async beforeRequest(ctx: Server.Context) {
+
+    private async handleResponse(ctx: Server.Context) {
         // Static responses
         if (this.staticServe) {
-           await this.staticServe.handler(ctx)
+            await this.staticServe.handler(ctx)
         }
 
         if (!ctx.finished) {
@@ -138,32 +134,25 @@ export class Server {
             // New Controller
             for (let item of ctx.controllers) {
                 // Register services
-                const { injectServices, injectPropertys, injectDatabases  } = item.target.$options
+                const { injectServices, injectPropertys, injectDatabases } = item.target.$options
                 const { configs } = this.options
                 injectDatabases(configs.database)
                 const services = injectServices(ctx, configs)
                 injectPropertys(ctx)
                 item.controller = new item.target(...services)
-            }
-        }
-    }
 
-    /**
-     * Hook beforeResponse
-     * @param { Server.Context } ctx
-     */
-    private async beforeResponse(ctx: Server.Context) {
-        for (let item of ctx.controllers) {
-            for (let handler of item.handlers) {
-                const { injectParameters } = item.target.$options
-                const parameters =  injectParameters(ctx, handler.propertyKey)
-                let data = await item.controller[handler.propertyKey](...parameters)
-                if (data) {
-                    ctx.status = 200
-                    ctx.body = data
+                for (let handler of item.handlers) {
+                    const { injectParameters } = item.target.$options
+                    const parameters = injectParameters(ctx, handler.propertyKey)
+                    let data = await item.controller[handler.propertyKey](...parameters)
+                    if (data) {
+                        ctx.status = 200
+                        ctx.body = data
+                    }
                 }
             }
         }
+
         // Static responses
         if (!ctx.finished) {
             if (this.staticServe) {
@@ -171,6 +160,7 @@ export class Server {
             }
         }
     }
+
 }
 
 export namespace Server {
@@ -227,12 +217,12 @@ export namespace Server {
         parameters?: ControllerOptionsParameter;
         databases?: ControllerOptionsDatabase;
         handlers?: ControllerHandler;
-        injectServices?: (ctx: Context, configs: Configs) => any [];
+        injectServices?: (ctx: Context, configs: Configs) => any[];
         injectPropertys?: (ctx: Context) => void;
         injectDatabases?: (config: Server.ServerDatabaseOptions) => void;
         injectParameters?: (ctx: Context, propertyKey: string) => any;
         baseRoute?: string;
-        services?: Array<{ new (...args: any[]): any }>;
+        services?: Array<{ new(...args: any[]): any }>;
         target?: Controller;
         match?: (ctx: Core.Context) => any;
     }
@@ -252,7 +242,7 @@ export namespace Server {
     }
 
     export interface ControllerClass extends Controller {
-        new (...args: any[]): Controller;
+        new(...args: any[]): Controller;
     }
 
     export interface Context extends Core.Context {

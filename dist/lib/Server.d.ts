@@ -28,15 +28,10 @@ export declare class Server {
      */
     listen(port: number): void;
     /**
-     * Hook beforeRequest
+     * handleResponse
      * @param { Server.Context } ctx
      */
-    private beforeRequest;
-    /**
-     * Hook beforeResponse
-     * @param { Server.Context } ctx
-     */
-    private beforeResponse;
+    private handleResponse;
 }
 export declare namespace Server {
     interface Options {

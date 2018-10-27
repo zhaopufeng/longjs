@@ -20,15 +20,11 @@ class Server {
         // Create static serve
         if (configs.staticServeOpts)
             this.staticServe = new StaticServe_1.StaticServe(configs.staticServeOpts);
-        let { beforeRequest, beforeResponse } = this;
-        // Bind hooks
-        beforeRequest = beforeRequest.bind(this);
-        beforeResponse = beforeResponse.bind(this);
+        let { handleResponse } = this;
         // Init Core
         this.app = new core_1.default({ configs: options.configs });
         const { app } = this;
-        app.beforeRequest(beforeRequest.bind(this));
-        app.response(beforeResponse.bind(this));
+        app.handleResponse(handleResponse.bind(this));
         // Assert is port
         if (options.port) {
             this.listen(options.port);
@@ -98,10 +94,10 @@ class Server {
         }
     }
     /**
-     * Hook beforeRequest
+     * handleResponse
      * @param { Server.Context } ctx
      */
-    async beforeRequest(ctx) {
+    async handleResponse(ctx) {
         // Static responses
         if (this.staticServe) {
             await this.staticServe.handler(ctx);
@@ -121,22 +117,14 @@ class Server {
                 const services = injectServices(ctx, configs);
                 injectPropertys(ctx);
                 item.controller = new item.target(...services);
-            }
-        }
-    }
-    /**
-     * Hook beforeResponse
-     * @param { Server.Context } ctx
-     */
-    async beforeResponse(ctx) {
-        for (let item of ctx.controllers) {
-            for (let handler of item.handlers) {
-                const { injectParameters } = item.target.$options;
-                const parameters = injectParameters(ctx, handler.propertyKey);
-                let data = await item.controller[handler.propertyKey](...parameters);
-                if (data) {
-                    ctx.status = 200;
-                    ctx.body = data;
+                for (let handler of item.handlers) {
+                    const { injectParameters } = item.target.$options;
+                    const parameters = injectParameters(ctx, handler.propertyKey);
+                    let data = await item.controller[handler.propertyKey](...parameters);
+                    if (data) {
+                        ctx.status = 200;
+                        ctx.body = data;
+                    }
                 }
             }
         }

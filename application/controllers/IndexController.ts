@@ -1,20 +1,21 @@
-import { Controller, Get, Session, Param, Database, Server } from '@longjs/server'
-import { Core } from '@longjs/core';
+import { Controller, Get, Session, Database, Server, Header } from '@longjs/server'
 
 @Controller('/')
 export class IndexController {
-    @Session public sess: any
+    @Session public session: any
     @Database('users') public db: Server.Database
+    @Header public headers: any
 
     @Get
-    public async index() {
-        console.log(this.sess)
-        return this.sess.user
+    async index() {
+        if (this.session.user) {
+            return this.session.user
+        }
+        return 'xx'
     }
 
-    @Get('/set/:name')
-    public async set(@Param(['name']) pm: any) {
-        console.log(pm)
-        this.sess.user = pm.name
+    @Get
+    async set() {
+        this.session.user = 100
     }
 }

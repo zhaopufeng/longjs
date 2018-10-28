@@ -4,6 +4,7 @@ import { resolve } from 'path'
 
 export const configs: Server.Configs = {
     session: {
+        store: new RedisStorage(),   // 启用redis
         key: 'sess:id',              // cookie
         maxAge: 86400000,            // maxAge
         overwrite: true,             // overwrite

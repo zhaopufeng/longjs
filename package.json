@@ -8,8 +8,9 @@
     "start": "ts-node --project ./tsconfig.json ./application/app.ts"
   },
   "dependencies": {
+    "@longjs/decorators": "^1.0.0-beta.0.2",
     "@longjs/redis-storage": "^1.0.0-beta.0.4",
-    "@longjs/server": "^1.0.0-beta.1.0",
+    "@longjs/server": "^1.0.0-beta.1.2",
     "mysql": "^2.16.0"
   }
 }

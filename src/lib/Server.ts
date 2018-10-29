@@ -25,7 +25,7 @@ export class Server {
         // Map controllers
         if (Array.isArray(options.controllers)) {
             const controllers = this.controllers = options.controllers
-            controllers.forEach((Controller) => {
+            controllers.forEach((Controller: Controller) => {
                 const { routes, route } = Controller.prototype.$options
                 if (routes) {
                     Object.keys(routes).forEach((key: string) => {
@@ -239,7 +239,7 @@ export namespace Server {
         proxy?: boolean;
         keys?: string[];
         env?: Core.Env;
-        controllers?: Controller[];
+        controllers?: Array<{new (...args: any[]): any}>;
         configs?: Configs;
         routeStrict?: boolean;
     }

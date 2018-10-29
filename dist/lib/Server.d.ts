@@ -40,7 +40,9 @@ export declare namespace Server {
         proxy?: boolean;
         keys?: string[];
         env?: Core.Env;
-        controllers?: Controller[];
+        controllers?: Array<{
+            new (...args: any[]): any;
+        }>;
         configs?: Configs;
         routeStrict?: boolean;
     }

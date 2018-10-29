@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/server": "^1.0.0-beta.1.4"
+    "@longjs/server": "^1.0.0-beta.1.5"
   },
   "dependencies": {
     "knex": "^0.15.2"

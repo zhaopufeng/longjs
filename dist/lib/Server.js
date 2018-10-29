@@ -10,12 +10,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@longjs/core");
 const StaticServe_1 = require("./StaticServe");
 const https = require("https");
+const pathToRegExp = require("path-to-regexp");
 class Server {
     constructor(options) {
         this.options = options;
-        if (!Array.isArray(options.controllers))
-            return;
-        this.controllers = options.controllers;
+        // Map controllers
+        if (Array.isArray(options.controllers)) {
+            const controllers = this.controllers = options.controllers;
+            controllers.forEach((Controller) => {
+                const { routes, route, metadatas } = Controller.prototype.$options;
+                // Map metadata
+                Controller.prototype.$options.metadatas = metadatas.map((K) => {
+                    return new K();
+                });
+                if (routes) {
+                    Object.keys(routes).forEach((key) => {
+                        if (Array.isArray(routes[key])) {
+                            routes[key].forEach((iRoute) => {
+                                iRoute.keys = [];
+                                iRoute.routePath = (route + iRoute.routePath).replace(/[\/]{2,}/g, '/');
+                                iRoute.RegExp = pathToRegExp(iRoute.routePath, iRoute.keys, {
+                                    strict: options.routeStrict
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        }
         const configs = options.configs = options.configs || {};
         // Create static serve
         if (configs.staticServeOpts)
@@ -103,27 +125,68 @@ class Server {
             await this.staticServe.handler(ctx);
         }
         if (!ctx.finished) {
-            ctx.routes = [];
-            // Handler routes
-            this.controllers.forEach((Controller) => {
-                Controller.$options.match(ctx);
-            });
-            // New Controller
-            for (let item of ctx.controllers) {
-                // Register services
-                const { injectServices, injectPropertys, injectDatabases } = item.target.$options;
-                const { configs } = this.options;
-                injectDatabases(configs.database);
-                const services = injectServices(ctx, configs);
-                injectPropertys(ctx);
-                item.controller = new item.target(...services);
-                for (let handler of item.handlers) {
-                    const { injectParameters } = item.target.$options;
-                    const parameters = injectParameters(ctx, handler.propertyKey);
-                    let data = await item.controller[handler.propertyKey](...parameters);
-                    if (data) {
-                        ctx.status = 200;
-                        ctx.body = data;
+            const { controllers } = this;
+            const { path, method } = ctx;
+            // Map controllers
+            for (let Controller of controllers) {
+                const { routes, metadatas, parameters, propertys, methods } = Controller.prototype.$options;
+                const matchRoutes = routes[method];
+                // Check matchRoutes is Array
+                if (Array.isArray(matchRoutes)) {
+                    // Merge routes
+                    if (Array.isArray(routes['ALL']))
+                        matchRoutes.push(...routes['ALL']);
+                    const matches = matchRoutes.filter((matchRoute) => {
+                        return matchRoute.RegExp.test(path);
+                    });
+                    // matches routes
+                    if (matches.length > 0) {
+                        // Inject propertys
+                        if (propertys) {
+                            Object.keys(propertys).forEach((key) => {
+                                const property = propertys[key];
+                                const { handler, arg } = property;
+                                Controller.prototype[key] = handler(ctx, arg);
+                            });
+                        }
+                        if (methods) {
+                            Object.keys(methods).forEach((key) => {
+                                const method = methods[key];
+                                method.handler(ctx, method.options);
+                            });
+                        }
+                        // new Controller
+                        const instance = new Controller(...metadatas);
+                        // Map mathces route
+                        for (let matchRoute of matches) {
+                            if (!ctx.finished && !ctx.headerSent) {
+                                const { keys, RegExp, propertyKey } = matchRoute;
+                                // Match path params
+                                keys.forEach((item, index) => {
+                                    const { name } = item;
+                                    const params = RegExp.exec(path);
+                                    ctx.params[name] = params[index + 1];
+                                });
+                                // Inject parameters
+                                let injectParameters = [];
+                                if (parameters) {
+                                    const parameter = parameters[propertyKey];
+                                    if (parameter) {
+                                        injectParameters = parameters[propertyKey].map((parameter) => {
+                                            if (parameter.arg) {
+                                                return parameter.handler(ctx, parameter.arg);
+                                            }
+                                            parameter.handler(ctx);
+                                        });
+                                    }
+                                }
+                                // Run response handler
+                                const data = await instance[propertyKey](...injectParameters);
+                                if (data && ctx.writable) {
+                                    ctx.body = data;
+                                }
+                            }
+                        }
                     }
                 }
             }

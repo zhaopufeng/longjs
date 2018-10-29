@@ -7,7 +7,9 @@
  */
 
 import 'reflect-metadata'
+import chalk from 'chalk'
 import { Server } from '..';
+import * as Knex from 'knex'
 import * as pathToRegExp from 'path-to-regexp'
 
 interface Options<T = any> {
@@ -70,6 +72,7 @@ export interface Controller {
 type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 type ClassDecoratorCallback = (options: ControllerOptions) => void;
 type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
+type PropertyDecoratorType = 'query' | 'body' | 'session' | 'files' | 'params' | 'header' | 'headers' | 'request' | 'response';
 type ParameterDecoratorCallback = (ctx: Server.Context, arg: any) => any;
 type PropertyDecoratorCallback = (ctx: Server.Context, arg?: any) => any;
 type MethodDecoratorCallback = (ctx: Server.Context, options: Methods) => void;
@@ -363,4 +366,70 @@ export function createMethodDecorator<T = any>(callback: MethodDecoratorCallback
         }
     }
     return decorator
+}
+
+/* RequestMethodDecorators Examples ***********************************************************************************/
+
+/**
+ * RequestMethodDecorators
+ * Get
+ */
+export const Get = createRequestDecorator<string>('GET')
+
+/**
+ * RequestMethodDecorators
+ * All
+ */
+export const All = createRequestDecorator<string>('ALL')
+
+/**
+ * RequestMethodDecorators
+ * Delete
+ */
+export const Delete = createRequestDecorator<string>('DELETE')
+
+/**
+ * RequestMethodDecorators
+ * Head
+ */
+export const Head = createRequestDecorator<string>('HEAD')
+
+/**
+ * RequestMethodDecorators
+ * Options
+ */
+export const Options = createRequestDecorator<string>('OPTIONS')
+
+/**
+ * RequestMethodDecorators
+ * Patch
+ */
+export const Patch = createRequestDecorator<string>('PATCH')
+
+/**
+ * RequestMethodDecorators
+ * Post
+ */
+export const Post = createRequestDecorator<string>('POST')
+
+/**
+ * RequestMethodDecorators
+ * Put
+ */
+export const Put = createRequestDecorator<string>('PUT')
+
+/* ClassDecorator Examples ***********************************************************************************/
+
+/**
+ * Controller Decorator
+ * @param path
+ */
+export function Controller(path: string): ClassDecorator {
+    return createClassDecorator((options: ControllerOptions) => {
+        const { target, routes } = options
+        // Set options metadata
+        options.metadatas = Reflect.getMetadata('design:paramtypes', target) || []
+        // Set options route root path
+        options.route = (path + '/').replace(/[\/]{2,}/g, '/')
+    })
 }

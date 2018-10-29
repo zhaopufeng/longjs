@@ -19,13 +19,9 @@
   },
   "repository": "ranyunlong/longjs",
   "dependencies": {
-    "@longjs/core": "^1.0.0-beta.2.0",
-    "@types/ioredis": "^4.0.3",
+    "@longjs/core": "^1.0.0-beta.2.1",
     "@types/knex": "^0.14.26",
     "@types/mz": "^0.0.32",
-    "chalk": "^2.4.1",
-    "ioredis": "^4.0.2",
-    "knex": "^0.15.2",
     "mz": "^2.7.0",
     "path-to-regexp": "^2.4.0",
     "reflect-metadata": "^0.1.12"

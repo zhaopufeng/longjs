@@ -8,448 +8,284 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
-const chalk_1 = require("chalk");
-const Knex = require("knex");
-const pathToRegExp = require("path-to-regexp");
 /**
- * 自定义指令方法
- * @param callback 回调函数 返回核心的options选项
- * @param Controller 可选自定义装饰器获取到的 构造函数
+ * createClassDecorator
+ * 创建类装饰器方法
  */
-function createDecorator(callback, Controller) {
-    function decorator(...args) {
-        if (args.length === 1) { // 只有一个参数时是类装饰器 否则是其他类型装饰器
-            const [target] = args;
-            const meta = Reflect.getMetadata('design:paramtypes', target) || [];
-            const options = target.prototype.$options = target.prototype.$options || {};
-            if (options.services) {
-                options.services = [...options.services, ...meta];
-            }
-            else {
-                options.services = meta;
-            }
-            target.prototype.$options = {
-                propertys: options.propertys || {},
-                handlers: options.handlers || {},
-                services: options.services,
-                parameters: options.parameters || {},
-                databases: options.databases || {},
-                target: target
-            };
-            callback(target.prototype.$options);
-        }
-        else {
-            const [target, propertyKey, descriptor] = args;
-            const options = target.$options = target.$options || {};
-            target.$options = {
-                propertys: options.propertys || {},
-                handlers: options.handlers || {},
-                parameters: options.parameters || {},
-                databases: options.databases || {}
-            };
-            callback(target.$options, propertyKey, descriptor);
-        }
-    }
-    if (!Controller) {
-        return decorator;
-    }
-    else {
-        const meta = Reflect.getMetadata('design:paramtypes', Controller);
-        if (Controller.prototype) {
-            const options = Controller.prototype.$options;
-            if (options.services) {
-                options.services = [...options.services, ...meta];
-            }
-            else {
-                options.services = meta;
-            }
-            Controller.prototype.$options = options || {};
-            Controller.prototype.$options = {
-                propertys: options.propertys || {},
-                handlers: options.handlers || {},
-                services: options.services,
-                parameters: options.parameters || {},
-                databases: options.databases || {}
-            };
-            callback(Controller.prototype.$options);
-        }
-        else {
-            Controller.$options = Controller.$options || {};
-            const options = Controller.$options;
-            Controller.$options = {
-                propertys: options.propertys || {},
-                handlers: options.handlers || {},
-                services: options.services || [],
-                parameters: options.parameters || {},
-                databases: options.databases || {}
-            };
-            callback(Controller.$options);
-        }
-    }
+function createClassDecorator(callback) {
+    return (target) => {
+        // Get options
+        let options = target.prototype.$options || {};
+        // Check options target is defined
+        if (!options.target)
+            options.target = target;
+        // Run callback
+        callback(options);
+        // Set controller route
+        const { route, metadatas } = options;
+        if (route)
+            options.route = route;
+        // Set metadata
+        if (metadatas)
+            options.metadatas = metadatas;
+        // Set options
+        target.prototype.$options = options;
+    };
 }
-exports.createDecorator = createDecorator;
+exports.createClassDecorator = createClassDecorator;
 /**
- * PropertyDecorator
- * Files
- *
- * Examples
- * ```
- * ```
- */
-function Controller(path) {
-    return createDecorator((options) => {
-        const baseRoute = options.baseRoute = (path + '/').replace(/[\/]{2,}/g, '/');
-        options.target.$options = options;
-        const handlers = options.handlers;
-        // Check controller default handler
-        if (typeof options.target.prototype.index === 'function') {
-            if (handlers['/index']) {
-                handlers[baseRoute] = JSON.parse(JSON.stringify(handlers['/index']));
-            }
-            else {
-                // If controller default handler not method decorator, default method is ALL
-                handlers[baseRoute] = {
-                    propertyKey: 'index',
-                    type: ['ALL']
-                };
-            }
-        }
-        Object.keys(handlers).forEach((key) => {
-            if (!/\/$/.test(key)) {
-                const path = (baseRoute + key).replace(/[\/]{2,}/g, '/');
-                const keys = [];
-                handlers[key].regexp = pathToRegExp(path, keys, {
-                    strict: true
-                });
-                handlers[key].keys = keys;
-            }
-            else {
-                const keys = [];
-                handlers[key].regexp = pathToRegExp(baseRoute, keys, {
-                    strict: true
-                });
-                handlers[key].keys = keys;
-            }
-        });
-        options.match = (ctx) => {
-            ctx.controllers = ctx.controllers || [];
-            const matched = [];
-            Object.keys(handlers).forEach((key) => {
-                const handler = handlers[key];
-                if (handler.regexp.test(ctx.path) && (!~~handler.type.indexOf(ctx.method) || !~~handler.type.indexOf('ALL'))) {
-                    matched.push(handler);
-                    const data = handler.regexp.exec(ctx.path);
-                    handler.keys.forEach((key, index) => {
-                        ctx.params[key.name] = data[index + 1];
-                    });
-                }
-            });
-            if (matched.length > 0) {
-                ctx.controllers.push({
-                    target: options.target,
-                    handlers: matched
-                });
-            }
-        };
-        // Inject services
-        options.injectServices = function (ctx) {
-            return options.services.map((K) => {
-                return new K(ctx);
-            });
-        };
-        options.injectParameters = function (ctx, propertyKey) {
-            // Get parameters decorators params.
-            const parameters = options.parameters;
-            // result.
-            const params = [];
-            // Check whether there are decorator data on the routing method.
-            if (!Array.isArray(parameters[propertyKey]))
-                return [];
-            parameters[propertyKey].forEach((k) => {
-                params[k.parameterIndex] = params[k.parameterIndex] || {};
-                if (Array.isArray(k.args)) {
-                    k.args.forEach((value) => {
-                        const data = ctx[k.type] || ctx.request[k.type];
-                        if (typeof data === 'object') {
-                            params[k.parameterIndex][value] = data[value];
-                        }
-                    });
-                }
-                else if (typeof k.args === 'object') {
-                    // mark
-                    // const data: object | undefined = (ctx as any)[k.type] || (ctx.request as any)[k.type]
-                    // const result: any = {}
-                    // for (let key in k.args) {
-                    //     if (!data) return;
-                    //     const d = (data as any)[key]
-                    //     if (!d) return;
-                    //     if (d instanceof (k.args as any)[key]) {
-                    //         result[key] = (data as any)[key]
-                    //     }
-                    // }
-                    // params[k.parameterIndex] = result
-                }
-                else if (typeof k.args === 'string') {
-                    params[k.parameterIndex] = ctx[k.type][k.args] || ctx.request[k.type][k.args];
-                }
-                else {
-                    params[k.parameterIndex] = ctx[k.type] || ctx.request[k.type];
-                }
-            });
-            return params;
-        };
-        // Inject databases
-        options.injectDatabases = function (config) {
-            const databases = options.databases;
-            if (JSON.stringify(databases) !== '{}' && !config)
-                throw new Error(chalk_1.default.redBright('Database is not configure!'));
-            Object.keys(databases).forEach((key) => {
-                if (typeof databases[key] === 'string') {
-                    options.target.prototype[key] = Knex(config)(databases[key]);
-                }
-                else {
-                    options.target.prototype[key] = Knex(config);
-                }
-            });
-        };
-        // Inject propertys
-        options.injectPropertys = function (ctx) {
-            const propertys = Object.keys(options.propertys);
-            propertys.forEach((key) => {
-                const type = options.propertys[key];
-                if (type === 'session') {
-                    options.target.prototype[key] = ctx['session'];
-                }
-                else {
-                    options.target.prototype[key] = ctx.request[type];
-                }
-            });
-        };
-    });
-}
-exports.Controller = Controller;
-/**
- * createPropertyDecorator
+ * 创建http请求装饰器方法
  * @param type
  */
-function createPropertyOrParameterDecorator(type) {
+function createRequestDecorator(type) {
     function decorator(...args) {
-        function handler(options, propertyKey, parameterIndex) {
-            if (typeof parameterIndex === 'number') { // 参数装饰器
-                const key = propertyKey;
-                options.parameters[key] = options.parameters[key] || [];
-                options.parameters[key].push({
-                    parameterIndex,
-                    type,
-                    args: args.length === 1 ? args[0] : undefined
-                });
-            }
-            else { // 属性装饰器
-                options.propertys[propertyKey] = type;
-            }
-        }
         if (args.length === 1) {
-            return createDecorator((options, propertyKey, parameterIndex) => {
-                handler(options, propertyKey, parameterIndex);
-            });
+            const [route] = args;
+            return handler(route);
+        }
+        else {
+            return handler(null, ...args);
+        }
+    }
+    function handler(route, ...args) {
+        if (route) {
+            return (target, propertyKey, descriptor) => {
+                appendRoute(route, target, propertyKey, descriptor);
+            };
+        }
+        else {
+            appendRoute(route, ...args);
+        }
+        function appendRoute(route, ...args) {
+            const [target, propertyKey, descriptor] = args;
+            if (!route)
+                route = propertyKey;
+            // If the path does not start with '/',insert '/' before route.
+            if (!/^\//.test(route)) {
+                route = `/${route}`;
+            }
+            // If the path Contains double `//`, replace with '/'.
+            route = route.replace(/[\/]{2,}/g, '/');
+            const options = target.$options || {};
+            const { routes } = options;
+            options.routes = routes || {};
+            // Check if the route is duplicated
+            const theTypeRoutes = options.routes[type];
+            if (Array.isArray(theTypeRoutes)) {
+                const filters = theTypeRoutes.filter((k) => {
+                    return k.routePath === route;
+                });
+                // If not is duplicated
+                if (!filters.length) {
+                    theTypeRoutes.push({
+                        routePath: route,
+                        propertyKey: propertyKey
+                    });
+                    return;
+                }
+                throw new Error(`In class ${target.constructor.name}, function ${propertyKey}(), route path '${route}' Repeat in request type '${type}'.`);
+            }
+            else {
+                options.routes[type] = [{
+                        routePath: route,
+                        propertyKey: propertyKey
+                    }];
+            }
+            target.$options = options;
+        }
+    }
+    return decorator;
+}
+exports.createRequestDecorator = createRequestDecorator;
+/**
+ * createParameterDecorator
+ * 创建参数装饰器方法
+ * @param callback
+ */
+function createParameterDecorator(callback) {
+    function decorator(...args) {
+        if (args.length === 1) {
+            return (target, propertyKey, parameterIndex) => {
+                const options = target.$options || {};
+                const parameters = options.parameters = options.parameters || {};
+                if (!Array.isArray(parameters[propertyKey])) {
+                    parameters[propertyKey] = [];
+                }
+                parameters[propertyKey][parameterIndex] = {
+                    handler: callback,
+                    arg: args[0]
+                };
+                target.$options = options;
+            };
         }
         else {
             const [target, propertyKey, parameterIndex] = args;
-            createDecorator((options) => {
-                handler(options, propertyKey, parameterIndex);
-            }, target);
+            const options = target.$options || {};
+            const parameters = options.parameters = options.parameters || {};
+            if (!Array.isArray(parameters[propertyKey])) {
+                parameters[propertyKey] = [];
+            }
+            parameters[propertyKey][parameterIndex] = {
+                handler: callback
+            };
+            target.$options = options;
         }
     }
     return decorator;
 }
+exports.createParameterDecorator = createParameterDecorator;
 /**
- * PropertyDecorator
- * Query
- *
- * Examples
- * ```
- * ```
+ * createPropertyDecorator
+ * 创建属性装饰器方法
+ * @param callback
  */
-exports.Query = createPropertyOrParameterDecorator('query');
-/**
- * PropertyDecorator
- * Param
- *
- * Examples
- * ```
- * ```
- */
-exports.Param = createPropertyOrParameterDecorator('params');
-/**
- * PropertyDecorator
- * Body
- *
- * Examples
- * ```
- * ```
- */
-exports.Body = createPropertyOrParameterDecorator('body');
-/**
- * PropertyDecorator
- * Body
- *
- * Examples
- * ```
- * ```
- */
-exports.Session = createPropertyOrParameterDecorator('session');
-/**
- * PropertyDecorator
- * Files
- *
- * Examples
- * ```
- * ```
- */
-exports.Files = createPropertyOrParameterDecorator('files');
-exports.Header = createPropertyOrParameterDecorator('header');
-exports.Headers = createPropertyOrParameterDecorator('headers');
-/**
- * createRequestMethodDecorator
- * @param type
- */
-function createRequestMethodDecorator(type) {
+function createPropertyDecorator(callback) {
     function decorator(...args) {
-        function handler(options, propertyKey, descriptor, path) {
-            // If the path does not start with '/', before '/'.
-            // If route path is not '/'
-            if (!/^\//.test(path)) {
-                path = '/' + path;
+        if (args.length === 1) {
+            return (target, propertyKey) => {
+                const options = target.$options || {};
+                if (!options.propertys)
+                    options.propertys = {};
+                const { propertys } = options;
+                propertys[propertyKey] = {
+                    handler: callback,
+                    arg: args[0]
+                };
+                target.$options = options;
+            };
+        }
+        else {
+            const [target, propertyKey] = args;
+            const options = target.$options || {};
+            if (!options.propertys)
+                options.propertys = {};
+            const { propertys } = options;
+            propertys[propertyKey] = {
+                handler: callback
+            };
+            target.$options = options;
+        }
+    }
+    return decorator;
+}
+exports.createPropertyDecorator = createPropertyDecorator;
+/**
+ * createPropertyAndParameterDecorator
+ * 创建同时能兼容参数装饰器和属性装饰器方法
+ * @param callback
+ */
+function createPropertyAndParameterDecorator(callback) {
+    function decorator(...args) {
+        if (args.length === 1) {
+            function fn(...ags) {
+                const [target, propertyKey, parameterIndex] = ags;
+                handler({
+                    target,
+                    propertyKey,
+                    parameterIndex,
+                    args: args[0]
+                });
             }
-            // Check the method is included in the router.
-            if (options.handlers[path]) {
-                // If method exists, it means that the route contains a request mode.
-                if (options.handlers[path].type) {
-                    // If it is an array, it means that 2 or more requests are already included.
-                    if (Array.isArray(options.handlers[path].type)) {
-                        const types = options.handlers[path].type;
-                        if (!~types.indexOf(type)) {
-                            throw new Error(chalk_1.default.redBright(`router path ${path} ${type} is repeat in method ${descriptor.value.name}`));
-                        }
-                        types.push(type);
-                    }
-                    else {
-                        // If All is not included, add this method type.
-                        if (!~options.handlers[path].type.indexOf('ALL')) {
-                            options.handlers[path].type = [...options.handlers[path].type, type];
-                        }
-                    }
+            return fn;
+        }
+        else {
+            const [target, propertyKey, parameterIndex] = args;
+            handler({
+                target,
+                propertyKey,
+                parameterIndex
+            });
+        }
+        function handler(options) {
+            const { target, propertyKey, parameterIndex, args } = options;
+            // If the parameterIndex is an number, it is a parameter decorator, otherwise it is an property decorator.
+            const opts = target.$options || {};
+            if (typeof parameterIndex !== 'number') {
+                if (!opts.propertys) {
+                    opts.propertys = {};
+                    opts.propertys[propertyKey] = {
+                        arg: args,
+                        handler: callback
+                    };
+                }
+                else {
+                    opts.propertys[propertyKey] = {
+                        arg: args,
+                        handler: callback
+                    };
                 }
             }
             else {
-                options.handlers[path] = {
-                    propertyKey,
-                    type: [type]
-                };
+                if (!opts.parameters) {
+                    opts.parameters = {};
+                    opts.parameters[propertyKey] = [];
+                    opts.parameters[propertyKey][parameterIndex] = {
+                        arg: args,
+                        handler: callback
+                    };
+                }
+                else {
+                    if (Array.isArray(opts.parameters[propertyKey])) {
+                        opts.parameters[propertyKey][parameterIndex] = {
+                            arg: args,
+                            handler: callback
+                        };
+                    }
+                    else {
+                        opts.parameters[propertyKey] = [];
+                        opts.parameters[propertyKey][parameterIndex] = {
+                            arg: args,
+                            handler: callback
+                        };
+                    }
+                }
             }
-        }
-        if (args.length === 1) {
-            const [route] = args;
-            return createDecorator((options, propertyKey, descriptor) => {
-                handler(options, propertyKey, descriptor, route || propertyKey);
-            });
-        }
-        else {
-            const [target, propertyKey, descriptor] = args;
-            createDecorator((options) => {
-                handler(options, propertyKey, descriptor, propertyKey);
-            }, target);
+            target.$options = opts;
         }
     }
     return decorator;
 }
+exports.createPropertyAndParameterDecorator = createPropertyAndParameterDecorator;
 /**
- * RequestMethodDecorators
- * Get
- *
- * Examples
- * ```
- * ```
+ * createMethodDecorator
+ * 创建方法装饰器
+ * @param callback
  */
-exports.Get = createRequestMethodDecorator('GET');
-/**
- * RequestMethodDecorators
- * All
- *
- * Examples
- * ```
- * ```
- */
-exports.All = createRequestMethodDecorator('ALL');
-/**
- * RequestMethodDecorators
- * Delete
- *
- * Examples
- * ```
- * ```
- */
-exports.Delete = createRequestMethodDecorator('DELETE');
-/**
- * RequestMethodDecorators
- * Head
- *
- * Examples
- * ```
- * ```
- */
-exports.Head = createRequestMethodDecorator('HEAD');
-/**
- * RequestMethodDecorators
- * Options
- *
- * Examples
- * ```
- * ```
- */
-exports.Options = createRequestMethodDecorator('OPTIONS');
-/**
- * RequestMethodDecorators
- * Patch
- *
- * Examples
- * ```
- * ```
- */
-exports.Patch = createRequestMethodDecorator('PATCH');
-/**
- * RequestMethodDecorators
- * Post
- *
- * Examples
- * ```
- * ```
- */
-exports.Post = createRequestMethodDecorator('POST');
-/**
- * RequestMethodDecorators
- * Put
- *
- * Examples
- * ```
- * ```
- */
-exports.Put = createRequestMethodDecorator('PUT');
-exports.Request = createPropertyOrParameterDecorator('request');
-exports.Response = createPropertyOrParameterDecorator('response');
-function Database(...args) {
-    if (args.length === 1) {
-        const table = args[0];
-        return createDecorator((options, propertyKey) => {
-            options.databases[propertyKey] = table;
-        });
+function createMethodDecorator(callback) {
+    function decorator(...args) {
+        if (args.length === 1) {
+            return (target, propertyKey, descriptor) => {
+                const options = target.$options || {};
+                if (!options.methods)
+                    options.methods = {};
+                options.methods[propertyKey] = {
+                    handler: callback,
+                    options: {
+                        target,
+                        propertyKey,
+                        descriptor,
+                        arg: args[0]
+                    }
+                };
+                target.$options = options;
+            };
+        }
+        else {
+            const [target, propertyKey, descriptor] = args;
+            const options = target.$options || {};
+            if (!options.methods)
+                options.methods = {};
+            options.methods[propertyKey] = {
+                handler: callback,
+                options: {
+                    target,
+                    propertyKey,
+                    descriptor
+                }
+            };
+            target.$options = options;
+        }
     }
-    else {
-        const target = args[0];
-        const propertyKey = args[1];
-        createDecorator((options) => {
-            options.databases[propertyKey] = null;
-        }, target);
-    }
+    return decorator;
 }
-exports.Database = Database;
+exports.createMethodDecorator = createMethodDecorator;

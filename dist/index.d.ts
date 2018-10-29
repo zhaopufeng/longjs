@@ -5,6 +5,7 @@
  * @copyright Ranyunlong 2018-10-29 15:50
  * @export Decorators
  */
+import * as Knex from 'knex';
 /**
  * Controller Decorator
  * @param path
@@ -54,6 +55,7 @@ export declare const Session: {
     (target: any, propertyKey: string | symbol): void;
     (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 };
+export declare type Database = Knex.QueryInterface | Knex;
 export declare const Database: {
     (target: any, propertyKey: string, parameterIndex: number): void;
     (target: any, propertyKey: string | symbol): void;

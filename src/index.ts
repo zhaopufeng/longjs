@@ -102,7 +102,7 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Serve
     return ctx.session
 })
 
-type Database = Knex.QueryInterface | Knex
+export type Database = Knex.QueryInterface | Knex
 export const Database = createPropertyAndParameterDecorator<string>((ctx: Server.Context, args: string, configs) => {
     if (args && configs.database) {
         return Knex(configs.database)(args) as Database

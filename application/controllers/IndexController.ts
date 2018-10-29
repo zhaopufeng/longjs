@@ -1,19 +1,24 @@
-import { Controller, Get, Session } from '@longjs/decorators'
+import { Controller, Get, Session, Database, Post, Body, Query } from '@longjs/decorators'
+import { CaptchaService } from '../services/CaptchaService';
 
 @Controller('/')
 export class IndexController {
     @Session public session: Session;
+    constructor(public captchaService: CaptchaService) {}
+
     @Get('/')
-    async index() {
-        if (this.session.user) {
-            return this.session.user
-        }
-        return 'xx'
+    public async index() {
+        return this.session.captcha
     }
 
-    @Get('/set/:name')
-    async set() {
-        this.session.user = 'zhangsan'
-        return this.session
+    @Get
+    public async captcha() {
+        return this.captchaService.create().data
+    }
+
+    @Post
+    public async register(@Body body: Body, @Query query: Query) {
+        console.log(body, query)
+        return 'xx'
     }
 }

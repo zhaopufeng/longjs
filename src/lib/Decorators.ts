@@ -31,15 +31,17 @@ interface Propertys {
     }
 }
 
+interface MethodsOptions {
+    target?: any;
+    propertyKey?: string | symbol;
+    descriptor?: TypedPropertyDescriptor<any>,
+    arg?: any;
+}
+
 interface Methods {
     [key: string]: {
         handler?: Function;
-        options?: {
-            target?: any;
-            propertyKey?: string | symbol;
-            descriptor?: TypedPropertyDescriptor<any>,
-            arg?: any;
-        }
+        options?: MethodsOptions;
     }
 }
 
@@ -72,7 +74,7 @@ type ClassDecoratorCallback = (options: ControllerOptions) => void;
 type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
 type ParameterDecoratorCallback = (ctx: Server.Context, arg: any, configs?: Server.Configs) => any;
 type PropertyDecoratorCallback = (ctx: Server.Context, arg: any, configs?: Server.Configs) => any;
-type MethodDecoratorCallback = (ctx: Server.Context, options: Methods, configs?: Server.Configs) => void;
+type MethodDecoratorCallback = (ctx: Server.Context, options: MethodsOptions, configs?: Server.Configs) => void;
 /**
  * createClassDecorator
  * 创建类装饰器方法

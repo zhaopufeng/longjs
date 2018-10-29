@@ -46,6 +46,19 @@ export declare const Query: {
     (target: any, propertyKey: string | symbol): void;
     (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 };
+export interface Session {
+    [key: string]: any;
+}
+export declare const Session: {
+    (target: any, propertyKey: string, parameterIndex: number): void;
+    (target: any, propertyKey: string | symbol): void;
+    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
+};
+export declare const Database: {
+    (target: any, propertyKey: string, parameterIndex: number): void;
+    (target: any, propertyKey: string | symbol): void;
+    (arg: string): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
+};
 /**
  * Parameter && Property Decorator
  * Files

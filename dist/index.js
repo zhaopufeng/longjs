@@ -8,6 +8,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const server_1 = require("@longjs/server");
+const Knex = require("knex");
 /**
  * Controller Decorator
  * @param path
@@ -57,6 +58,22 @@ exports.Query = server_1.createPropertyAndParameterDecorator((ctx, args) => {
         return data;
     }
     return ctx.query;
+});
+exports.Session = server_1.createPropertyAndParameterDecorator((ctx, args) => {
+    if (Array.isArray(args)) {
+        const data = {};
+        args.forEach((k) => {
+            data[k] = ctx.session[k];
+        });
+        return data;
+    }
+    return ctx.session;
+});
+exports.Database = server_1.createPropertyAndParameterDecorator((ctx, args, configs) => {
+    if (args && configs.database) {
+        return Knex(configs.database)(args);
+    }
+    return Knex(configs.database);
 });
 exports.Files = server_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {

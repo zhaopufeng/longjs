@@ -18,11 +18,7 @@ class Server {
         if (Array.isArray(options.controllers)) {
             const controllers = this.controllers = options.controllers;
             controllers.forEach((Controller) => {
-                const { routes, route, metadatas } = Controller.prototype.$options;
-                // Map metadata
-                Controller.prototype.$options.metadatas = metadatas.map((K) => {
-                    return new K();
-                });
+                const { routes, route } = Controller.prototype.$options;
                 if (routes) {
                     Object.keys(routes).forEach((key) => {
                         if (Array.isArray(routes[key])) {
@@ -129,7 +125,7 @@ class Server {
             const { path, method } = ctx;
             // Map controllers
             for (let Controller of controllers) {
-                const { routes, metadatas, parameters, propertys, methods } = Controller.prototype.$options;
+                const { routes, parameters, propertys, methods } = Controller.prototype.$options;
                 const matchRoutes = routes[method];
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {
@@ -146,13 +142,20 @@ class Server {
                             Object.keys(propertys).forEach((key) => {
                                 const property = propertys[key];
                                 const { handler, arg } = property;
-                                Controller.prototype[key] = handler(ctx, arg);
+                                Controller.prototype[key] = handler(ctx, arg, this.options.configs);
                             });
                         }
                         if (methods) {
                             Object.keys(methods).forEach((key) => {
                                 const method = methods[key];
-                                method.handler(ctx, method.options);
+                                method.handler(ctx, method.options, this.options.configs);
+                            });
+                        }
+                        // Map metadata
+                        let { metadatas } = Controller.prototype.$options;
+                        if (Array.isArray(metadatas)) {
+                            metadatas = metadatas.map((K) => {
+                                return new K(ctx, this.options.configs);
                             });
                         }
                         // new Controller
@@ -174,9 +177,9 @@ class Server {
                                     if (parameter) {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
                                             if (parameter.arg) {
-                                                return parameter.handler(ctx, parameter.arg);
+                                                return parameter.handler(ctx, parameter.arg, this.options.configs);
                                             }
-                                            parameter.handler(ctx);
+                                            parameter.handler(ctx, null, this.options.configs);
                                         });
                                     }
                                 }

@@ -58,9 +58,9 @@ export interface Controller {
 declare type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 declare type ClassDecoratorCallback = (options: ControllerOptions) => void;
 declare type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
-declare type ParameterDecoratorCallback = (ctx: Server.Context, arg: any) => any;
-declare type PropertyDecoratorCallback = (ctx: Server.Context, arg?: any) => any;
-declare type MethodDecoratorCallback = (ctx: Server.Context, options: Methods) => void;
+declare type ParameterDecoratorCallback = (ctx: Server.Context, arg: any, configs?: Server.Configs) => any;
+declare type PropertyDecoratorCallback = (ctx: Server.Context, arg: any, configs?: Server.Configs) => any;
+declare type MethodDecoratorCallback = (ctx: Server.Context, options: Methods, configs?: Server.Configs) => void;
 /**
  * createClassDecorator
  * 创建类装饰器方法

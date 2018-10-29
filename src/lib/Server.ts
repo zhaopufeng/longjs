@@ -7,9 +7,10 @@
  */
 import CoreClass, { Core } from '@longjs/core';
 import { StaticServe } from './StaticServe';
+import { Controller } from './Decorators'
 import * as https from 'https'
 import * as Knex from 'knex';
-import * as pathToRegexp from 'path-to-regexp'
+import * as pathToRegExp from 'path-to-regexp'
 
 export class Server {
     // core application
@@ -17,12 +18,35 @@ export class Server {
     // https/http listen state
     public listend: boolean;
     // controllers
-    public controllers: Server.Controller[];
+    public controllers: Controller[];
     public staticServe: StaticServe;
 
     constructor(public options: Server.Options) {
-        if (!Array.isArray(options.controllers)) return;
-        this.controllers = options.controllers
+        // Map controllers
+        if (Array.isArray(options.controllers)) {
+            const controllers = this.controllers = options.controllers
+            controllers.forEach((Controller) => {
+                const { routes, route, metadatas } = Controller.prototype.$options
+                // Map metadata
+                Controller.prototype.$options.metadatas = metadatas.map((K) => {
+                    return new K()
+                })
+                if (routes) {
+                    Object.keys(routes).forEach((key: string) => {
+                        if (Array.isArray(routes[key])) {
+                            routes[key].forEach((iRoute) => {
+                                iRoute.keys = []
+                                iRoute.routePath = (route + iRoute.routePath).replace(/[\/]{2,}/g, '/')
+                                iRoute.RegExp = pathToRegExp(iRoute.routePath, iRoute.keys, {
+                                    strict: options.routeStrict
+                                })
+                            })
+                        }
+                    })
+                }
+            })
+        }
+
         const configs = options.configs = options.configs || {}
         // Create static serve
         if (configs.staticServeOpts) this.staticServe = new StaticServe(configs.staticServeOpts)
@@ -124,30 +148,73 @@ export class Server {
         }
 
         if (!ctx.finished) {
-            ctx.routes = []
+            const { controllers } = this
+            const { path, method } = ctx
+            // Map controllers
+            for (let Controller of controllers) {
+                const { routes, metadatas, parameters, propertys, methods } =  Controller.prototype.$options
+                const matchRoutes = routes[method]
 
-            // Handler routes
-            this.controllers.forEach((Controller: Server.Controller) => {
-                Controller.$options.match(ctx)
-            });
+                // Check matchRoutes is Array
+                if (Array.isArray(matchRoutes)) {
+                    // Merge routes
+                    if (Array.isArray(routes['ALL'])) matchRoutes.push(...routes['ALL'])
+                    const matches = matchRoutes.filter((matchRoute) => {
+                        return matchRoute.RegExp.test(path)
+                    })
 
-            // New Controller
-            for (let item of ctx.controllers) {
-                // Register services
-                const { injectServices, injectPropertys, injectDatabases } = item.target.$options
-                const { configs } = this.options
-                injectDatabases(configs.database)
-                const services = injectServices(ctx, configs)
-                injectPropertys(ctx)
-                item.controller = new item.target(...services)
+                    // matches routes
+                    if (matches.length > 0) {
+                        // Inject propertys
+                        if (propertys) {
+                            Object.keys(propertys).forEach((key: string) => {
+                                const property = propertys[key]
+                                const { handler, arg } = property
+                                ; (Controller as any).prototype[key] = handler(ctx, arg)
+                            })
+                        }
 
-                for (let handler of item.handlers) {
-                    const { injectParameters } = item.target.$options
-                    const parameters = injectParameters(ctx, handler.propertyKey)
-                    let data = await item.controller[handler.propertyKey](...parameters)
-                    if (data) {
-                        ctx.status = 200
-                        ctx.body = data
+                        if (methods) {
+                            Object.keys(methods).forEach((key: string) => {
+                                const method = methods[key]
+                                method.handler(ctx, method.options)
+                            })
+                        }
+
+                        // new Controller
+                        const instance = new (Controller as Server.ControllerClass)(...metadatas)
+                        // Map mathces route
+                        for (let matchRoute of matches) {
+                            if (!ctx.finished && !ctx.headerSent) {
+                                const { keys, RegExp, propertyKey } = matchRoute
+                                // Match path params
+                                keys.forEach((item, index) => {
+                                    const { name } = item
+                                    const params = RegExp.exec(path)
+                                    ctx.params[name] = params[index + 1]
+                                })
+
+                                // Inject parameters
+                                let injectParameters: any = []
+                                if (parameters) {
+                                    const parameter = parameters[propertyKey]
+                                    if (parameter) {
+                                        injectParameters = parameters[propertyKey].map((parameter) => {
+                                            if (parameter.arg) {
+                                                return parameter.handler(ctx, parameter.arg)
+                                            }
+                                            parameter.handler(ctx)
+                                        })
+                                    }
+                                }
+
+                                // Run response handler
+                                const data = await instance[propertyKey](...injectParameters)
+                                if (data && ctx.writable) {
+                                    ctx.body = data
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -172,6 +239,7 @@ export namespace Server {
         env?: Core.Env;
         controllers?: Controller[];
         configs?: Configs;
+        routeStrict?: boolean;
     }
 
     export interface Configs extends Core.Configs {
@@ -179,65 +247,13 @@ export namespace Server {
         database?: ServerDatabaseOptions;
     }
 
-    export type ClassDecorator = <C>(target: C) => C | void;
-
-    export type Decorator = ClassDecorator | ParameterDecorator | MethodDecorator | PropertyDecorator;
-
     export type RequestMethodTypes = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
 
     export type PropertyDecoratorTypes = 'query' | 'body' | 'session' | 'files' | 'params' | 'header' | 'headers' | 'request' | 'response';
 
     export type Database = Knex
 
-    export interface ControllerOptionsParameter {
-        [key: string]: Parameters[];
-    }
-
-    export interface Parameters {
-        type?: PropertyDecoratorTypes;
-        parameterIndex?: number;
-        args?: string | string[] | object;
-    }
-
-    export interface ControllerHandler {
-        [key: string]: {
-            propertyKey?: string;
-            type?: RequestMethodTypes[];
-            regexp?: RegExp;
-            keys?: pathToRegexp.Key[];
-        };
-    }
-
-    export interface ControllerOptionsDatabase {
-        [key: string]: string | null;
-    }
-
-    export interface ControllerOptions {
-        propertys?: { [key: string]: PropertyDecoratorTypes };
-        parameters?: ControllerOptionsParameter;
-        databases?: ControllerOptionsDatabase;
-        handlers?: ControllerHandler;
-        injectServices?: (ctx: Context, configs: Configs) => any[];
-        injectPropertys?: (ctx: Context) => void;
-        injectDatabases?: (config: Server.ServerDatabaseOptions) => void;
-        injectParameters?: (ctx: Context, propertyKey: string) => any;
-        baseRoute?: string;
-        services?: Array<{ new(...args: any[]): any }>;
-        target?: Controller;
-        match?: (ctx: Core.Context) => any;
-    }
-
     export interface ServerDatabaseOptions extends Knex.Config {
-        [key: string]: any;
-    }
-
-    export interface Controller {
-        index?(): Promise<any>;
-        $options?: ControllerOptions;
-        prototype?: {
-            $options?: ControllerOptions;
-            [key: string]: any;
-        }
         [key: string]: any;
     }
 
@@ -246,12 +262,6 @@ export namespace Server {
     }
 
     export interface Context extends Core.Context {
-        controllers?: ControllerRoute[]
-    }
-
-    export interface ControllerRoute {
-        target?: ControllerClass;
-        controller?: Controller;
-        handlers?: any;
+        [key: string]: any;
     }
 }

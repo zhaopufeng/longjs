@@ -1,23 +1,14 @@
-import { Server, Controller, Get, Post, Query, Param, Session, Database } from '../../src';
-import { TestService } from '../services/TestService';
+import {Controller } from '../../src';
 
 @Controller('/')
-export class IndexController implements Server.Controller {
-    constructor(public test: TestService) {}
-    @Session public ss: any;
-    @Query public q: any;
-    // @Database public db: any;
-
-    @Get
+export class IndexController {
+    @Get('/users/:name')
     public async index() {
-        if (!this.ss.name) {
-            this.ss.name = Math.random() * 100
-        }
-        return '100'
+        return 'xx';
     }
 
-    @Get
-    public async users() {
-        return this.ss.name
+    @Post
+    public async test() {
+        return;
     }
 }

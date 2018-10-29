@@ -179,7 +179,7 @@ class Server {
                                             if (parameter.arg) {
                                                 return parameter.handler(ctx, parameter.arg, this.options.configs);
                                             }
-                                            parameter.handler(ctx, null, this.options.configs);
+                                            return parameter.handler(ctx, null, this.options.configs);
                                         });
                                     }
                                 }

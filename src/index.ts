@@ -16,6 +16,8 @@ import {
     Server
 } from '@longjs/server'
 
+import * as Knex from 'knex'
+
 /**
  * Controller Decorator
  * @param path
@@ -84,6 +86,20 @@ export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Server.
         return data
     }
     return ctx.query
+})
+
+export interface Session {
+    [key: string]: any;
+}
+export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+    if (Array.isArray(args)) {
+        const data: any = {}
+        args.forEach((k: string) => {
+            data[k] = ctx.session[k]
+        })
+        return data
+    }
+    return ctx.session
 })
 
 /**

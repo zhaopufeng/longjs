@@ -17,6 +17,7 @@ import {
 } from '@longjs/server'
 
 import * as Knex from 'knex'
+import { Core } from '@longjs/core';
 
 /**
  * Controller Decorator
@@ -32,15 +33,14 @@ export function Controller(path: string): ClassDecorator {
     })
 }
 
-export interface Header {
+export interface Headers {
     [key: string]: any;
 }
-
 /**
  * Parameter && Property Decorator
  * Header
  */
-export const Header = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -88,6 +88,10 @@ export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Server.
     return ctx.query
 })
 
+/**
+ * Parameter && Property Decorator
+ * Session
+ */
 export interface Session {
     [key: string]: any;
 }
@@ -102,12 +106,67 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Serve
     return ctx.session
 })
 
-export type Database = Knex.QueryInterface | Knex
+/**
+ * Parameter && Property Decorator
+ * Database
+ */
+export type Database = Knex
+export type DatabaseQuery = Knex.QueryInterface
 export const Database = createPropertyAndParameterDecorator<string>((ctx: Server.Context, args: string, configs) => {
     if (args && configs.database) {
-        return Knex(configs.database)(args) as Database
+        return Knex(configs.database)(args)
     }
-    return Knex(configs.database) as Database
+    return Knex(configs.database)
+})
+
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export type Request = Core.Request
+export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string, configs) => {
+    if (Array.isArray(args)) {
+        const data: any = {}
+        args.forEach((k: string) => {
+            data[k] = (ctx.request as any)[k]
+        })
+        return data
+    }
+    return ctx.request
+})
+
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export type Response = Core.Response
+export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string, configs) => {
+    if (Array.isArray(args)) {
+        const data: any = {}
+        args.forEach((k: string) => {
+            data[k] = (ctx.response as any)[k]
+        })
+        return data
+    }
+    return ctx.response
+})
+
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export interface Params {
+    [key: string]: any;
+}
+export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string, configs) => {
+    if (Array.isArray(args)) {
+        const data: any = {}
+        args.forEach((k: string) => {
+            data[k] = (ctx.params as any)[k]
+        })
+        return data
+    }
+    return ctx.params
 })
 
 /**
@@ -126,6 +185,14 @@ export const Files = createPropertyAndParameterDecorator<string[]>((ctx: Server.
         return data
     }
     return ctx.files
+})
+
+/**
+ * MethodDecorators
+ * Type
+ */
+export const Type = createMethodDecorator((ctx: Server.Context, options: any, configs?: Server.Configs) => {
+    ctx.type = options.arg
 })
 
 /**

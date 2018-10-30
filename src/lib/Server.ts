@@ -6,6 +6,7 @@
  * @export Server
  */
 import CoreClass, { Core } from '@longjs/core';
+import proxy, { Options as ProxyOpts } from '@longjs/proxy'
 import { StaticServe } from './StaticServe';
 import { Controller } from './Decorators'
 import * as https from 'https'
@@ -26,7 +27,7 @@ export class Server {
         if (Array.isArray(options.controllers)) {
             const controllers = this.controllers = options.controllers
             controllers.forEach((Controller: Controller) => {
-                const { routes, route } = Controller.prototype.$options
+                const { routes = {}, route = ''} = Controller.prototype.$options || {}
                 if (routes) {
                     Object.keys(routes).forEach((key: string) => {
                         if (Array.isArray(routes[key])) {
@@ -138,6 +139,11 @@ export class Server {
      */
 
     private async handleResponse(ctx: Server.Context) {
+        const { proxyTable } = this.options.configs
+        if (proxyTable) {
+            proxy(ctx, proxyTable)
+        }
+
         // Static responses
         if (this.staticServe) {
             await this.staticServe.handler(ctx)
@@ -148,7 +154,8 @@ export class Server {
             const { path, method } = ctx
             // Map controllers
             for (let Controller of controllers) {
-                const { routes, parameters, propertys, methods } =  Controller.prototype.$options
+                const $options = Controller.prototype.$options || {}
+                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = $options
                 const matchRoutes = routes[method]
 
                 // Check matchRoutes is Array
@@ -247,6 +254,7 @@ export namespace Server {
     export interface Configs extends Core.Configs {
         staticServeOpts?: StaticServe.Opts;
         database?: ServerDatabaseOptions;
+        proxyTable?: ProxyOpts;
     }
 
     export type RequestMethodTypes = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';

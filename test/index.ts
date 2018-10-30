@@ -12,6 +12,12 @@ new Server({
             root: resolve('public'),
             maxage: 60000,
             defer: true
+        },
+        proxyTable: {
+            '^/api': {
+                target: 'https://www.baidu.com',
+                changeOrigin: true
+            }
         }
     }
 })

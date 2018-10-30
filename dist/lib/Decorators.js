@@ -253,7 +253,7 @@ exports.createPropertyAndParameterDecorator = createPropertyAndParameterDecorato
  */
 function createMethodDecorator(callback) {
     function decorator(...args) {
-        if (args.length === 1) {
+        if (args.length < 3) {
             return (target, propertyKey, descriptor) => {
                 const options = target.$options || {};
                 if (!options.methods)
@@ -264,7 +264,9 @@ function createMethodDecorator(callback) {
                         target,
                         propertyKey,
                         descriptor,
-                        arg: args[0]
+                        arg: args[0],
+                        key: args[0],
+                        value: args[1]
                     }
                 };
                 target.$options = options;

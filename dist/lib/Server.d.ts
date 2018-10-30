@@ -7,6 +7,7 @@
  * @export Server
  */
 import CoreClass, { Core } from '@longjs/core';
+import { Options as ProxyOpts } from '@longjs/proxy';
 import { StaticServe } from './StaticServe';
 import { Controller } from './Decorators';
 import * as https from 'https';
@@ -49,6 +50,7 @@ export declare namespace Server {
     interface Configs extends Core.Configs {
         staticServeOpts?: StaticServe.Opts;
         database?: ServerDatabaseOptions;
+        proxyTable?: ProxyOpts;
     }
     type RequestMethodTypes = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
     type PropertyDecoratorTypes = 'query' | 'body' | 'session' | 'files' | 'params' | 'header' | 'headers' | 'request' | 'response';

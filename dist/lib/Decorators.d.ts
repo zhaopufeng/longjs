@@ -25,6 +25,8 @@ interface MethodsOptions {
     propertyKey?: string | symbol;
     descriptor?: TypedPropertyDescriptor<any>;
     arg?: any;
+    key?: string;
+    value?: any;
 }
 interface Methods {
     [key: string]: {
@@ -108,8 +110,8 @@ export declare function createPropertyAndParameterDecorator<T = any>(callback: P
  * 创建方法装饰器
  * @param callback
  */
-export declare function createMethodDecorator<T = any>(callback: MethodDecoratorCallback): {
+export declare function createMethodDecorator<K = any, V = any>(callback: MethodDecoratorCallback): {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (arg: T): MethodDecorator;
+    (key: K, value: V): MethodDecorator;
 };
 export {};

@@ -8,6 +8,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @export Server
  */
 const core_1 = require("@longjs/core");
+const proxy_1 = require("@longjs/proxy");
 const StaticServe_1 = require("./StaticServe");
 const https = require("https");
 const pathToRegExp = require("path-to-regexp");
@@ -18,7 +19,7 @@ class Server {
         if (Array.isArray(options.controllers)) {
             const controllers = this.controllers = options.controllers;
             controllers.forEach((Controller) => {
-                const { routes, route } = Controller.prototype.$options;
+                const { routes = {}, route = '' } = Controller.prototype.$options || {};
                 if (routes) {
                     Object.keys(routes).forEach((key) => {
                         if (Array.isArray(routes[key])) {
@@ -116,6 +117,11 @@ class Server {
      * @param { Server.Context } ctx
      */
     async handleResponse(ctx) {
+        const { proxyTable } = this.options.configs;
+        if (proxyTable) {
+            const req = ctx.req;
+            await proxy_1.default(ctx, proxyTable);
+        }
         // Static responses
         if (this.staticServe) {
             await this.staticServe.handler(ctx);
@@ -125,7 +131,8 @@ class Server {
             const { path, method } = ctx;
             // Map controllers
             for (let Controller of controllers) {
-                const { routes, parameters, propertys, methods } = Controller.prototype.$options;
+                const $options = Controller.prototype.$options || {};
+                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = $options;
                 const matchRoutes = routes[method];
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {

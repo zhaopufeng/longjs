@@ -1,5 +1,5 @@
 {
-  "name": "@longjs/redis-storage",
+  "name": "@longjs/proxy",
   "version": "1.0.0-beta.0.1",
   "main": "./dist/index.js",
   "license": "MIT",
@@ -8,9 +8,10 @@
   },
   "keywords": [
     "longjs",
-    "longjs-redis-storage",
-    "longjs/redis-storage",
-    "@longjs/redis-storeage"
+    "proxy",
+    "longjs-proxy",
+    "longjs/proxy",
+    "@longjs/proxy"
   ],
   "author": {
     "email": "549510622@qq.com",
@@ -18,9 +19,11 @@
     "url": "https://www.ranyunlong.com"
   },
   "repository": "ranyunlong/longjs",
+  "devDependencies": {
+    "@longjs/server": "^1.0.0-beta.1.6"
+  },
   "dependencies": {
-    "@longjs/core": "^1.0.0-beta.0.9",
-    "@types/ioredis": "^4.0.3",
-    "ioredis": "^4.0.2"
+    "@types/http-proxy": "^1.16.2",
+    "http-proxy": "^1.17.0"
   }
 }

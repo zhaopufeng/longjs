@@ -3,29 +3,25 @@
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
  */
-
-import { Server } from '@longjs/server'
-import * as httpProxy from 'http-proxy'
+/// <reference types="node" />
+import { Server } from '@longjs/server';
 import * as url from 'url';
 import * as stream from 'stream';
-import { Agent, IncomingMessage, ServerResponse } from 'http';
-import { ServerOptions } from 'https'
-
+import { Agent } from 'http';
+import { ServerOptions } from 'https';
 export interface PathRewrite {
     [key: string]: string;
 }
-
 export interface Routers {
     [key: string]: string;
 }
-
 export interface ProxyOptions {
     /** Buffer */
     buffer?: stream.Stream;
     /** URL string to be parsed with the url module. */
     target?: string | url.Url;
     /** URL string to be parsed with the url module. */
-    forward?: string| url.Url;
+    forward?: string | url.Url;
     /** Object to be passed to http(s).request. */
     agent?: Agent;
     /** Object to be passed to https.createServer(). */
@@ -57,31 +53,21 @@ export interface ProxyOptions {
     /** Rewrites the location protocol on (301 / 302 / 307 / 308) redirects to 'http' or 'https'.Default: null. */
     protocolRewrite?: string;
     /** rewrites domain of set-cookie headers. */
-    cookieDomainRewrite?: false | string | {[oldDomain: string]: string};
+    cookieDomainRewrite?: false | string | {
+        [oldDomain: string]: string;
+    };
     /** object with extra headers to be added to target requests. */
-    headers?: {[header: string]: string};
+    headers?: {
+        [header: string]: string;
+    };
     /** Timeout (in milliseconds) when proxy receives no response from target. Default: 120000 (2 minutes) */
     proxyTimeout?: number;
     /** If set to true, none of the webOutgoing passes are called and it's your responsibility to appropriately return the response by listening and acting on the proxyRes event */
     selfHandleResponse?: boolean;
 }
-
 export interface Options {
-    [key: string]: ProxyOptions
+    [key: string]: ProxyOptions;
 }
-
-let _proxy: httpProxy = httpProxy.createProxyServer({})
-
-export function proxyTable(ctx: Server.Context, options: Options = {}) {
-    Object.keys(options).forEach((key: string) => {
-        proxy(key, ctx, options[key])
-    })
-}
-
-export function proxy(path: string, ctx: Server.Context, proxyOptions: ProxyOptions) {
-    if (RegExp(path).test(ctx.path)) {
-        _proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
-    }
-}
-
-export default proxyTable
+export declare function proxyTable(ctx: Server.Context, options?: Options): void;
+export declare function proxy(path: string, ctx: Server.Context, proxyOptions: ProxyOptions): void;
+export default proxyTable;

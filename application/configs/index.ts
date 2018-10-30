@@ -33,7 +33,6 @@ export const configs: Server.Configs = {
             keepExtensions: false,  // 是否保留原始文件的扩展名
             // hash: 'sha1',        // 如果你想要进入的文件计算校验和，此设置为'sha1'或'md5'默认false
             multiples: true,        // 多个文件上传或否
-            // https://github.com/felixge/node-formidable#filebegin
             // onFileBegin:()=>{}   // Function 文件开始的特殊回调。该功能由强大的直接执行。它可以在将文件保存到磁盘之前用于重命名文件。
         }
     },

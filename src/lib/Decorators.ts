@@ -36,6 +36,8 @@ interface MethodsOptions {
     propertyKey?: string | symbol;
     descriptor?: TypedPropertyDescriptor<any>,
     arg?: any;
+    key?: string;
+    value?: any;
 }
 
 interface Methods {
@@ -330,11 +332,11 @@ export function createPropertyAndParameterDecorator<T = any>(callback: Parameter
  * 创建方法装饰器
  * @param callback
  */
-export function createMethodDecorator<T = any>(callback: MethodDecoratorCallback) {
+export function createMethodDecorator<K = any, V = any>(callback: MethodDecoratorCallback) {
     function decorator(target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
-    function decorator(arg: T): MethodDecorator;
+    function decorator(key: K, value: V): MethodDecorator;
     function decorator(...args: any[]): any {
-        if (args.length === 1) {
+        if (args.length < 3) {
             return (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
                 const options: ControllerOptions = target.$options || {}
                 if (!options.methods) options.methods = {}
@@ -344,7 +346,9 @@ export function createMethodDecorator<T = any>(callback: MethodDecoratorCallback
                         target,
                         propertyKey,
                         descriptor,
-                        arg: args[0]
+                        arg: args[0],
+                        key: args[0],
+                        value: args[1]
                     }
                 }
                 target.$options = options

@@ -4,7 +4,7 @@
  * @license MIT
  */
 /// <reference types="node" />
-import { Server } from '@longjs/server';
+import { Core } from '@longjs/core';
 import * as url from 'url';
 import * as stream from 'stream';
 import { Agent } from 'http';
@@ -64,10 +64,11 @@ export interface ProxyOptions {
     proxyTimeout?: number;
     /** If set to true, none of the webOutgoing passes are called and it's your responsibility to appropriately return the response by listening and acting on the proxyRes event */
     selfHandleResponse?: boolean;
+    pathRewrite?: PathRewrite;
 }
 export interface Options {
     [key: string]: ProxyOptions;
 }
-export declare function proxyTable(ctx: Server.Context, options?: Options): void;
-export declare function proxy(path: string, ctx: Server.Context, proxyOptions: ProxyOptions): void;
+export declare function proxyTable(ctx: Core.Context, options?: Options): Promise<void>;
+export declare function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions): Promise<{}>;
 export default proxyTable;

@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Server } from '@longjs/server'
+import { Core } from '@longjs/core'
 import * as httpProxy from 'http-proxy'
 import * as url from 'url';
 import * as stream from 'stream';
@@ -64,6 +64,7 @@ export interface ProxyOptions {
     proxyTimeout?: number;
     /** If set to true, none of the webOutgoing passes are called and it's your responsibility to appropriately return the response by listening and acting on the proxyRes event */
     selfHandleResponse?: boolean;
+    pathRewrite?: PathRewrite;
 }
 
 export interface Options {
@@ -72,16 +73,42 @@ export interface Options {
 
 let _proxy: httpProxy = httpProxy.createProxyServer({})
 
-export function proxyTable(ctx: Server.Context, options: Options = {}) {
-    Object.keys(options).forEach((key: string) => {
-        proxy(key, ctx, options[key])
-    })
+export async function proxyTable(ctx: Core.Context, options: Options = {}) {
+    for (let key in options) {
+        await proxy(key, ctx, options[key])
+    }
 }
 
-export function proxy(path: string, ctx: Server.Context, proxyOptions: ProxyOptions) {
-    if (RegExp(path).test(ctx.path)) {
-        _proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
-    }
+export async function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions) {
+    return new Promise((next, reject) => {
+        const { changeOrigin, pathRewrite } = proxyOptions
+        if (RegExp(path).test(ctx.path)) {
+            if (typeof changeOrigin === 'undefined') proxyOptions.changeOrigin = true
+            const path = ctx.path
+            for (let item in pathRewrite) {
+                let itemPath: string = item
+                let itemPath2: string;
+                // pathRewrite
+                if (!/\^/.test(itemPath)) itemPath = `^${itemPath}`
+                if (!/\$$/.test(itemPath)) {
+                    itemPath = `${itemPath}$`
+                    itemPath2 = `${itemPath}/$`
+                }
+                if (RegExp(itemPath).test(path)) {
+                    ctx.req.url = ctx.req.url.replace(RegExp(itemPath), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
+                } else if (RegExp(itemPath2).test(path)) {
+                    ctx.req.url = ctx.req.url.replace(RegExp(itemPath2), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
+                }
+            }
+            // proxy
+            _proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
+            _proxy.on('error', function(err) {
+                reject(err)
+            })
+        } else {
+            next()
+        }
+    })
 }
 
 export default proxyTable

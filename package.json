@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/server": "^1.0.0-beta.1.6"
+    "@longjs/core": "^1.0.0-beta.2.0"
   },
   "dependencies": {
     "@types/http-proxy": "^1.16.2",

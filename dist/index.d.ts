@@ -64,6 +64,7 @@ export interface ProxyOptions {
     proxyTimeout?: number;
     /** If set to true, none of the webOutgoing passes are called and it's your responsibility to appropriately return the response by listening and acting on the proxyRes event */
     selfHandleResponse?: boolean;
+    pathRewrite?: PathRewrite;
 }
 export interface Options {
     [key: string]: ProxyOptions;

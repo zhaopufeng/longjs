@@ -14,6 +14,10 @@ function proxyTable(ctx, options = {}) {
 }
 exports.proxyTable = proxyTable;
 function proxy(path, ctx, proxyOptions) {
+    const { pathRewrite, changeOrigin } = proxyOptions;
+    // changeOrigin default true
+    if (typeof changeOrigin !== 'boolean')
+        proxyOptions.changeOrigin = true;
     if (RegExp(path).test(ctx.path)) {
         _proxy.web(ctx.req, ctx.res, proxyOptions);
     }

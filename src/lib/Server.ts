@@ -12,6 +12,7 @@ import { Controller } from './Decorators'
 import * as https from 'https'
 import * as Knex from 'knex';
 import * as pathToRegExp from 'path-to-regexp'
+import { IncomingMessage } from 'http';
 
 export class Server {
     // core application
@@ -141,7 +142,8 @@ export class Server {
     private async handleResponse(ctx: Server.Context) {
         const { proxyTable } = this.options.configs
         if (proxyTable) {
-            proxy(ctx, proxyTable)
+            const req = ctx.req as IncomingMessage
+            await proxy(ctx, proxyTable)
         }
 
         // Static responses

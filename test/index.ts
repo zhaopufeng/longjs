@@ -15,8 +15,18 @@ new Server({
         },
         proxyTable: {
             '^/api': {
-                target: 'https://www.baidu.com',
-                changeOrigin: true
+                target: 'https://www.qq.com/',
+                changeOrigin: true,
+                pathRewrite: {
+                    '/api': '/'
+                }
+            },
+            '^/baidu': {
+                target: 'https://www.baidu.com/',
+                changeOrigin: true,
+                pathRewrite: {
+                    '/baidu': '/'
+                }
             }
         }
     }

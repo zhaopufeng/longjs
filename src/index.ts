@@ -4,11 +4,7 @@
  * @license MIT
  */
 
-<<<<<<< HEAD
 import { Core, Plugin } from '@longjs/core'
-=======
-import { Core } from '@longjs/core'
->>>>>>> ce8ff55d15c2e451a0fe7a47aaabbc4ecd8b4d7d
 import * as httpProxy from 'http-proxy'
 import * as url from 'url';
 import * as stream from 'stream';
@@ -81,7 +77,6 @@ export async function proxyTable(ctx: Core.Context, options: Options = {}) {
     for (let key in options) {
         await proxy(key, ctx, options[key])
     }
-<<<<<<< HEAD
 }
 
 export async function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions) {
@@ -161,40 +156,6 @@ export class Proxy implements Plugin {
             }
         })
     }
-=======
-}
-
-export async function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions) {
-    return new Promise((next, reject) => {
-        const { changeOrigin, pathRewrite } = proxyOptions
-        if (RegExp(path).test(ctx.path)) {
-            if (typeof changeOrigin === 'undefined') proxyOptions.changeOrigin = true
-            const path = ctx.path
-            for (let item in pathRewrite) {
-                let itemPath: string = item
-                let itemPath2: string;
-                // pathRewrite
-                if (!/\^/.test(itemPath)) itemPath = `^${itemPath}`
-                if (!/\$$/.test(itemPath)) {
-                    itemPath = `${itemPath}$`
-                    itemPath2 = `${itemPath}/$`
-                }
-                if (RegExp(itemPath).test(path)) {
-                    ctx.req.url = ctx.req.url.replace(RegExp(itemPath), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
-                } else if (RegExp(itemPath2).test(path)) {
-                    ctx.req.url = ctx.req.url.replace(RegExp(itemPath2), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
-                }
-            }
-            // proxy
-            _proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
-            _proxy.on('error', function(err) {
-                reject(err)
-            })
-        } else {
-            next()
-        }
-    })
->>>>>>> ce8ff55d15c2e451a0fe7a47aaabbc4ecd8b4d7d
 }
 
 export default Proxy

@@ -1,10 +1,6 @@
 {
   "name": "@longjs/proxy",
-<<<<<<< HEAD
   "version": "1.0.0-beta.0.3",
-=======
-  "version": "1.0.0-beta.0.2",
->>>>>>> ce8ff55d15c2e451a0fe7a47aaabbc4ecd8b4d7d
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {

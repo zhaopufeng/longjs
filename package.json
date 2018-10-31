@@ -25,6 +25,7 @@
     "@longjs/decorators": "^1.0.0-beta.0.6",
     "@longjs/proxy": "^1.0.0",
     "@longjs/session": "^1.0.0",
-    "@longjs/static": "^1.0.0"
+    "@longjs/static": "^1.0.0",
+    "mysql": "^2.16.0"
   }
 }

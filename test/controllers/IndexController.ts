@@ -5,32 +5,29 @@ import { Database } from '@longjs/database';
 @Controller('/')
 export class IndexController {
     @Session public session: Session;
-    @Database public database: Database;
+    @Database('users') public users: Database;
+    @Database public db: Database;
 
-    constructor(public testService: TestService) {
-        // console.log(testService.test())
-        // console.log(this.database)
-    }
+    constructor(public testService: TestService) {}
 
     @Get('/')
     public async index() {
-        if (!this.session.user) {
-            this.session.user = 'zhangsan'
+        if (!this.session.users) {
+            this.session.users = await this.db('users').select()
         }
         return 'xx'
     }
 
     @Get('/user')
     public async user() {
-        if (this.session.user) {
-            return this.session.user
-        }
-        return 'xx'
+        // if (this.session.user) {
+        //     return this.session.user
+        // }
+        return await this.users.select()
     }
 
-    @Post
-    public async test(@Body body: Body) {
-        console.log(body)
-        return 'test'
+    @Get
+    public async test() {
+        return this.session.users
     }
 }

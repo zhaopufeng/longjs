@@ -11,6 +11,7 @@ import * as EventEmitter from 'events'
 import * as statuses from 'statuses'
 import * as Keygrip from 'keygrip';
 import * as accepts from 'accepts'
+import * as pathToRegExp from 'path-to-regexp'
 import * as Cookies from 'cookies'
 import { Socket } from 'net'
 import { ListenOptions } from 'net'
@@ -19,27 +20,58 @@ import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { CreateContext } from './lib/CreateContext'
 import { CreateResponse } from './lib/CreateResponse'
 import { CreateRequest } from './lib/CreateRequest'
-import { CreateBody } from './lib/CreateBody'
-import { CreateSession, SessionOpts } from './lib/CreateSession';
-import { Stream } from 'stream';
-import { isJSON } from './lib/utils';
-export * from './lib/SessionStore';
+import { Stream } from 'stream'
+import { isJSON } from './lib/utils'
+import { Plugins } from './lib/Plugin'
+import { Controller, ControllerConstructor } from './lib/Decorators'
 
 export default class Server extends EventEmitter {
-    public proxy: boolean = false
+    public proxy: boolean;
     public subdomainOffset: number = 2
     public env: Core.Env = process.env.NODE_ENV as Core.Env || 'development'
     public silent: boolean
-    public keys: Keygrip | string[] = ['long:sess']
-    public configs: Core.Configs = {}
-    public _handleResponse: Core.HttpHandle
+    public keys: Keygrip | string[];
 
     /**
      * constructor
      */
     constructor(public options: Core.Options = {}) {
         super()
-        this.configs = options.configs = options.configs || {}
+        options.configs = options.configs || {}
+        this.keys = options.keys || ['long:sess']
+        this.subdomainOffset = options.subdomainOffset || 2
+        this.env = process.env.NODE_ENV as  Core.Env || 'development'
+
+         // Map controllers
+        if (Array.isArray(options.controllers)) {
+            const controllers  = options.controllers
+            controllers.forEach((Controller: Controller) => {
+                if (typeof Controller.prototype.$options !== 'object' || Controller.prototype.$options) Controller.prototype.$options = {}
+                const { routes = {}, route = ''} = Controller.prototype.$options
+                if (routes) {
+                    Object.keys(routes).forEach((key: string) => {
+                        if (Array.isArray(routes[key])) {
+                            routes[key].forEach((iRoute) => {
+                                iRoute.keys = []
+                                iRoute.routePath = (route + iRoute.routePath).replace(/[\/]{2,}/g, '/')
+                                iRoute.RegExp = pathToRegExp(iRoute.routePath, iRoute.keys, {
+                                    strict: options.routeStrict
+                                })
+                            })
+                        }
+                    })
+                }
+            })
+        }
+
+        // Start server listen port
+        if (options.port) {
+            if (options.host) {
+                this.listen(options.port, options.host)
+            } else {
+                this.listen(options.port)
+            }
+        }
     }
 
     /**
@@ -47,10 +79,8 @@ export default class Server extends EventEmitter {
      * Handler custom http proccess
      */
     public callback() {
-        let session: CreateSession;
-        this.configs.session ? session =  new CreateSession(this.configs.session) : session = new CreateSession()
         return (request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse) => {
-            this.start(request, response, session)
+            this.start(request, response)
         }
     }
 
@@ -73,39 +103,120 @@ export default class Server extends EventEmitter {
         return this;
     }
 
-    public handleResponse(callback: Core.HttpHandle) {
-        this._handleResponse = callback
+    public async handleResponse(context: Core.Context) {
+        if (!context.finished ) {
+            const { controllers = [] } = this.options
+            const { path, method } = context
+            // Map controllers
+            for (let Controller of controllers) {
+                const $options = (Controller as ControllerConstructor).prototype.$options || {}
+                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = $options
+                const matchRoutes = routes[method]
+                // Check matchRoutes is Array
+                if (Array.isArray(matchRoutes)) {
+                    // Merge routes
+                    if (Array.isArray(routes['ALL'])) matchRoutes.push(...routes['ALL'])
+                    const matches = matchRoutes.filter((matchRoute) => {
+                        return matchRoute.RegExp.test(path)
+                    })
+
+                    // matches routes
+                    if (matches.length > 0) {
+                        // Inject propertys
+                        if (propertys) {
+                            Object.keys(propertys).forEach((key: string) => {
+                                const property = propertys[key]
+                                const { handler, arg } = property
+                                ; (Controller as any).prototype[key] = handler(context, arg, this.options.configs)
+                            })
+                        }
+
+                        if (methods) {
+                            Object.keys(methods).forEach((key: string) => {
+                                const method = methods[key]
+                                method.handler(context, method.options, this.options.configs)
+                            })
+                        }
+                        // Map metadata
+                        let { metadatas } = Controller.prototype.$options
+                        if (Array.isArray(metadatas)) {
+                            metadatas = metadatas.map((K) => {
+                                return new K(context, this.options.configs)
+                            })
+                        }
+                        // new Controller
+                        const instance = new (Controller as ControllerConstructor)(...metadatas)
+                        // Map mathces route
+                        for (let matchRoute of matches) {
+                            if (!context.finished && !context.headerSent) {
+                                const { keys, RegExp, propertyKey } = matchRoute
+                                // Match path params
+                                keys.forEach((item, index) => {
+                                    const { name } = item
+                                    const params = RegExp.exec(path)
+                                    context.params[name] = params[index + 1]
+                                })
+
+                                // Inject parameters
+                                let injectParameters: any = []
+                                if (parameters) {
+                                    const parameter = parameters[propertyKey]
+                                    if (parameter) {
+                                        injectParameters = parameters[propertyKey].map((parameter) => {
+                                            if (parameter.arg) {
+                                                return parameter.handler(context, parameter.arg, this.options.configs)
+                                            }
+                                            return parameter.handler(context, null, this.options.configs)
+                                        })
+                                    }
+                                }
+
+                                // Run response handler
+                                const data = await instance[propertyKey](...injectParameters)
+                                if (data && context.writable) {
+                                    context.body = data
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
      * start
      * Application start method
      */
-    private async start(request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse, session: CreateSession): Promise<any>  {
+    private async start(request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse): Promise<any>  {
         try {
             // Create http/https context
             const context = this.createContext(request, response)
 
-            // Load session
-            await session.create(context)
+            // Run plugin request
+            const { plugins = [] } = this.options
+            for (let plugin of plugins) {
+                if (typeof plugin.handlerRequest === 'function')  await plugin.handlerRequest(context)
+            }
 
-            const { _handleResponse } = this
+            // Run plugin requested
+            for (let plugin of plugins) {
+                if (typeof plugin.handlerRequested === 'function')  await plugin.handlerRequested(context)
+            }
 
-            // Load request body
-            const createBody = new CreateBody(context, this.configs.bodyParser)
-
-            // Create body
-            await createBody.create()
-
-            // Handler hook response
-            if (typeof _handleResponse === 'function') await _handleResponse(context)
-
-            // Reset session
-            await session.reset(context)
+            // Run plugin response
+            for (let plugin of plugins) {
+                if (typeof plugin.handlerResponse === 'function')  await plugin.handlerResponse(context)
+            }
 
             // Responses
+            await this.handleResponse(context)
             await this.respond(context, response as ServerResponse)
 
+            // Run plugin responded
+            for (let plugin of plugins) {
+                if (typeof plugin.handlerResponded === 'function')  await plugin.handlerResponded(context)
+            }
             /**
              * Handler not found
              * 1. Response is not finished
@@ -119,6 +230,10 @@ export default class Server extends EventEmitter {
             // Handler exception
             this.exception(response, error)
             this.emit('exception', error)
+            const { plugins = [] } = this.options
+            for (let plugin of plugins) {
+                if (typeof plugin.handlerException === 'function')  await plugin.handlerException(error, request as IncomingMessage, response as ServerResponse)
+            }
         }
     }
 
@@ -223,17 +338,26 @@ export default class Server extends EventEmitter {
 
 export namespace Core {
 
-    export interface HttpHandle {
+    export interface HttpHandler {
         (ctx?: Context): Promise<any>
     }
 
     export interface Configs {
-        bodyParser?: CreateBody.Options;
-        session?: SessionOpts;
+        [key: string]: any;
     }
 
     export interface Options {
+        port?: number;
+        host?: string;
         configs?: Configs;
+        keys?: Keygrip | string[];
+        env?: Env;
+        proxy?: boolean;
+        subdomainOffset?: number;
+        silent?: boolean;
+        plugins?: Plugins;
+        controllers?: Array<{ new (...args: any[]): any }>;
+        routeStrict?: boolean;
     }
 
     export interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {

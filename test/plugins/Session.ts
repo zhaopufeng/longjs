@@ -7,19 +7,19 @@
 
 import { SessionStorage } from './SessionStore'
 import { SetOption, GetOption } from 'cookies'
-import { Core } from '..';
+import { Core } from '../../src'
+import { Plugin } from '../../src/lib/Plugin'
 
-export class CreateSession {
-    public key: string;
-    public store: SessionStorage;
+export class Session implements Plugin {
     public sessions: any = {}
     constructor(public opts: SessionOpts = {}) {
         opts.signed = true
-        this.key = opts.key || 'ssid'
-        this.store = opts.store || new SessionStorage()
+        opts.key = opts.key || 'ssid'
+        opts.store = opts.store || new SessionStorage()
     }
-    public async create(ctx: Core.Context) {
-        const { key, store, opts } = this;
+    public async handlerRequest(ctx: Core.Context) {
+        const {  opts } = this;
+        const { key, store } = opts
         // Get Sid from cookies
         let sid = ctx.cookies.get(key, opts as GetOption);
         // Check sid
@@ -38,8 +38,9 @@ export class CreateSession {
         ctx._session = JSON.stringify(ctx.session)
     }
 
-    public async reset(ctx: Core.Context) {
-        const { key, store, opts} = this;
+    public async handlerResponse(ctx: Core.Context) {
+        const { opts } = this;
+        const {  key, store } = opts
         // Get Sid from cookies
         const sid = ctx.session.sid
 

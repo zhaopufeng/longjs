@@ -14,9 +14,7 @@ import { Socket } from 'net';
 import { ListenOptions } from 'net';
 import { IncomingMessage, ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { CreateBody } from './lib/CreateBody';
-import { SessionOpts } from './lib/CreateSession';
-export * from './lib/SessionStore';
+import { Plugins } from './lib/Plugin';
 export default class Server extends EventEmitter {
     options: Core.Options;
     proxy: boolean;
@@ -24,8 +22,6 @@ export default class Server extends EventEmitter {
     env: Core.Env;
     silent: boolean;
     keys: Keygrip | string[];
-    configs: Core.Configs;
-    _handleResponse: Core.HttpHandle;
     /**
      * constructor
      */
@@ -48,7 +44,7 @@ export default class Server extends EventEmitter {
     listen(options: ListenOptions, listeningListener?: () => void): this;
     listen(handle: any, backlog?: number, listeningListener?: () => void): this;
     listen(handle: any, listeningListener?: () => void): this;
-    handleResponse(callback: Core.HttpHandle): void;
+    handleResponse(context: Core.Context): Promise<void>;
     /**
      * start
      * Application start method
@@ -71,15 +67,26 @@ export default class Server extends EventEmitter {
     protected createContext(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse): Core.Context;
 }
 export declare namespace Core {
-    interface HttpHandle {
+    interface HttpHandler {
         (ctx?: Context): Promise<any>;
     }
     interface Configs {
-        bodyParser?: CreateBody.Options;
-        session?: SessionOpts;
+        [key: string]: any;
     }
     interface Options {
+        port?: number;
+        host?: string;
         configs?: Configs;
+        keys?: Keygrip | string[];
+        env?: Env;
+        proxy?: boolean;
+        subdomainOffset?: number;
+        silent?: boolean;
+        plugins?: Plugins;
+        controllers?: Array<{
+            new (...args: any[]): any;
+        }>;
+        routeStrict?: boolean;
     }
     interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {
         /**

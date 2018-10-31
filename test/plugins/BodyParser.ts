@@ -9,10 +9,11 @@ import * as os from 'os'
 import * as parse from 'co-body'
 import * as typeIs from 'type-is'
 import * as formidable from 'formidable'
-import { Core } from '..'
+import { Core } from '../../src'
 import { IncomingMessage } from 'http'
+import { Plugin } from '../../src/lib/Plugin'
 
-export class CreateBody {
+export class BodyParser implements Plugin {
     // JSON正文的字节限制 默认值1mb
     public readonly jsonLimit: string
 
@@ -23,7 +24,7 @@ export class CreateBody {
     public readonly textLimit: number;
 
     // 编码格式 默认 utf-8
-    public readonly encoding: CreateBody.Encoding;
+    public readonly encoding: BodyParser.Encoding;
 
     // 开启 multipart 默认true
     public readonly multipart: boolean;
@@ -41,7 +42,7 @@ export class CreateBody {
     public readonly jsonStrict: boolean;
 
     // formidable 选项
-    public readonly formidable: CreateBody.FormidableOptions;
+    public readonly formidable: BodyParser.FormidableOptions;
     // 开启严格模式 不解析GET HEAD DELETE请求 默认true
     public readonly strict: boolean;
 
@@ -51,8 +52,7 @@ export class CreateBody {
      * @param opts Options
      */
     constructor(
-        public ctx: Core.Context,
-        opts: CreateBody.Options = {}
+       public opts: BodyParser.Options = {}
     ) {
         this.encoding = opts.encoding || 'utf-8';
         this.formLimit = (opts.formLimit || 56) + 'kb'
@@ -70,10 +70,10 @@ export class CreateBody {
      *
      * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
      */
-    public async create() {
-        if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(this.ctx.method)) {
-            await this.parseBody()
-            await this.parseFile()
+    public async handlerRequest(ctx: Core.Context) {
+        if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(ctx.method)) {
+            await this.parseBody(ctx)
+            await this.parseFile(ctx)
         }
     }
 
@@ -81,18 +81,18 @@ export class CreateBody {
      * parseBody
      * Parser body request data
      */
-    private async parseBody() {
-        const request = this.ctx.req as IncomingMessage
+    private async parseBody(ctx: Core.Context) {
+        const request = ctx.req as IncomingMessage
         if (typeIs(request, 'json') === 'json') {
-            this.ctx.request.body = await parse.json(request, { limit: this.jsonLimit, strict: this.strict })
+            ctx.request.body = await parse.json(request, { limit: this.jsonLimit, strict: this.strict })
         }
 
         if (typeIs(request, 'urlencoded') === 'urlencoded') {
-            this.ctx.request.body = await parse.form(request, { limit: this.formLimit, strict: this.strict })
+            ctx.request.body = await parse.form(request, { limit: this.formLimit, strict: this.strict })
         }
 
         if (typeIs(request, 'text') === 'text') {
-            this.ctx.request.body = await parse.text(request, { limit: this.textLimit, strict: this.strict })
+            ctx.request.body = await parse.text(request, { limit: this.textLimit, strict: this.strict })
         }
     }
 
@@ -100,9 +100,9 @@ export class CreateBody {
      * parseBody
      * Parser file request data
      */
-    private async parseFile(): Promise<any> {
+    private async parseFile(ctx: Core.Context): Promise<any> {
         return new Promise((resolve, reject) => {
-            const request = this.ctx.req as IncomingMessage
+            const request = ctx.req as IncomingMessage
             if (typeIs(request, 'multipart')) {
                 const form = new formidable.IncomingForm()
                 if (this.formidable) {
@@ -125,8 +125,8 @@ export class CreateBody {
 
                 form.parse(request, (err, fields, files) => {
                     if (err) reject(err)
-                    this.ctx.request.body = fields || {}
-                    this.ctx.request.files = files || {}
+                    ctx.request.body = fields || {}
+                    ctx.request.files = files || {}
                     resolve()
                 })
             } else {
@@ -144,7 +144,7 @@ export class CreateBody {
  * @license MIT
  * @copyright Ranyunlong 2018-09-23 22:49
  */
-export namespace CreateBody {
+export namespace BodyParser {
     export interface RequestFile {
         fields: any;
         files: any;

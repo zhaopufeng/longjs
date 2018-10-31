@@ -1,20 +1,12 @@
-import TKServer from '../src'
-import * as http from 'http'
+import Server from '../src'
+import { BodyParser } from './plugins/BodyParser';
+import { Session } from './plugins/Session';
 
-const app = new TKServer({
-    async beforeRequest(ctx) {
-        return;
-    },
-    async requested() {
-        return;
-    },
-    async beforeResponse() {
-        return;
-    },
-    async response(ctx) {
-        // ctx.body = 'xx'
-        return;
-    }
+new Server({
+    port: 8000,
+    host: 'localhost',
+    plugins: [
+        new BodyParser(),
+        new Session()
+    ]
 })
-
-http.createServer(app.callback()).listen(3000)

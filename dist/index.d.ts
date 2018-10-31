@@ -45,6 +45,9 @@ export default class Server extends EventEmitter {
     listen(handle: any, backlog?: number, listeningListener?: () => void): this;
     listen(handle: any, listeningListener?: () => void): this;
     handleResponse(context: Core.Context): Promise<void>;
+    getPluginID(pluginConstructor: {
+        new (...args: any[]): any;
+    }): string;
     /**
      * start
      * Application start method
@@ -79,6 +82,7 @@ export declare namespace Core {
         port?: number;
         host?: string;
         configs?: Configs;
+        pluginConfigs?: Configs;
         keys?: Keygrip | string[];
         env?: Env;
         proxy?: boolean;

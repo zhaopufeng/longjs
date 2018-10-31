@@ -2,10 +2,11 @@
 import { Core } from '..';
 import { IncomingMessage, ServerResponse } from 'http';
 export interface Plugin {
-    handlerRequest?(ctx: Core.Context): Promise<any>;
-    handlerRequested?(ctx: Core.Context): Promise<any>;
-    handlerResponse?(ctx: Core.Context): Promise<any>;
-    handlerResponded?(ctx: Core.Context): Promise<any>;
-    handlerException?(err: Error, request?: IncomingMessage, response?: ServerResponse): Promise<any>;
+    readonly uid?: string;
+    handlerRequest?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
+    handlerRequested?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
+    handlerResponse?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
+    handlerResponded?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
+    handlerException?(err: Error, request?: IncomingMessage, response?: ServerResponse, configs?: Core.Configs): Promise<any>;
 }
 export declare type Plugins = Plugin[];

@@ -19,6 +19,7 @@ const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
 const stream_1 = require("stream");
 const utils_1 = require("./lib/utils");
+const crypto_1 = require("crypto");
 class Server extends EventEmitter {
     /**
      * constructor
@@ -29,13 +30,22 @@ class Server extends EventEmitter {
         this.subdomainOffset = 2;
         this.env = process.env.NODE_ENV || 'development';
         options.configs = options.configs || {};
+        options.pluginConfigs = options.pluginConfigs || {};
         this.keys = options.keys || ['long:sess'];
         this.subdomainOffset = options.subdomainOffset || 2;
         this.env = process.env.NODE_ENV || 'development';
+        const { plugins = [] } = this.options;
+        // Plugin register uid
+        plugins.forEach((plugin, i) => {
+            const uid = crypto_1.randomBytes(24).toString('hex');
+            plugin.uid = uid;
+            options.configs[uid] = {};
+        });
         // Map controllers
         if (Array.isArray(options.controllers)) {
             const controllers = options.controllers;
             controllers.forEach((Controller) => {
+                Controller.prototype.$app = this;
                 if (typeof Controller.prototype.$options !== 'object' || Controller.prototype.$options)
                     Controller.prototype.$options = {};
                 const { routes = {}, route = '' } = Controller.prototype.$options;
@@ -102,13 +112,13 @@ class Server extends EventEmitter {
                             Object.keys(propertys).forEach((key) => {
                                 const property = propertys[key];
                                 const { handler, arg } = property;
-                                Controller.prototype[key] = handler(context, arg, this.options.configs);
+                                Controller.prototype[key] = handler(context, arg);
                             });
                         }
                         if (methods) {
                             Object.keys(methods).forEach((key) => {
                                 const method = methods[key];
-                                method.handler(context, method.options, this.options.configs);
+                                method.handler(context, method.options);
                             });
                         }
                         // Map metadata
@@ -137,9 +147,9 @@ class Server extends EventEmitter {
                                     if (parameter) {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
                                             if (parameter.arg) {
-                                                return parameter.handler(context, parameter.arg, this.options.configs);
+                                                return parameter.handler(context, parameter.arg);
                                             }
-                                            return parameter.handler(context, null, this.options.configs);
+                                            return parameter.handler(context);
                                         });
                                     }
                                 }
@@ -155,6 +165,17 @@ class Server extends EventEmitter {
             }
         }
     }
+    getPluginID(pluginConstructor) {
+        const { plugins = [] } = this.options;
+        let uid;
+        plugins.forEach((plugin) => {
+            if (plugin instanceof pluginConstructor) {
+                uid = plugin.uid;
+                return true;
+            }
+        });
+        return uid;
+    }
     /**
      * start
      * Application start method
@@ -166,26 +187,30 @@ class Server extends EventEmitter {
             // Run plugin request
             const { plugins = [] } = this.options;
             for (let plugin of plugins) {
+                const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerRequest === 'function')
-                    await plugin.handlerRequest(context);
+                    await plugin.handlerRequest(context, configs);
             }
             // Run plugin requested
             for (let plugin of plugins) {
+                const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerRequested === 'function')
-                    await plugin.handlerRequested(context);
+                    await plugin.handlerRequested(context, configs);
             }
             // Run plugin response
             for (let plugin of plugins) {
+                const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerResponse === 'function')
-                    await plugin.handlerResponse(context);
+                    await plugin.handlerResponse(context, configs);
             }
             // Responses
             await this.handleResponse(context);
             await this.respond(context, response);
             // Run plugin responded
             for (let plugin of plugins) {
+                const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerResponded === 'function')
-                    await plugin.handlerResponded(context);
+                    await plugin.handlerResponded(context, configs);
             }
             /**
              * Handler not found
@@ -203,8 +228,9 @@ class Server extends EventEmitter {
             this.emit('exception', error);
             const { plugins = [] } = this.options;
             for (let plugin of plugins) {
+                const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerException === 'function')
-                    await plugin.handlerException(error, request, response);
+                    await plugin.handlerException(error, request, response, configs);
             }
         }
     }

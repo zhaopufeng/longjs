@@ -7,7 +7,7 @@
  */
 
 import 'reflect-metadata'
-import { Core } from '..';
+import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp'
 
 interface Options<T = any> {
@@ -19,14 +19,14 @@ interface Options<T = any> {
 
 interface Parameters {
     [key: string]: Array<{
-        handler?: Function;
+        handler?: ParameterDecoratorCallback;
         arg?: any;
     }>;
 }
 
 interface Propertys {
     [key: string]: {
-        handler?: Function;
+        handler?: PropertyDecoratorCallback;
         arg?: any;
     }
 }
@@ -42,7 +42,7 @@ interface MethodsOptions {
 
 interface Methods {
     [key: string]: {
-        handler?: Function;
+        handler?: MethodDecoratorCallback;
         options?: MethodsOptions;
     }
 }
@@ -66,6 +66,7 @@ interface ControllerOptions {
 
 export interface Controller {
     readonly prototype: {
+        $app: Server;
         $options: ControllerOptions;
     };
     [key: string]: any;
@@ -81,9 +82,9 @@ export interface ControllerConstructor {
 type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 type ClassDecoratorCallback = (options: ControllerOptions) => void;
 type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
-type ParameterDecoratorCallback = (ctx: Core.Context, arg: any, configs?: Core.Configs) => any;
-type PropertyDecoratorCallback = (ctx: Core.Context, arg: any, configs?: Core.Configs) => any;
-type MethodDecoratorCallback = (ctx: Core.Context, options: MethodsOptions, configs?: Core.Configs) => void;
+type ParameterDecoratorCallback = (ctx: Core.Context, arg?: any) => any;
+type PropertyDecoratorCallback = (ctx: Core.Context, arg?: any) => any;
+type MethodDecoratorCallback = (ctx: Core.Context, options: MethodsOptions) => void;
 /**
  * createClassDecorator
  * 创建类装饰器方法

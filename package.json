@@ -1,6 +1,6 @@
 {
   "name": "@longjs/database",
-  "version": "1.0.0-beta.0.1",
+  "version": "1.0.0-beta.0.2",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.2.6"
+    "@longjs/core": "^1.0.0-beta.2.8"
   },
   "dependencies": {
     "@types/knex": "^0.14.26",

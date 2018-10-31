@@ -12,7 +12,7 @@ import * as assert from 'assert'
 export default class Databases implements Plugin {
     constructor(public options: Config) {}
     public async handlerRequest(ctx: Core.Context, configs: any) {
-        if (!configs) configs = this.options
+        if (!configs.options) configs.options = this.options
     }
 }
 
@@ -24,6 +24,7 @@ export const Database = createPropertyAndParameterDecorator<String>((ctx, args) 
     assert(ctx.app.options, 'Server options is not define')
     assert(ctx.app.options.pluginConfigs, 'Your must be used @longjs/database plugin')
     assert(ctx.app.options.pluginConfigs[uid], 'Your must be used @longjs/database plugin')
-    if (args) return knex(ctx.app.options.pluginConfigs[uid])
-    return knex
+    assert(ctx.app.options.pluginConfigs[uid].options, 'Your must be used @longjs/database plugin')
+    if (args) return knex(ctx.app.options.pluginConfigs[uid].options)(args)
+    return knex(ctx.app.options.pluginConfigs[uid].options)
 })

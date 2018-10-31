@@ -13,8 +13,8 @@ class Databases {
         this.options = options;
     }
     async handlerRequest(ctx, configs) {
-        if (!configs)
-            configs = this.options;
+        if (!configs.options)
+            configs.options = this.options;
     }
 }
 exports.default = Databases;
@@ -25,7 +25,8 @@ exports.Database = core_1.createPropertyAndParameterDecorator((ctx, args) => {
     assert(ctx.app.options, 'Server options is not define');
     assert(ctx.app.options.pluginConfigs, 'Your must be used @longjs/database plugin');
     assert(ctx.app.options.pluginConfigs[uid], 'Your must be used @longjs/database plugin');
+    assert(ctx.app.options.pluginConfigs[uid].options, 'Your must be used @longjs/database plugin');
     if (args)
-        return knex(ctx.app.options.pluginConfigs[uid]);
-    return knex;
+        return knex(ctx.app.options.pluginConfigs[uid].options)(args);
+    return knex(ctx.app.options.pluginConfigs[uid].options);
 });

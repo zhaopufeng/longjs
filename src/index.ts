@@ -57,7 +57,7 @@ export default class Server extends EventEmitter {
             const controllers  = options.controllers
             controllers.forEach((Controller: Controller) => {
                 Controller.prototype.$app = this;
-                if (typeof Controller.prototype.$options !== 'object' || Controller.prototype.$options) Controller.prototype.$options = {}
+                if (typeof Controller.prototype.$options !== 'object' || !Controller.prototype.$options) Controller.prototype.$options = {}
                 const { routes = {}, route = ''} = Controller.prototype.$options
                 if (routes) {
                     Object.keys(routes).forEach((key: string) => {
@@ -238,6 +238,14 @@ export default class Server extends EventEmitter {
 
             // Responses
             await this.handleResponse(context)
+
+            // Before controllors response run handlerResponseAfter plugin hooks
+            for (let plugin of plugins) {
+                const configs = this.options.pluginConfigs[plugin.uid]
+                if (typeof plugin.handlerResponseAfter === 'function')  await plugin.handlerResponseAfter(context, configs)
+            }
+
+            // Core run respond
             await this.respond(context, response as ServerResponse)
 
             // Run plugin responded

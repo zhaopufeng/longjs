@@ -1,7 +1,11 @@
-import { Controller, Get, Session } from '@longjs/decorators'
+import { Controller, Get, Session, Post, Body } from '@longjs/decorators'
+import { TestService } from '../services/TestService';
 
 @Controller('/')
 export class IndexController {
+    constructor(public testService: TestService) {
+        console.log(testService.test())
+    }
     @Session public session: Session;
     @Get('/')
     public async index() {
@@ -17,5 +21,11 @@ export class IndexController {
             return this.session.user
         }
         return 'xx'
+    }
+
+    @Post
+    public async test(@Body body: Body) {
+        console.log(body)
+        return 'test'
     }
 }

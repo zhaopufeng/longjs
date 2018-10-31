@@ -14,7 +14,7 @@ The module based on @longjs/core, used for HTTP static file output.
 or
 
 ```shell
-> npm add @longjs/static
+> npm install @longjs/static
 ```
 
 ### Examples

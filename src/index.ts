@@ -114,7 +114,7 @@ export default class Server extends EventEmitter {
         return this;
     }
 
-    public async handleResponse(context: Core.Context) {
+    private async handleResponse(context: Core.Context) {
         if (!context.finished ) {
             const { controllers = [] } = this.options
             const { path, method } = context

@@ -44,7 +44,7 @@ export default class Server extends EventEmitter {
     listen(options: ListenOptions, listeningListener?: () => void): this;
     listen(handle: any, backlog?: number, listeningListener?: () => void): this;
     listen(handle: any, listeningListener?: () => void): this;
-    handleResponse(context: Core.Context): Promise<void>;
+    private handleResponse;
     getPluginID(pluginConstructor: {
         new (...args: any[]): any;
     }): string;

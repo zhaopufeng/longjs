@@ -1,6 +1,6 @@
 {
-  "name": "@longjs/proxy",
-  "version": "1.0.0",
+  "name": "@longjs/database",
+  "version": "1.0.0-beta.0.1",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -8,10 +8,10 @@
   },
   "keywords": [
     "longjs",
-    "proxy",
-    "longjs-proxy",
-    "longjs/proxy",
-    "@longjs/proxy"
+    "database",
+    "longjs-database",
+    "longjs/database",
+    "@longjs/database"
   ],
   "author": {
     "email": "549510622@qq.com",
@@ -20,10 +20,10 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.2.5"
+    "@longjs/core": "^1.0.0-beta.2.6"
   },
   "dependencies": {
-    "@types/http-proxy": "^1.16.2",
-    "http-proxy": "^1.17.0"
+    "@types/knex": "^0.14.26",
+    "knex": "^0.15.2"
   }
 }

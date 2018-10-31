@@ -499,6 +499,7 @@ export namespace Core {
     }
 
     export  interface Request extends BaseRequest {
+        app: Server;
         req: IncomingMessage | Http2ServerRequest;
         res: ServerResponse | Http2ServerResponse;
         ctx: Context;
@@ -510,6 +511,7 @@ export namespace Core {
     }
 
     export interface Response extends BaseResponse {
+        app: Server;
         req: IncomingMessage | Http2ServerRequest;
         res: ServerResponse | Http2ServerResponse;
         ctx: Context;
@@ -517,6 +519,7 @@ export namespace Core {
     }
 
     export interface Context extends BaseContext {
+        app: Server;
         request: Request;
         response: Response;
         req: IncomingMessage | Http2ServerRequest;

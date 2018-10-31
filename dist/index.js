@@ -1,103 +1,59 @@
 "use strict";
 /**
- * @class BodyParser
+ * @class StaticServer
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
- * @copyright Ranyunlong 2018-09-23 19:07
+ * @copyright Ranyunlong 2018-10-08 14:35
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const os = require("os");
-const parse = require("co-body");
-const typeIs = require("type-is");
-const formidable = require("formidable");
-class BodyParser {
-    /**
-     * constructor
-     * @param ctx Context
-     * @param opts Options
-     */
-    constructor(opts = {}) {
+/**
+ * Module dependencies.
+ */
+const send_1 = require("./lib/send");
+const assert = require("assert");
+const path_1 = require("path");
+class StaticServe {
+    constructor(opts) {
         this.opts = opts;
-        this.encoding = opts.encoding || 'utf-8';
-        this.formLimit = (opts.formLimit || 56) + 'kb';
-        this.json = opts.json || true;
-        this.jsonLimit = (opts.jsonLimit || 1) + 'mb';
-        this.jsonStrict = opts.jsonStrict || true;
-        this.multipart = opts.multipart || true;
-        this.urlencoded = opts.urlencoded || true;
-        this.strict = opts.strict || true;
+        const { root } = opts;
+        opts = Object.assign({}, opts);
+        assert(root, 'root directory is required to serve files');
+        opts.root = path_1.resolve(root);
+        if (opts.index !== false)
+            this.opts.index = opts.index || 'index.html';
     }
-    /**
-     * parse
-     * Parser body request and file request
-     *
-     * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
-     */
+    // Run before controller runs
     async handlerRequest(ctx) {
-        if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(ctx.method)) {
-            await this.parseBody(ctx);
-            await this.parseFile(ctx);
+        if (this.opts.defer)
+            return;
+        if (ctx.method === 'HEAD' || ctx.method === 'GET') {
+            try {
+                await send_1.default(ctx, ctx.path, this.opts);
+            }
+            catch (err) {
+                if (err.status !== 404) {
+                    throw err;
+                }
+            }
         }
     }
-    /**
-     * parseBody
-     * Parser body request data
-     */
-    async parseBody(ctx) {
-        const request = ctx.req;
-        if (typeIs(request, 'json') === 'json') {
-            ctx.request.body = await parse.json(request, { limit: this.jsonLimit, strict: this.strict });
+    // Run after controller operation
+    async handlerResponseAfter(ctx) {
+        if (!this.opts.defer)
+            return;
+        if (ctx.method !== 'HEAD' && ctx.method !== 'GET')
+            return;
+        // response is already handled
+        if (ctx.response.body != null || ctx.status === 404)
+            return; // eslint-disable-line
+        try {
+            await send_1.default(ctx, ctx.path, this.opts);
         }
-        if (typeIs(request, 'urlencoded') === 'urlencoded') {
-            ctx.request.body = await parse.form(request, { limit: this.formLimit, strict: this.strict });
-        }
-        if (typeIs(request, 'text') === 'text') {
-            ctx.request.body = await parse.text(request, { limit: this.textLimit, strict: this.strict });
-        }
-    }
-    /**
-     * parseBody
-     * Parser file request data
-     */
-    async parseFile(ctx) {
-        return new Promise((resolve, reject) => {
-            const request = ctx.req;
-            if (typeIs(request, 'multipart')) {
-                const form = new formidable.IncomingForm();
-                if (this.formidable) {
-                    const { uploadDir, keepExtensions, maxFieldsSize, maxFields, hash, multiples } = this.formidable;
-                    if (uploadDir)
-                        form.uploadDir = uploadDir;
-                    if (keepExtensions)
-                        form.keepExtensions = keepExtensions;
-                    if (maxFieldsSize) {
-                        form.maxFieldsSize = maxFieldsSize;
-                        form.maxFileSize = maxFieldsSize;
-                    }
-                    if (maxFields)
-                        form.maxFields = maxFields;
-                    if (hash)
-                        form.hash = hash;
-                    if (multiples)
-                        form.multiples = multiples;
-                }
-                else {
-                    form.uploadDir = os.tmpdir();
-                    form.multiples = true;
-                }
-                form.encoding = this.encoding;
-                form.parse(request, (err, fields, files) => {
-                    if (err)
-                        reject(err);
-                    ctx.request.body = fields || {};
-                    ctx.request.files = files || {};
-                    resolve();
-                });
+        catch (err) {
+            if (err.status !== 404) {
+                throw err;
             }
-            else {
-                resolve();
-            }
-        });
+        }
     }
 }
-exports.default = BodyParser;
+exports.StaticServe = StaticServe;

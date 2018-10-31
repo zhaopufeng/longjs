@@ -1,10 +1,10 @@
-# @longjs/body-parser 1.0.0
+# @longjs/static 1.0.0
 
-[![npm (scoped)](https://img.shields.io/npm/v/@longjs/body-parser.svg)](https://www.npmjs.com/package/@longjs/body-parser)
+[![npm (scoped)](https://img.shields.io/npm/v/@longjs/static.svg)](https://www.npmjs.com/package/@longjs/static)
 
 ### 介绍
 
-@longjs/body-parser 插件
+@longjs/static插件
 
-用于处理body 相关插件
+用于处理 静态目录文件 相关插件
 

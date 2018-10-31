@@ -13,8 +13,8 @@
     },
     "lib":["esnext"],
     "include": [
-        "src/**/*",
-        // "test/**/*"
+        // "src/**/*",
+        "test/**/*"
     ],
     "watch":true,
     "exclude": [

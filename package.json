@@ -19,6 +19,10 @@
   },
   "repository": "ranyunlong/longjs",
   "dependencies": {
-    "@longjs/core": "^1.0.0-beta.2.3"
+    "@longjs/body-parser": "^1.0.0-beta.0.1",
+    "@longjs/core": "^1.0.0-beta.2.4",
+    "@longjs/decorators": "^1.0.0-beta.0.5",
+    "@longjs/proxy": "^1.0.0-beta.0.3",
+    "@longjs/session": "^1.0.0-beta.0.2"
   }
 }

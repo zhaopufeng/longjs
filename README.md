@@ -23,22 +23,41 @@ or
 
 ```ts
 import Server from '@longjs/core'
-import Session from '@longjs/session'
-
+import Session, { SessionRedisStorage } from '@longjs/session'
+// If your want to use redis.
 new Server({
     port: 3000,
     plugins: [
         new Session({
-
+            store: new SessionRedisStorage(),
+            key: 'sess:id',
+            maxAge: 86400000,
+            overwrite: true,
+            httpOnly: true,
+            signed: true
         })
     ]
 })
+
+// Default is stored in memory.
+new Server({
+    port: 3000,
+    plugins: [
+        new Session({
+            key: 'sess:id',
+            maxAge: 86400000,
+            overwrite: true,
+            httpOnly: true,
+            signed: true
+        })
+    ]
+})
+
 ```
 
 ### Api
 
 #### Options
-## Options
 
 Most options based on [cookies](https://github.com/pillarjs/cookies#cookiesset-name--value---options--)
 

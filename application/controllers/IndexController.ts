@@ -19,6 +19,30 @@ export class IndexController {
     }
 
     @Get
+    public async getmembers(@Query query: Query) {
+        let { page, limit } = query
+        if (isNaN(page)) page = 1
+        if (page < 1) page = 1
+        if (isNaN(limit)) limit = 10
+        if (limit < 10) page = 10
+        const data = Mock.mock({
+            'data|10': [{
+                'iid|+1': (page - 1) * limit,
+                'name': '@cfirst@clast',
+                'age': 20,
+                'upic': '@image(80x80,@color)',
+                'crate_time': '@date(yyyy-MM-dd)',
+                'content': '@cparagraph',
+                'address': '@province@city@county',
+                'idc': '@ID',
+            }],
+            'total': 1000
+        })
+
+        return data;
+    }
+
+    @Get
     public async getusers(@Body body: Body, @Query query: Query) {
         let { page, limit } = query
         if (isNaN(page)) page = 1
@@ -26,7 +50,7 @@ export class IndexController {
 
         const obj: any = {}
         const start = page * limit
-        obj[`data|10`] = [{
+        obj[`data|${limit}`] = [{
             'id|+1': start,
             'number': '@ID',
             'guid': '@guid',

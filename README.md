@@ -119,3 +119,14 @@ If you are using the `proxyServer.listen` method, the following options are also
 
  *  **ssl**: object to be passed to https.createServer()
  *  **ws**: true/false, if you want to proxy websockets
+
+
+ ### Issues
+
+ - [create issues](https://github.com/ranyunlong/longjs/issues)
+
+ ### Contribution
+
+ - [![image](https://avatars0.githubusercontent.com/u/19652564?s=460&v=4)](https://github.com/ranyunlong)
+
+ ### License MIT

@@ -8,10 +8,10 @@
   },
   "keywords": [
     "longjs",
-    "body-parser",
-    "longjs-body-parser",
-    "longjs/body-parser",
-    "@longjs/body-parser"
+    "session",
+    "longjs-session",
+    "longjs/session",
+    "@longjs/session"
   ],
   "author": {
     "email": "549510622@qq.com",

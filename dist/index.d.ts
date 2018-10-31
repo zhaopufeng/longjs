@@ -1,81 +1,23 @@
 /**
- * @class BodyParser
+ * @class CreateSession
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
- * @copyright Ranyunlong 2018-09-23 19:07
+ * @copyright Ranyunlong 2018-10-14 10:04
  */
-import { Core } from '@longjs/core';
-import { Plugin } from '@longjs/core';
-export default class BodyParser implements Plugin {
-    opts: BodyParser.Options;
-    readonly jsonLimit: string;
-    readonly formLimit: string;
-    readonly textLimit: number;
-    readonly encoding: BodyParser.Encoding;
-    readonly multipart: boolean;
-    readonly urlencoded: boolean;
-    readonly text: boolean;
-    readonly json: boolean;
-    readonly jsonStrict: boolean;
-    readonly formidable: BodyParser.FormidableOptions;
-    readonly strict: boolean;
-    /**
-     * constructor
-     * @param ctx Context
-     * @param opts Options
-     */
-    constructor(opts?: BodyParser.Options);
-    /**
-     * parse
-     * Parser body request and file request
-     *
-     * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
-     */
+import { SessionStorage } from './lib/SessionStorage';
+import { SetOption } from 'cookies';
+import { Core, Plugin } from '@longjs/core';
+export declare class Session implements Plugin {
+    opts: SessionOpts;
+    sessions: any;
+    constructor(opts?: SessionOpts);
     handlerRequest(ctx: Core.Context): Promise<void>;
-    /**
-     * parseBody
-     * Parser body request data
-     */
-    private parseBody;
-    /**
-     * parseBody
-     * Parser file request data
-     */
-    private parseFile;
+    handlerResponse(ctx: Core.Context): Promise<void>;
 }
-/**
- * @namespace BodyParse
- * @interface BodyParse
- * @export { BodyParse }
- * @author ranyunlong<549510622@qq.com>
- * @license MIT
- * @copyright Ranyunlong 2018-09-23 22:49
- */
-export declare namespace BodyParser {
-    interface RequestFile {
-        fields: any;
-        files: any;
-    }
-    interface Options {
-        jsonLimit?: number;
-        formLimit?: number;
-        textLimit?: number;
-        encoding?: Encoding;
-        multipart?: boolean;
-        urlencoded?: boolean;
-        text?: boolean;
-        json?: boolean;
-        jsonStrict?: boolean;
-        formidable?: FormidableOptions;
-        strict?: boolean;
-    }
-    interface FormidableOptions {
-        maxFields?: number;
-        maxFieldsSize?: number;
-        uploadDir?: string;
-        keepExtensions?: boolean;
-        hash?: string | boolean;
-        multiples?: boolean;
-    }
-    type Encoding = 'utf-8' | string;
+export interface SessionOpts extends SetOption {
+    key?: string;
+    store?: SessionStorage;
+    signed?: boolean;
 }
+export * from './lib/SessionStorage';
+export * from './lib/SessionRedisStorage';

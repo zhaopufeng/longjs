@@ -1,103 +1,80 @@
 "use strict";
 /**
- * @class BodyParser
+ * @class CreateSession
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
- * @copyright Ranyunlong 2018-09-23 19:07
+ * @copyright Ranyunlong 2018-10-14 10:04
  */
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
-const os = require("os");
-const parse = require("co-body");
-const typeIs = require("type-is");
-const formidable = require("formidable");
-class BodyParser {
-    /**
-     * constructor
-     * @param ctx Context
-     * @param opts Options
-     */
+const SessionStorage_1 = require("./lib/SessionStorage");
+class Session {
     constructor(opts = {}) {
         this.opts = opts;
-        this.encoding = opts.encoding || 'utf-8';
-        this.formLimit = (opts.formLimit || 56) + 'kb';
-        this.json = opts.json || true;
-        this.jsonLimit = (opts.jsonLimit || 1) + 'mb';
-        this.jsonStrict = opts.jsonStrict || true;
-        this.multipart = opts.multipart || true;
-        this.urlencoded = opts.urlencoded || true;
-        this.strict = opts.strict || true;
+        this.sessions = {};
+        opts.signed = true;
+        opts.key = opts.key || 'ssid';
+        opts.store = opts.store || new SessionStorage_1.SessionStorage();
     }
-    /**
-     * parse
-     * Parser body request and file request
-     *
-     * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
-     */
     async handlerRequest(ctx) {
-        if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(ctx.method)) {
-            await this.parseBody(ctx);
-            await this.parseFile(ctx);
+        const { opts } = this;
+        const { key, store } = opts;
+        // Get Sid from cookies
+        let sid = ctx.cookies.get(key, opts);
+        // Check sid
+        if (!sid) {
+            // Not sid
+            ctx.session = { sid };
         }
+        else {
+            // Get Sid from store
+            ctx.session = await store.get(sid);
+        }
+        // Check session state
+        if (typeof ctx.session !== 'object' || ctx.session === null) {
+            ctx.session = { sid };
+        }
+        ctx._session = JSON.stringify(ctx.session);
     }
-    /**
-     * parseBody
-     * Parser body request data
-     */
-    async parseBody(ctx) {
-        const request = ctx.req;
-        if (typeIs(request, 'json') === 'json') {
-            ctx.request.body = await parse.json(request, { limit: this.jsonLimit, strict: this.strict });
+    async handlerResponse(ctx) {
+        const { opts } = this;
+        const { key, store } = opts;
+        // Get Sid from cookies
+        const sid = ctx.session.sid;
+        // Get old session
+        const old = ctx._session;
+        // Add refresh function
+        let need_refresh = false;
+        ctx.session.refresh = () => { need_refresh = true; };
+        // Remove refresh function
+        if (ctx.session && 'refresh' in ctx.session) {
+            delete ctx.session.refresh;
         }
-        if (typeIs(request, 'urlencoded') === 'urlencoded') {
-            ctx.request.body = await parse.form(request, { limit: this.formLimit, strict: this.strict });
+        // Get session from context
+        const sess = JSON.stringify(ctx.session);
+        // If not changed
+        if (!need_refresh && old === sess)
+            return;
+        // If is an empty object
+        if (sess === '{}') {
+            ctx.session = null;
         }
-        if (typeIs(request, 'text') === 'text') {
-            ctx.request.body = await parse.text(request, { limit: this.textLimit, strict: this.strict });
+        // Need clear old session
+        if (sid && !ctx.session) {
+            await store.destroy(sid);
+            ctx.cookies.set(key, null);
+            return;
         }
-    }
-    /**
-     * parseBody
-     * Parser file request data
-     */
-    async parseFile(ctx) {
-        return new Promise((resolve, reject) => {
-            const request = ctx.req;
-            if (typeIs(request, 'multipart')) {
-                const form = new formidable.IncomingForm();
-                if (this.formidable) {
-                    const { uploadDir, keepExtensions, maxFieldsSize, maxFields, hash, multiples } = this.formidable;
-                    if (uploadDir)
-                        form.uploadDir = uploadDir;
-                    if (keepExtensions)
-                        form.keepExtensions = keepExtensions;
-                    if (maxFieldsSize) {
-                        form.maxFieldsSize = maxFieldsSize;
-                        form.maxFileSize = maxFieldsSize;
-                    }
-                    if (maxFields)
-                        form.maxFields = maxFields;
-                    if (hash)
-                        form.hash = hash;
-                    if (multiples)
-                        form.multiples = multiples;
-                }
-                else {
-                    form.uploadDir = os.tmpdir();
-                    form.multiples = true;
-                }
-                form.encoding = this.encoding;
-                form.parse(request, (err, fields, files) => {
-                    if (err)
-                        reject(err);
-                    ctx.request.body = fields || {};
-                    ctx.request.files = files || {};
-                    resolve();
-                });
-            }
-            else {
-                resolve();
-            }
+        // set/update session
+        const ssid = await store.set(ctx.session, {
+            ...opts,
+            sid
         });
+        ctx.cookies.set(key, ssid, opts);
     }
 }
-exports.default = BodyParser;
+exports.Session = Session;
+__export(require("./lib/SessionStorage"));
+__export(require("./lib/SessionRedisStorage"));

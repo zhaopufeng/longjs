@@ -23,11 +23,7 @@
     "@longjs/core": "^1.0.0-beta.2.4"
   },
   "dependencies": {
-    "@types/co-body": "^0.0.3",
-    "@types/type-is": "^1.6.2",
-    "@types/formidable": "^1.0.31",
-    "type-is": "^1.6.16",
-    "co-body": "^6.0.0",
-    "formidable": "^1.2.1"
+    "@types/ioredis": "^4.0.3",
+    "ioredis": "^4.2.0"
   }
 }

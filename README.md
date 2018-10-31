@@ -1,8 +1,10 @@
-# @longjs/decorators 1.0.0
+# @longjs/body-parser 1.0.0
 
-[![npm (scoped)](https://img.shields.io/npm/v/@longjs/decorators.svg)](https://www.npmjs.com/package/@longjs/decorators)
+[![npm (scoped)](https://img.shields.io/npm/v/@longjs/body-parser.svg)](https://www.npmjs.com/package/@longjs/body-parser)
 
 ### 介绍
 
-Longjs是一个使用Typescript 为语法基础的可扩展的nodejs 服务端应用程序框架，使用面向对象的方式编程（OOP);
+@longjs/body-parser 插件
+
+用于处理body 相关插件
 

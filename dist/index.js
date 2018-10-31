@@ -1,127 +1,103 @@
 "use strict";
 /**
- * Decorators
+ * @class BodyParser
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
- * @copyright Ranyunlong 2018-10-29 15:50
- * @export Decorators
+ * @copyright Ranyunlong 2018-09-23 19:07
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const server_1 = require("@longjs/server");
-const Knex = require("knex");
-/**
- * Controller Decorator
- * @param path
- */
-function Controller(path) {
-    return server_1.createClassDecorator((options) => {
-        const { target } = options;
-        // Set options metadata
-        options.metadatas = Reflect.getMetadata('design:paramtypes', target) || [];
-        // Set options route root path
-        options.route = (path + '/').replace(/[\/]{2,}/g, '/');
-    });
+const os = require("os");
+const parse = require("co-body");
+const typeIs = require("type-is");
+const formidable = require("formidable");
+class BodyParser {
+    /**
+     * constructor
+     * @param ctx Context
+     * @param opts Options
+     */
+    constructor(opts = {}) {
+        this.opts = opts;
+        this.encoding = opts.encoding || 'utf-8';
+        this.formLimit = (opts.formLimit || 56) + 'kb';
+        this.json = opts.json || true;
+        this.jsonLimit = (opts.jsonLimit || 1) + 'mb';
+        this.jsonStrict = opts.jsonStrict || true;
+        this.multipart = opts.multipart || true;
+        this.urlencoded = opts.urlencoded || true;
+        this.strict = opts.strict || true;
+    }
+    /**
+     * parse
+     * Parser body request and file request
+     *
+     * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
+     */
+    async handlerRequest(ctx) {
+        if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(ctx.method)) {
+            await this.parseBody(ctx);
+            await this.parseFile(ctx);
+        }
+    }
+    /**
+     * parseBody
+     * Parser body request data
+     */
+    async parseBody(ctx) {
+        const request = ctx.req;
+        if (typeIs(request, 'json') === 'json') {
+            ctx.request.body = await parse.json(request, { limit: this.jsonLimit, strict: this.strict });
+        }
+        if (typeIs(request, 'urlencoded') === 'urlencoded') {
+            ctx.request.body = await parse.form(request, { limit: this.formLimit, strict: this.strict });
+        }
+        if (typeIs(request, 'text') === 'text') {
+            ctx.request.body = await parse.text(request, { limit: this.textLimit, strict: this.strict });
+        }
+    }
+    /**
+     * parseBody
+     * Parser file request data
+     */
+    async parseFile(ctx) {
+        return new Promise((resolve, reject) => {
+            const request = ctx.req;
+            if (typeIs(request, 'multipart')) {
+                const form = new formidable.IncomingForm();
+                if (this.formidable) {
+                    const { uploadDir, keepExtensions, maxFieldsSize, maxFields, hash, multiples } = this.formidable;
+                    if (uploadDir)
+                        form.uploadDir = uploadDir;
+                    if (keepExtensions)
+                        form.keepExtensions = keepExtensions;
+                    if (maxFieldsSize) {
+                        form.maxFieldsSize = maxFieldsSize;
+                        form.maxFileSize = maxFieldsSize;
+                    }
+                    if (maxFields)
+                        form.maxFields = maxFields;
+                    if (hash)
+                        form.hash = hash;
+                    if (multiples)
+                        form.multiples = multiples;
+                }
+                else {
+                    form.uploadDir = os.tmpdir();
+                    form.multiples = true;
+                }
+                form.encoding = this.encoding;
+                form.parse(request, (err, fields, files) => {
+                    if (err)
+                        reject(err);
+                    ctx.request.body = fields || {};
+                    ctx.request.files = files || {};
+                    resolve();
+                });
+            }
+            else {
+                resolve();
+            }
+        });
+    }
 }
-exports.Controller = Controller;
-/**
- * Parameter && Property Decorator
- * Header
- */
-exports.Header = server_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.headers[k];
-        });
-        return data;
-    }
-    return ctx.headers;
-});
-exports.Body = server_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(ctx.body))
-        return ctx.body;
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.body[k];
-        });
-        return data;
-    }
-    return ctx.body;
-});
-exports.Query = server_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.query[k];
-        });
-        return data;
-    }
-    return ctx.query;
-});
-exports.Session = server_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.session[k];
-        });
-        return data;
-    }
-    return ctx.session;
-});
-exports.Database = server_1.createPropertyAndParameterDecorator((ctx, args, configs) => {
-    if (args && configs.database) {
-        return Knex(configs.database)(args);
-    }
-    return Knex(configs.database);
-});
-exports.Files = server_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.files[k];
-        });
-        return data;
-    }
-    return ctx.files;
-});
-/**
- * RequestMethodDecorators
- * Get
- */
-exports.Get = server_1.createRequestDecorator('GET');
-/**
- * RequestMethodDecorators
- * All
- */
-exports.All = server_1.createRequestDecorator('ALL');
-/**
- * RequestMethodDecorators
- * Delete
- */
-exports.Delete = server_1.createRequestDecorator('DELETE');
-/**
- * RequestMethodDecorators
- * Head
- */
-exports.Head = server_1.createRequestDecorator('HEAD');
-/**
- * RequestMethodDecorators
- * Options
- */
-exports.Options = server_1.createRequestDecorator('OPTIONS');
-/**
- * RequestMethodDecorators
- * Patch
- */
-exports.Patch = server_1.createRequestDecorator('PATCH');
-/**
- * RequestMethodDecorators
- * Post
- */
-exports.Post = server_1.createRequestDecorator('POST');
-/**
- * RequestMethodDecorators
- * Put
- */
-exports.Put = server_1.createRequestDecorator('PUT');
+exports.default = BodyParser;

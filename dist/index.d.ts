@@ -1,139 +1,81 @@
 /**
- * Decorators
+ * @class BodyParser
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
- * @copyright Ranyunlong 2018-10-29 15:50
- * @export Decorators
+ * @copyright Ranyunlong 2018-09-23 19:07
  */
-import * as Knex from 'knex';
-/**
- * Controller Decorator
- * @param path
- */
-export declare function Controller(path: string): ClassDecorator;
-export interface Header {
-    [key: string]: any;
+import { Core } from '@longjs/core';
+import { Plugin } from '@longjs/core';
+export default class BodyParser implements Plugin {
+    opts: BodyParser.Options;
+    readonly jsonLimit: string;
+    readonly formLimit: string;
+    readonly textLimit: number;
+    readonly encoding: BodyParser.Encoding;
+    readonly multipart: boolean;
+    readonly urlencoded: boolean;
+    readonly text: boolean;
+    readonly json: boolean;
+    readonly jsonStrict: boolean;
+    readonly formidable: BodyParser.FormidableOptions;
+    readonly strict: boolean;
+    /**
+     * constructor
+     * @param ctx Context
+     * @param opts Options
+     */
+    constructor(opts?: BodyParser.Options);
+    /**
+     * parse
+     * Parser body request and file request
+     *
+     * Not allow GET DELETE HEAD COPY PURGE UNLOCK request
+     */
+    handlerRequest(ctx: Core.Context): Promise<void>;
+    /**
+     * parseBody
+     * Parser body request data
+     */
+    private parseBody;
+    /**
+     * parseBody
+     * Parser file request data
+     */
+    private parseFile;
 }
 /**
- * Parameter && Property Decorator
- * Header
+ * @namespace BodyParse
+ * @interface BodyParse
+ * @export { BodyParse }
+ * @author ranyunlong<549510622@qq.com>
+ * @license MIT
+ * @copyright Ranyunlong 2018-09-23 22:49
  */
-export declare const Header: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * Parameter && Property Decorator
- * Body
- */
-export interface Body {
-    [key: string]: any;
+export declare namespace BodyParser {
+    interface RequestFile {
+        fields: any;
+        files: any;
+    }
+    interface Options {
+        jsonLimit?: number;
+        formLimit?: number;
+        textLimit?: number;
+        encoding?: Encoding;
+        multipart?: boolean;
+        urlencoded?: boolean;
+        text?: boolean;
+        json?: boolean;
+        jsonStrict?: boolean;
+        formidable?: FormidableOptions;
+        strict?: boolean;
+    }
+    interface FormidableOptions {
+        maxFields?: number;
+        maxFieldsSize?: number;
+        uploadDir?: string;
+        keepExtensions?: boolean;
+        hash?: string | boolean;
+        multiples?: boolean;
+    }
+    type Encoding = 'utf-8' | string;
 }
-export declare const Body: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * Parameter && Property Decorator
- * Query
- */
-export interface Query {
-    [key: string]: any;
-}
-export declare const Query: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-export interface Session {
-    [key: string]: any;
-}
-export declare const Session: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-export declare type Database = Knex.QueryInterface | Knex;
-export declare const Database: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * Parameter && Property Decorator
- * Files
- */
-export interface Files {
-    [key: string]: any;
-}
-export declare const Files: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * RequestMethodDecorators
- * Get
- */
-export declare const Get: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * All
- */
-export declare const All: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * Delete
- */
-export declare const Delete: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * Head
- */
-export declare const Head: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * Options
- */
-export declare const Options: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * Patch
- */
-export declare const Patch: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * Post
- */
-export declare const Post: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
-/**
- * RequestMethodDecorators
- * Put
- */
-export declare const Put: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};

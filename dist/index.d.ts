@@ -7,12 +7,12 @@
 import { SessionStorage } from './lib/SessionStorage';
 import { SetOption } from 'cookies';
 import { Core, Plugin } from '@longjs/core';
-export declare class Session implements Plugin {
+export default class Session implements Plugin {
     opts: SessionOpts;
     sessions: any;
     constructor(opts?: SessionOpts);
-    handlerRequest(ctx: Core.Context): Promise<void>;
-    handlerResponded(ctx: Core.Context): Promise<void>;
+    handlerRequest(ctx: Core.Context, configs: any): Promise<void>;
+    handlerResponseAfter(ctx: Core.Context): Promise<void>;
 }
 export interface SessionOpts extends SetOption {
     key?: string;

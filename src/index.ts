@@ -9,14 +9,15 @@ import { SessionStorage } from './lib/SessionStorage'
 import { SetOption, GetOption } from 'cookies'
 import { Core, Plugin } from '@longjs/core'
 
-export class Session implements Plugin {
+export default class Session implements Plugin {
     public sessions: any = {}
     constructor(public opts: SessionOpts = {}) {
         opts.signed = true
         opts.key = opts.key || 'ssid'
         opts.store = opts.store || new SessionStorage()
     }
-    public async handlerRequest(ctx: Core.Context) {
+    public async handlerRequest(ctx: Core.Context, configs: any) {
+        if (!configs)  configs = this.opts
         const {  opts } = this;
         const { key, store } = opts
         // Get Sid from cookies
@@ -37,7 +38,7 @@ export class Session implements Plugin {
         ctx._session = JSON.stringify(ctx.session)
     }
 
-    public async handlerResponded(ctx: Core.Context) {
+    public async handlerResponseAfter(ctx: Core.Context) {
         const { opts } = this;
         const {  key, store } = opts
         // Get Sid from cookies

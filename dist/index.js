@@ -18,7 +18,9 @@ class Session {
         opts.key = opts.key || 'ssid';
         opts.store = opts.store || new SessionStorage_1.SessionStorage();
     }
-    async handlerRequest(ctx) {
+    async handlerRequest(ctx, configs) {
+        if (!configs)
+            configs = this.opts;
         const { opts } = this;
         const { key, store } = opts;
         // Get Sid from cookies
@@ -38,7 +40,7 @@ class Session {
         }
         ctx._session = JSON.stringify(ctx.session);
     }
-    async handlerResponded(ctx) {
+    async handlerResponseAfter(ctx) {
         const { opts } = this;
         const { key, store } = opts;
         // Get Sid from cookies
@@ -75,6 +77,6 @@ class Session {
         ctx.cookies.set(key, ssid, opts);
     }
 }
-exports.Session = Session;
+exports.default = Session;
 __export(require("./lib/SessionStorage"));
 __export(require("./lib/SessionRedisStorage"));

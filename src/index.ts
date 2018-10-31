@@ -14,7 +14,7 @@ import * as assert from 'assert'
 import { resolve } from 'path'
 import { Core, Plugin } from '@longjs/core';
 
-export class StaticServe implements Plugin {
+export default class StaticServer implements Plugin {
     constructor(public opts: StaticServe.Opts) {
         const { root } = opts
         opts = Object.assign({}, opts)

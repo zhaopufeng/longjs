@@ -42,7 +42,7 @@ new Server({
 - `maxage` Browser cache max-age in milliseconds. defaults to 0
 - `hidden` Allow transfer of hidden files. defaults to false
 - `index` Default file name, defaults to 'index.html'
-- `defer` If true, serves after `return next()`, allowing any downstream middleware to respond first.
+- `defer` If true, serves is responding after controllers
 - `gzip`  Try to serve the gzipped version of a file automatically when gzip is supported by a client and if the requested file with .gz extension exists. defaults to true.
 - `br`  Try to serve the brotli version of a file automatically when brotli is supported by a client and if the requested file with .br extension exists (note, that brotli is only accepted over https). defaults to true.
 - `setHeaders` Function to set custom headers on response.

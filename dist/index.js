@@ -7,14 +7,14 @@
  * @export Decorators
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const server_1 = require("@longjs/server");
-const Knex = require("knex");
+const Core_1 = require("@longjs/Core");
+require("reflect-metadata");
 /**
  * Controller Decorator
  * @param path
  */
 function Controller(path) {
-    return server_1.createClassDecorator((options) => {
+    return Core_1.createClassDecorator((options) => {
         const { target } = options;
         // Set options metadata
         options.metadatas = Reflect.getMetadata('design:paramtypes', target) || [];
@@ -27,7 +27,7 @@ exports.Controller = Controller;
  * Parameter && Property Decorator
  * Header
  */
-exports.Header = server_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Headers = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -37,7 +37,7 @@ exports.Header = server_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.headers;
 });
-exports.Body = server_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Body = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(ctx.body))
         return ctx.body;
     if (Array.isArray(args)) {
@@ -49,7 +49,7 @@ exports.Body = server_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.body;
 });
-exports.Query = server_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Query = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -59,7 +59,7 @@ exports.Query = server_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.query;
 });
-exports.Session = server_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Session = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -69,13 +69,37 @@ exports.Session = server_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.session;
 });
-exports.Database = server_1.createPropertyAndParameterDecorator((ctx, args, configs) => {
-    if (args && configs.database) {
-        return Knex(configs.database)(args);
+exports.Request = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+    if (Array.isArray(args)) {
+        const data = {};
+        args.forEach((k) => {
+            data[k] = ctx.request[k];
+        });
+        return data;
     }
-    return Knex(configs.database);
+    return ctx.request;
 });
-exports.Files = server_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Response = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+    if (Array.isArray(args)) {
+        const data = {};
+        args.forEach((k) => {
+            data[k] = ctx.response[k];
+        });
+        return data;
+    }
+    return ctx.response;
+});
+exports.Params = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+    if (Array.isArray(args)) {
+        const data = {};
+        args.forEach((k) => {
+            data[k] = ctx.params[k];
+        });
+        return data;
+    }
+    return ctx.params;
+});
+exports.Files = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -86,42 +110,49 @@ exports.Files = server_1.createPropertyAndParameterDecorator((ctx, args) => {
     return ctx.files;
 });
 /**
+ * MethodDecorators
+ * Type
+ */
+exports.Type = Core_1.createMethodDecorator((ctx, options, configs) => {
+    ctx.type = options.arg;
+});
+/**
  * RequestMethodDecorators
  * Get
  */
-exports.Get = server_1.createRequestDecorator('GET');
+exports.Get = Core_1.createRequestDecorator('GET');
 /**
  * RequestMethodDecorators
  * All
  */
-exports.All = server_1.createRequestDecorator('ALL');
+exports.All = Core_1.createRequestDecorator('ALL');
 /**
  * RequestMethodDecorators
  * Delete
  */
-exports.Delete = server_1.createRequestDecorator('DELETE');
+exports.Delete = Core_1.createRequestDecorator('DELETE');
 /**
  * RequestMethodDecorators
  * Head
  */
-exports.Head = server_1.createRequestDecorator('HEAD');
+exports.Head = Core_1.createRequestDecorator('HEAD');
 /**
  * RequestMethodDecorators
  * Options
  */
-exports.Options = server_1.createRequestDecorator('OPTIONS');
+exports.Options = Core_1.createRequestDecorator('OPTIONS');
 /**
  * RequestMethodDecorators
  * Patch
  */
-exports.Patch = server_1.createRequestDecorator('PATCH');
+exports.Patch = Core_1.createRequestDecorator('PATCH');
 /**
  * RequestMethodDecorators
  * Post
  */
-exports.Post = server_1.createRequestDecorator('POST');
+exports.Post = Core_1.createRequestDecorator('POST');
 /**
  * RequestMethodDecorators
  * Put
  */
-exports.Put = server_1.createRequestDecorator('PUT');
+exports.Put = Core_1.createRequestDecorator('PUT');

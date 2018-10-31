@@ -5,20 +5,21 @@
  * @copyright Ranyunlong 2018-10-29 15:50
  * @export Decorators
  */
-import * as Knex from 'knex';
+import { Core } from '@longjs/Core';
+import 'reflect-metadata';
 /**
  * Controller Decorator
  * @param path
  */
 export declare function Controller(path: string): ClassDecorator;
-export interface Header {
+export interface Headers {
     [key: string]: any;
 }
 /**
  * Parameter && Property Decorator
  * Header
  */
-export declare const Header: {
+export declare const Headers: {
     (target: any, propertyKey: string, parameterIndex: number): void;
     (target: any, propertyKey: string | symbol): void;
     (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
@@ -47,6 +48,10 @@ export declare const Query: {
     (target: any, propertyKey: string | symbol): void;
     (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 };
+/**
+ * Parameter && Property Decorator
+ * Session
+ */
 export interface Session {
     [key: string]: any;
 }
@@ -55,11 +60,37 @@ export declare const Session: {
     (target: any, propertyKey: string | symbol): void;
     (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 };
-export declare type Database = Knex.QueryInterface | Knex;
-export declare const Database: {
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export declare type Request = Core.Request;
+export declare const Request: {
     (target: any, propertyKey: string, parameterIndex: number): void;
     (target: any, propertyKey: string | symbol): void;
-    (arg: string): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
+    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
+};
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export declare type Response = Core.Response;
+export declare const Response: {
+    (target: any, propertyKey: string, parameterIndex: number): void;
+    (target: any, propertyKey: string | symbol): void;
+    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
+};
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export interface Params {
+    [key: string]: any;
+}
+export declare const Params: {
+    (target: any, propertyKey: string, parameterIndex: number): void;
+    (target: any, propertyKey: string | symbol): void;
+    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
 };
 /**
  * Parameter && Property Decorator
@@ -72,6 +103,14 @@ export declare const Files: {
     (target: any, propertyKey: string, parameterIndex: number): void;
     (target: any, propertyKey: string | symbol): void;
     (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
+};
+/**
+ * MethodDecorators
+ * Type
+ */
+export declare const Type: {
+    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
+    (key: any, value: any): MethodDecorator;
 };
 /**
  * RequestMethodDecorators

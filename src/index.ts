@@ -17,7 +17,6 @@ import {
 } from '@longjs/Core'
 
 import 'reflect-metadata'
-import * as Knex from 'knex'
 
 /**
  * Controller Decorator
@@ -108,23 +107,10 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.
 
 /**
  * Parameter && Property Decorator
- * Database
- */
-export type Database = Knex
-export type DatabaseQuery = Knex.QueryInterface
-export const Database = createPropertyAndParameterDecorator<string>((ctx: Core.Context, args: string, configs) => {
-    if (args && configs.database) {
-        return Knex(configs.database)(args)
-    }
-    return Knex(configs.database)
-})
-
-/**
- * Parameter && Property Decorator
  * Request
  */
 export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string, configs) => {
+export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -140,7 +126,7 @@ export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Request
  */
 export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string, configs) => {
+export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -158,7 +144,7 @@ export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core
 export interface Params {
     [key: string]: any;
 }
-export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string, configs) => {
+export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {

@@ -20,11 +20,9 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.2.2"
+    "@longjs/core": "^1.0.0-beta.2.3"
   },
   "dependencies": {
-    "@types/knex": "^0.14.26",
-    "knex": "^0.15.2",
     "reflect-metadata": "^0.1.12"
   }
 }

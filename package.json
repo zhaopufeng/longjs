@@ -19,12 +19,6 @@
   },
   "repository": "ranyunlong/longjs",
   "dependencies": {
-    "@longjs/core": "^1.0.0-beta.2.0",
-    "@longjs/proxy": "^1.0.0-beta.0.2",
-    "@types/knex": "^0.14.26",
-    "@types/mz": "^0.0.32",
-    "mz": "^2.7.0",
-    "path-to-regexp": "^2.4.0",
-    "reflect-metadata": "^0.1.12"
+    "@longjs/core": "^1.0.0-beta.2.3"
   }
 }

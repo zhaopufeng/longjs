@@ -37,7 +37,7 @@ export class Session implements Plugin {
         ctx._session = JSON.stringify(ctx.session)
     }
 
-    public async handlerResponse(ctx: Core.Context) {
+    public async handlerResponded(ctx: Core.Context) {
         const { opts } = this;
         const {  key, store } = opts
         // Get Sid from cookies

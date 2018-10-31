@@ -6,7 +6,6 @@
  * @export Decorators
  */
 
-import 'reflect-metadata'
 import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp'
 

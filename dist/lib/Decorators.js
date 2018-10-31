@@ -7,7 +7,6 @@
  * @export Decorators
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-require("reflect-metadata");
 /**
  * createClassDecorator
  * 创建类装饰器方法

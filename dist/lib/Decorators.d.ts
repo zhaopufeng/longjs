@@ -5,7 +5,6 @@
  * @copyright Ranyunlong 2018-10-08 14:35
  * @export Decorators
  */
-import 'reflect-metadata';
 import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp';
 interface Parameters {

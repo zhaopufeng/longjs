@@ -1,12 +1,17 @@
 import { Controller, Get, Session, Post, Body } from '@longjs/decorators'
 import { TestService } from '../services/TestService';
+import { Database } from '@longjs/database';
 
 @Controller('/')
 export class IndexController {
-    constructor(public testService: TestService) {
-        console.log(testService.test())
-    }
     @Session public session: Session;
+    @Database public database: Database;
+
+    constructor(public testService: TestService) {
+        // console.log(testService.test())
+        // console.log(this.database)
+    }
+
     @Get('/')
     public async index() {
         if (!this.session.user) {

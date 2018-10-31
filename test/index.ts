@@ -5,6 +5,7 @@ import BodyParser from '@longjs/body-parser'
 import Session, { SessionRedisStorage } from '@longjs/session'
 import { resolve } from 'path'
 import { IndexController } from './controllers/IndexController'
+import Database from '@longjs/database';
 
 new Server({
     port: 3000,
@@ -12,6 +13,15 @@ new Server({
         IndexController
     ],
     plugins: [
+        new Database({
+            client: 'mysql',
+            connection: {
+                host: 'localhost',
+                user: 'test',
+                password: 'test',
+                database: 'test'
+            }
+        }),
         new Proxy({
             '^/api': {
                 target: 'https://www.qq.com/',

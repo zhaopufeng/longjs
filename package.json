@@ -1,6 +1,6 @@
 {
   "name": "@longjs/decorators",
-  "version": "1.0.0-beta.0.4",
+  "version": "1.0.0-beta.0.5",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -20,9 +20,11 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/server": "^1.0.0-beta.1.5"
+    "@longjs/core": "^1.0.0-beta.2.2"
   },
   "dependencies": {
-    "knex": "^0.15.2"
+    "@types/knex": "^0.14.26",
+    "knex": "^0.15.2",
+    "reflect-metadata": "^0.1.12"
   }
 }

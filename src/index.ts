@@ -13,11 +13,11 @@ import {
     createPropertyDecorator,
     createRequestDecorator,
     createPropertyAndParameterDecorator,
-    Server
-} from '@longjs/server'
+    Core
+} from '@longjs/Core'
 
+import 'reflect-metadata'
 import * as Knex from 'knex'
-import { Core } from '@longjs/core';
 
 /**
  * Controller Decorator
@@ -40,7 +40,7 @@ export interface Headers {
  * Parameter && Property Decorator
  * Header
  */
-export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -58,7 +58,7 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Serve
 export interface Body {
     [key: string]: any;
 }
-export const Body = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+export const Body = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(ctx.body)) return ctx.body;
     if (Array.isArray(args)) {
         const data: any = {}
@@ -77,7 +77,7 @@ export const Body = createPropertyAndParameterDecorator<string[]>((ctx: Server.C
 export interface Query {
     [key: string]: any;
 }
-export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -95,7 +95,7 @@ export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Server.
 export interface Session {
     [key: string]: any;
 }
-export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -112,7 +112,7 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Serve
  */
 export type Database = Knex
 export type DatabaseQuery = Knex.QueryInterface
-export const Database = createPropertyAndParameterDecorator<string>((ctx: Server.Context, args: string, configs) => {
+export const Database = createPropertyAndParameterDecorator<string>((ctx: Core.Context, args: string, configs) => {
     if (args && configs.database) {
         return Knex(configs.database)(args)
     }
@@ -124,7 +124,7 @@ export const Database = createPropertyAndParameterDecorator<string>((ctx: Server
  * Request
  */
 export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string, configs) => {
+export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string, configs) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -140,7 +140,7 @@ export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Serve
  * Request
  */
 export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string, configs) => {
+export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string, configs) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -158,7 +158,7 @@ export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Serv
 export interface Params {
     [key: string]: any;
 }
-export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string, configs) => {
+export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string, configs) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -176,7 +176,7 @@ export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Server
 export interface Files {
     [key: string]: any;
 }
-export const Files = createPropertyAndParameterDecorator<string[]>((ctx: Server.Context, args: string[]) => {
+export const Files = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -191,7 +191,7 @@ export const Files = createPropertyAndParameterDecorator<string[]>((ctx: Server.
  * MethodDecorators
  * Type
  */
-export const Type = createMethodDecorator((ctx: Server.Context, options: any, configs?: Server.Configs) => {
+export const Type = createMethodDecorator((ctx: Core.Context, options: any, configs?: Core.Configs) => {
     ctx.type = options.arg
 })
 

@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const send_1 = require("./lib/send");
 const assert = require("assert");
 const path_1 = require("path");
-class StaticServe {
+class StaticServer {
     constructor(opts) {
         this.opts = opts;
         const { root } = opts;
@@ -56,4 +56,4 @@ class StaticServe {
         }
     }
 }
-exports.StaticServe = StaticServe;
+exports.default = StaticServer;

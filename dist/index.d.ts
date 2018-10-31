@@ -9,7 +9,7 @@
  */
 import { Options } from './lib/send';
 import { Core, Plugin } from '@longjs/core';
-export declare class StaticServe implements Plugin {
+export default class StaticServer implements Plugin {
     opts: StaticServe.Opts;
     constructor(opts: StaticServe.Opts);
     handlerRequest(ctx: Core.Context): Promise<void>;

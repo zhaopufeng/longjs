@@ -12,7 +12,7 @@ export declare class Session implements Plugin {
     sessions: any;
     constructor(opts?: SessionOpts);
     handlerRequest(ctx: Core.Context): Promise<void>;
-    handlerResponse(ctx: Core.Context): Promise<void>;
+    handlerResponded(ctx: Core.Context): Promise<void>;
 }
 export interface SessionOpts extends SetOption {
     key?: string;

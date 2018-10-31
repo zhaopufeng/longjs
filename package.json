@@ -1,6 +1,6 @@
 {
-  "name": "@longjs/body-parser",
-  "version": "1.0.0-beta.0.1",
+  "name": "@longjs/session",
+  "version": "1.0.0-beta.0.2",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {

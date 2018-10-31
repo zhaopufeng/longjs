@@ -38,7 +38,7 @@ class Session {
         }
         ctx._session = JSON.stringify(ctx.session);
     }
-    async handlerResponse(ctx) {
+    async handlerResponded(ctx) {
         const { opts } = this;
         const { key, store } = opts;
         // Get Sid from cookies

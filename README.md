@@ -1,4 +1,4 @@
-# @longjs/body-parser 1.0.0
+# @longjs/session 1.0.0
 
 [![npm (scoped)](https://img.shields.io/npm/v/@longjs/session.svg)](https://www.npmjs.com/package/@longjs/session)
 

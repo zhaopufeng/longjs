@@ -6,6 +6,9 @@
  * @copyright Ranyunlong 2018-09-21 0:07
  * @export Server
  */
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
 const EventEmitter = require("events");
 const statuses = require("statuses");
@@ -292,3 +295,4 @@ class Server extends EventEmitter {
     }
 }
 exports.default = Server;
+__export(require("./lib/Decorators"));

@@ -66,6 +66,8 @@ export default class Server extends EventEmitter {
      */
     protected createContext(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse): Core.Context;
 }
+export * from './lib/Decorators';
+export * from './lib/Plugin';
 export declare namespace Core {
     interface HttpHandler {
         (ctx?: Context): Promise<any>;

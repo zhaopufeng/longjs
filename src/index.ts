@@ -336,6 +336,9 @@ export default class Server extends EventEmitter {
     }
 }
 
+export * from './lib/Decorators'
+export * from './lib/Plugin'
+
 export namespace Core {
 
     export interface HttpHandler {

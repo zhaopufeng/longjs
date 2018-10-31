@@ -180,6 +180,7 @@ export declare namespace Core {
         get(field: string): string | number | string[];
     }
     interface Request extends BaseRequest {
+        app: Server;
         req: IncomingMessage | Http2ServerRequest;
         res: ServerResponse | Http2ServerResponse;
         ctx: Context;
@@ -190,12 +191,14 @@ export declare namespace Core {
         ip: string;
     }
     interface Response extends BaseResponse {
+        app: Server;
         req: IncomingMessage | Http2ServerRequest;
         res: ServerResponse | Http2ServerResponse;
         ctx: Context;
         request: Request;
     }
     interface Context extends BaseContext {
+        app: Server;
         request: Request;
         response: Response;
         req: IncomingMessage | Http2ServerRequest;

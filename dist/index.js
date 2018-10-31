@@ -39,7 +39,7 @@ class Server extends EventEmitter {
         plugins.forEach((plugin, i) => {
             const uid = crypto_1.randomBytes(24).toString('hex');
             plugin.uid = uid;
-            options.configs[uid] = {};
+            options.pluginConfigs[uid] = {};
         });
         // Map controllers
         if (Array.isArray(options.controllers)) {

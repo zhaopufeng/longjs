@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import { Server } from '@longjs/server'
+import { Core, Plugin } from '@longjs/core'
 import * as httpProxy from 'http-proxy'
 import * as url from 'url';
 import * as stream from 'stream';
@@ -73,19 +73,89 @@ export interface Options {
 
 let _proxy: httpProxy = httpProxy.createProxyServer({})
 
-export function proxyTable(ctx: Server.Context, options: Options = {}) {
-    Object.keys(options).forEach((key: string) => {
-        proxy(key, ctx, options[key])
-    })
-}
-
-export function proxy(path: string, ctx: Server.Context, proxyOptions: ProxyOptions) {
-    const { pathRewrite, changeOrigin } = proxyOptions
-    // changeOrigin default true
-    if (typeof changeOrigin !== 'boolean') proxyOptions.changeOrigin = true
-    if (RegExp(path).test(ctx.path)) {
-        _proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
+export async function proxyTable(ctx: Core.Context, options: Options = {}) {
+    for (let key in options) {
+        await proxy(key, ctx, options[key])
     }
 }
 
-export default proxyTable
+export async function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions) {
+    return new Promise((next, reject) => {
+        const { changeOrigin, pathRewrite } = proxyOptions
+        if (RegExp(path).test(ctx.path)) {
+            if (typeof changeOrigin === 'undefined') proxyOptions.changeOrigin = true
+            const path = ctx.path
+            for (let item in pathRewrite) {
+                let itemPath: string = item
+                let itemPath2: string;
+                // pathRewrite
+                if (!/\^/.test(itemPath)) itemPath = `^${itemPath}`
+                if (!/\$$/.test(itemPath)) {
+                    itemPath = `${itemPath}$`
+                    itemPath2 = `${itemPath}/$`
+                }
+                if (RegExp(itemPath).test(path)) {
+                    ctx.req.url = ctx.req.url.replace(RegExp(itemPath), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
+                } else if (RegExp(itemPath2).test(path)) {
+                    ctx.req.url = ctx.req.url.replace(RegExp(itemPath2), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
+                }
+            }
+            // proxy
+            _proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
+            _proxy.on('error', function(err) {
+                reject(err)
+            })
+        } else {
+            next()
+        }
+    })
+}
+
+export class Proxy implements Plugin {
+    private _proxy: httpProxy = _proxy
+    constructor(public options: Options) { }
+    public async handlerRequest(ctx: Core.Context, configs: any) {
+        if (!configs) configs = this.options
+        this.proxyTable(ctx, this.options)
+    }
+
+    public async proxyTable(ctx: Core.Context, options: Options = {}) {
+        for (let key in options) {
+            await proxy(key, ctx, options[key])
+        }
+    }
+
+    public async proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions) {
+        return new Promise((next, reject) => {
+            const { changeOrigin, pathRewrite } = proxyOptions
+            if (RegExp(path).test(ctx.path)) {
+                if (typeof changeOrigin === 'undefined') proxyOptions.changeOrigin = true
+                const path = ctx.path
+                for (let item in pathRewrite) {
+                    let itemPath: string = item
+                    let itemPath2: string;
+                    // pathRewrite
+                    if (!/\^/.test(itemPath)) itemPath = `^${itemPath}`
+                    if (!/\$$/.test(itemPath)) {
+                        itemPath = `${itemPath}$`
+                        itemPath2 = `${itemPath}/$`
+                    }
+                    if (RegExp(itemPath).test(path)) {
+                        ctx.req.url = ctx.req.url.replace(RegExp(itemPath), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
+                    } else if (RegExp(itemPath2).test(path)) {
+                        ctx.req.url = ctx.req.url.replace(RegExp(itemPath2), pathRewrite[item]).replace(/[\/]{2,}/g, '/')
+                    }
+                }
+                // proxy
+                this._proxy.web(ctx.req as IncomingMessage, ctx.res as ServerResponse, proxyOptions)
+                this._proxy.on('error', function(err) {
+                    reject(err)
+                })
+            } else {
+                next()
+            }
+        })
+    }
+}
+
+export default Proxy

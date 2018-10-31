@@ -49,7 +49,7 @@ export default class Server extends EventEmitter {
             plugins.forEach((plugin, i) => {
             const uid = randomBytes(24).toString('hex')
             ; (plugin as any).uid = uid
-            options.configs[uid] = {}
+            options.pluginConfigs[uid] = {}
         })
 
          // Map controllers

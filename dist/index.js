@@ -57,7 +57,7 @@ class Proxy {
     async handlerRequest(ctx, configs) {
         if (!configs)
             configs = this.options;
-        this.proxyTable(ctx, this.options);
+        await this.proxyTable(ctx, this.options);
     }
     async proxyTable(ctx, options = {}) {
         for (let key in options) {

@@ -116,7 +116,7 @@ export class Proxy implements Plugin {
     constructor(public options: Options) { }
     public async handlerRequest(ctx: Core.Context, configs: any) {
         if (!configs) configs = this.options
-        this.proxyTable(ctx, this.options)
+        await this.proxyTable(ctx, this.options)
     }
 
     public async proxyTable(ctx: Core.Context, options: Options = {}) {

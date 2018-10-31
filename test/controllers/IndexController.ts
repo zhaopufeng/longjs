@@ -2,7 +2,7 @@ import { Controller, Get } from '@longjs/decorators'
 
 @Controller('/')
 export class IndexController {
-    @Get
+    @Get('/')
     public async index() {
         return 'xx'
     }

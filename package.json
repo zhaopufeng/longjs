@@ -1,6 +1,10 @@
 {
   "name": "@longjs/proxy",
+<<<<<<< HEAD
   "version": "1.0.0-beta.0.3",
+=======
+  "version": "1.0.0-beta.0.2",
+>>>>>>> ce8ff55d15c2e451a0fe7a47aaabbc4ecd8b4d7d
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -20,7 +24,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/server": "^1.0.0-beta.1.6"
+    "@longjs/core": "^1.0.0-beta.2.0"
   },
   "dependencies": {
     "@types/http-proxy": "^1.16.2",

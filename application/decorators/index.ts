@@ -1,0 +1,1 @@
+import { createMethodDecorator } from '@longjs/server'

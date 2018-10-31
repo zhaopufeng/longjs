@@ -1,6 +1,6 @@
 {
   "name": "@longjs/session",
-  "version": "1.0.0-beta.0.3",
+  "version": "1.0.0",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.2.4"
+    "@longjs/core": "^1.0.0-beta.2.5"
   },
   "dependencies": {
     "@types/ioredis": "^4.0.3",

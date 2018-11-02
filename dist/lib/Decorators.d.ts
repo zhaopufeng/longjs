@@ -90,8 +90,10 @@ export declare function createRequestDecorator<T = any>(type: RequestMethodType)
  * 创建参数装饰器方法
  * @param callback
  */
-export declare function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback): {
-    (target: any, propertyKey: string, parameterIndex: number): void;
+export declare function createParameterDecorator<T = any>(callback: ParameterDecoratorCallback): ParameterDecorator & {
+    (arg: T): ParameterDecorator;
+};
+export declare function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback): ParameterDecorator & {
     (arg: T): ParameterDecorator;
 };
 /**
@@ -99,8 +101,10 @@ export declare function createParameterDecorator<T = any>(decoratorName: string,
  * 创建属性装饰器方法
  * @param callback
  */
-export declare function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback): {
-    (target: any, propertyKey: string | symbol): void;
+export declare function createPropertyDecorator<T = any>(callback: PropertyDecoratorCallback): PropertyDecorator & {
+    (arg: T): PropertyDecorator;
+};
+export declare function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback): PropertyDecorator & {
     (arg: T): PropertyDecorator;
 };
 /**
@@ -108,10 +112,11 @@ export declare function createPropertyDecorator<T = any>(decoratorName: string, 
  * 创建同时能兼容参数装饰器和属性装饰器方法
  * @param callback
  */
-export declare function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback | PropertyDecoratorCallback): {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: T): ParameterDecorator;
+export declare function createPropertyAndParameterDecorator<T = any>(callback: ParameterDecoratorCallback & PropertyDecoratorCallback): ParameterDecorator & PropertyDecorator & {
+    (arg: T): ParameterDecorator & PropertyDecorator;
+};
+export declare function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback & PropertyDecoratorCallback): ParameterDecorator & PropertyDecorator & {
+    (arg: T): ParameterDecorator & PropertyDecorator;
 };
 /**
  * createMethodDecorator

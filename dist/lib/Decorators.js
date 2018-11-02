@@ -96,12 +96,12 @@ function createRequestDecorator(type) {
     return decorator;
 }
 exports.createRequestDecorator = createRequestDecorator;
-/**
- * createParameterDecorator
- * 创建参数装饰器方法
- * @param callback
- */
-function createParameterDecorator(decoratorName, callback) {
+function createParameterDecorator(...ags) {
+    let [decoratorName, callback] = ags;
+    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
+        callback = decoratorName;
+        decoratorName = null;
+    }
     function decorator(...args) {
         if (args.length === 1) {
             return (target, propertyKey, parameterIndex) => {
@@ -135,12 +135,12 @@ function createParameterDecorator(decoratorName, callback) {
     return decorator;
 }
 exports.createParameterDecorator = createParameterDecorator;
-/**
- * createPropertyDecorator
- * 创建属性装饰器方法
- * @param callback
- */
-function createPropertyDecorator(decoratorName, callback) {
+function createPropertyDecorator(...ags) {
+    let [decoratorName, callback] = ags;
+    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
+        callback = decoratorName;
+        decoratorName = null;
+    }
     function decorator(...args) {
         if (args.length === 1) {
             return (target, propertyKey) => {
@@ -172,12 +172,12 @@ function createPropertyDecorator(decoratorName, callback) {
     return decorator;
 }
 exports.createPropertyDecorator = createPropertyDecorator;
-/**
- * createPropertyAndParameterDecorator
- * 创建同时能兼容参数装饰器和属性装饰器方法
- * @param callback
- */
-function createPropertyAndParameterDecorator(decoratorName, callback) {
+function createPropertyAndParameterDecorator(...ags) {
+    let [decoratorName, callback] = ags;
+    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
+        callback = decoratorName;
+        decoratorName = null;
+    }
     function decorator(...args) {
         if (args.length === 1) {
             function fn(...ags) {

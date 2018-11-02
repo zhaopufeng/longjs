@@ -17,7 +17,7 @@ import {
 } from '@longjs/Core'
 import 'validator'
 import 'reflect-metadata'
-import validateParams, { ValidatorKeys, Messages } from './lib';
+import validateParams, { ValidatorKeys } from './lib';
 
 /**
  * Controller Decorator
@@ -51,16 +51,6 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.
     return ctx.headers
 })
 
-export interface HttpError extends Error {
-    errors?: { [key: string]: Messages};
-    statusCode?: number;
-    type?: string;
-}
-
-export interface HttpErrorConstructor extends HttpError {
-    new (...args: any[]): HttpError;
-}
-
 /**
  * Parameter && Property Decorator
  * Body
@@ -74,7 +64,7 @@ export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: HttpError = new Error('Request Body data is not valid.')
+            const error: Core.HttpException = new Error('Request Body data is not valid.')
             error.errors = errors
             error.type = 'BodyDecorator'
             throw error
@@ -98,7 +88,7 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: HttpError = new Error('Request query string data is not valid.')
+            const error: Core.HttpException = new Error('Request query string data is not valid.')
             error.errors = errors
             error.type = 'QueryDecorator'
             throw error
@@ -121,7 +111,7 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: HttpError = new Error('Request path parameter data is not valid.')
+            const error: Core.HttpException = new Error('Request path parameter data is not valid.')
             error.errors = errors
             error.type = 'ParamsDecorator'
             throw error
@@ -233,14 +223,10 @@ export const Status = createMethodDecorator<string>((ctx, options) => {
  * MethodDecorators
  * Catch
  */
-export const Catch = createMethodDecorator<HttpErrorConstructor>((ctx, options) => {
+export const Catch = createMethodDecorator<Core.HttpErrorConstructor>((ctx, options) => {
     const option: any = options.target.$options || {}
     option.catchs = {}
-    option.catchs[options.propertyKey as string] = {
-        arg: options.arg,
-        key: options.key,
-        value: options.value
-    }
+    option.catchs[options.propertyKey as string] = options.arg
     options.target.$options = option
 })
 

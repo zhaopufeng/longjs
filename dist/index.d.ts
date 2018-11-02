@@ -8,7 +8,7 @@
 import { Core } from '@longjs/Core';
 import 'validator';
 import 'reflect-metadata';
-import { ValidatorKeys, Messages } from './lib';
+import { ValidatorKeys } from './lib';
 /**
  * Controller Decorator
  * @param path
@@ -22,16 +22,6 @@ export interface Headers {
     [key: string]: any;
 }
 export declare const Headers: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
-export interface HttpError extends Error {
-    errors?: {
-        [key: string]: Messages;
-    };
-    statusCode?: number;
-    type?: string;
-}
-export interface HttpErrorConstructor extends HttpError {
-    new (...args: any[]): HttpError;
-}
 /**
  * Parameter && Property Decorator
  * Body
@@ -100,7 +90,7 @@ export declare const Status: {
  */
 export declare const Catch: {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: HttpErrorConstructor, value: any): MethodDecorator;
+    (key: Core.HttpErrorConstructor, value: any): MethodDecorator;
 };
 /**
  * RequestMethodDecorators

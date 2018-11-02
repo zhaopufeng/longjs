@@ -164,11 +164,7 @@ exports.Status = Core_1.createMethodDecorator((ctx, options) => {
 exports.Catch = Core_1.createMethodDecorator((ctx, options) => {
     const option = options.target.$options || {};
     option.catchs = {};
-    option.catchs[options.propertyKey] = {
-        arg: options.arg,
-        key: options.key,
-        value: options.value
-    };
+    option.catchs[options.propertyKey] = options.arg;
     options.target.$options = option;
 });
 /**

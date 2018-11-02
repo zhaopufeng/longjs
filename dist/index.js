@@ -6,9 +6,14 @@
  * @copyright Ranyunlong 2018-10-29 15:50
  * @export Decorators
  */
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
 const Core_1 = require("@longjs/Core");
+require("validator");
 require("reflect-metadata");
+const lib_1 = require("./lib");
 /**
  * Controller Decorator
  * @param path
@@ -23,10 +28,6 @@ function Controller(path) {
     });
 }
 exports.Controller = Controller;
-/**
- * Parameter && Property Decorator
- * Header
- */
 exports.Headers = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
@@ -37,27 +38,53 @@ exports.Headers = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.headers;
 });
-exports.Body = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(ctx.body))
-        return ctx.body;
-    if (Array.isArray(args)) {
+exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validateKeys) => {
+    if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.body[k];
+        Object.keys(validateKeys).forEach((k) => {
+            data[k] = ctx.body[k] || validateKeys[k].defalut;
         });
+        const errors = lib_1.default(data, validateKeys);
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Request body data parameters is not valid');
+            error.errors = errors;
+            throw error;
+        }
         return data;
     }
     return ctx.body;
 });
-exports.Query = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
+exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, validateKeys) => {
+    if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.query[k];
+        Object.keys(validateKeys).forEach((k) => {
+            data[k] = ctx.query[k] || validateKeys[k].defalut;
         });
+        const errors = lib_1.default(data, validateKeys);
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Request query string data parameters is not valid');
+            error.errors = errors;
+            throw error;
+        }
         return data;
     }
     return ctx.query;
+});
+exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, validateKeys) => {
+    if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
+        const data = {};
+        Object.keys(validateKeys).forEach((k) => {
+            data[k] = ctx.params[k] || validateKeys[k].defalut;
+        });
+        const errors = lib_1.default(data, validateKeys);
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Request query string data parameters is not valid');
+            error.errors = errors;
+            throw error;
+        }
+        return data;
+    }
+    return ctx.params;
 });
 exports.Session = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {
@@ -89,17 +116,7 @@ exports.Response = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.response;
 });
-exports.Params = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.params[k];
-        });
-        return data;
-    }
-    return ctx.params;
-});
-exports.Files = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Files = Core_1.createPropertyAndParameterDecorator('Files', (ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -113,8 +130,29 @@ exports.Files = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
  * MethodDecorators
  * Type
  */
-exports.Type = Core_1.createMethodDecorator((ctx, options, configs) => {
-    ctx.type = options.arg;
+exports.Type = Core_1.createMethodDecorator((ctx, options) => {
+    const { value } = options.descriptor;
+    options.descriptor.value = async function (...args) {
+        let data = await value.call(this, ...args);
+        if (data) {
+            ctx.type = options.arg;
+        }
+        return data;
+    };
+});
+/**
+ * MethodDecorators
+ * Status
+ */
+exports.Status = Core_1.createMethodDecorator((ctx, options) => {
+    const { value } = options.descriptor;
+    options.descriptor.value = async function (...args) {
+        let data = await value.call(this, ...args);
+        if (data) {
+            ctx.status = options.arg;
+        }
+        return data;
+    };
 });
 /**
  * RequestMethodDecorators
@@ -156,3 +194,4 @@ exports.Post = Core_1.createRequestDecorator('POST');
  * Put
  */
 exports.Put = Core_1.createRequestDecorator('PUT');
+__export(require("./lib"));

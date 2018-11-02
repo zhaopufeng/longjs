@@ -6,24 +6,22 @@
  * @export Decorators
  */
 import { Core } from '@longjs/Core';
+import 'validator';
 import 'reflect-metadata';
+import { ValidatorKeys } from './lib';
 /**
  * Controller Decorator
  * @param path
  */
 export declare function Controller(path: string): ClassDecorator;
-export interface Headers {
-    [key: string]: any;
-}
 /**
  * Parameter && Property Decorator
  * Header
  */
-export declare const Headers: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
+export interface Headers {
+    [key: string]: any;
+}
+export declare const Headers: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Body
@@ -31,11 +29,7 @@ export declare const Headers: {
 export interface Body {
     [key: string]: any;
 }
-export declare const Body: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
+export declare const Body: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Query
@@ -43,43 +37,7 @@ export declare const Body: {
 export interface Query {
     [key: string]: any;
 }
-export declare const Query: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * Parameter && Property Decorator
- * Session
- */
-export interface Session {
-    [key: string]: any;
-}
-export declare const Session: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * Parameter && Property Decorator
- * Request
- */
-export declare type Request = Core.Request;
-export declare const Request: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
-/**
- * Parameter && Property Decorator
- * Request
- */
-export declare type Response = Core.Response;
-export declare const Response: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
+export declare const Query: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Request
@@ -87,11 +45,27 @@ export declare const Response: {
 export interface Params {
     [key: string]: any;
 }
-export declare const Params: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
+export declare const Params: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+/**
+ * Parameter && Property Decorator
+ * Session
+ */
+export interface Session {
+    [key: string]: any;
+}
+export declare const Session: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export declare type Request = Core.Request;
+export declare const Request: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export declare type Response = Core.Response;
+export declare const Response: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Files
@@ -99,18 +73,22 @@ export declare const Params: {
 export interface Files {
     [key: string]: any;
 }
-export declare const Files: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: string[]): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
+export declare const Files: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * MethodDecorators
  * Type
  */
 export declare const Type: {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: any, value: any): MethodDecorator;
+    (key: string, value: any): MethodDecorator;
+};
+/**
+ * MethodDecorators
+ * Status
+ */
+export declare const Status: {
+    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
+    (key: string, value: any): MethodDecorator;
 };
 /**
  * RequestMethodDecorators
@@ -176,3 +154,4 @@ export declare const Put: {
     (route: string): MethodDecorator;
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
 };
+export * from './lib';

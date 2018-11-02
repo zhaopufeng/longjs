@@ -22,38 +22,29 @@ export interface Headers {
     [key: string]: any;
 }
 export declare const Headers: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export interface ValidateError extends Error {
+    errors?: {
+        [key: string]: Messages;
+    };
+    type?: string;
+}
 /**
  * Parameter && Property Decorator
  * Body
  */
-export interface Body<T = any> {
-    data: T;
-    getError: () => {
-        [K in keyof T]: Messages;
-    } | false;
-}
+export declare type Body<T = any> = T;
 export declare const Body: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Query
  */
-export interface Query<T = any> {
-    data: T;
-    getError: () => {
-        [K in keyof T]: Messages;
-    } | false;
-}
+export declare type Query<T = any> = T;
 export declare const Query: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Request
  */
-export interface Params<T = any> {
-    data: T;
-    getError: () => {
-        [K in keyof T]: Messages;
-    } | false;
-}
+export declare type Params<T = any> = T;
 export declare const Params: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator

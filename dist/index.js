@@ -39,70 +39,52 @@ exports.Headers = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     return ctx.headers;
 });
 exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validateKeys) => {
-    const data = {
-        data: {},
-        getError() {
-            return false;
-        }
-    };
+    const data = {};
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         Object.keys(validateKeys).forEach((k) => {
             data.data[k] = ctx.body[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            data.getError = function () {
-                return errors;
-            };
+            const error = new Error('Request Body data is not valid.');
+            error.errors = errors;
+            error.type = `Body`;
+            throw error;
         }
         return data;
     }
-    data.data = ctx.body;
-    return data;
+    return ctx.body;
 });
 exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, validateKeys) => {
-    const data = {
-        data: {},
-        getError() {
-            return false;
-        }
-    };
+    const data = {};
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         Object.keys(validateKeys).forEach((k) => {
             data.data[k] = ctx.query[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            data.getError = function () {
-                return errors;
-            };
+            const error = new Error('Request query string data is not valid.');
+            error.errors = errors;
+            error.type = `Query`;
+            throw error;
         }
         return data;
     }
-    data.data = ctx.query;
-    return data;
+    return ctx.query;
 });
 exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, validateKeys) => {
-    const data = {
-        data: {},
-        getError() {
-            return false;
-        }
-    };
+    const data = {};
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         Object.keys(validateKeys).forEach((k) => {
             data.data[k] = ctx.params[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            data.getError = function () {
-                return errors;
-            };
+            return;
         }
         return data;
     }
-    data.data = ctx.params;
-    return data;
+    return ctx.params;
 });
 exports.Session = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {

@@ -39,7 +39,7 @@ export interface Headers {
  * Parameter && Property Decorator
  * Header
  */
-export const Headers = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Headers = createPropertyAndParameterDecorator<string[]>('Headers', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -57,7 +57,7 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx, args)
 export interface Body {
     [key: string]: any;
 }
-export const Body = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Body = createPropertyAndParameterDecorator<string[]>('Body', (ctx, args) => {
     if (Array.isArray(ctx.body)) return ctx.body;
     if (Array.isArray(args)) {
         const data: any = {}
@@ -76,7 +76,7 @@ export const Body = createPropertyAndParameterDecorator<string[]>((ctx, args) =>
 export interface Query {
     [key: string]: any;
 }
-export const Query = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Query = createPropertyAndParameterDecorator<string[]>('Query', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -94,7 +94,7 @@ export const Query = createPropertyAndParameterDecorator<string[]>((ctx, args) =
 export interface Session {
     [key: string]: any;
 }
-export const Session = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Session = createPropertyAndParameterDecorator<string[]>('Session', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -110,7 +110,7 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx, args)
  * Request
  */
 export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Request = createPropertyAndParameterDecorator<string[]>('Request', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -126,7 +126,7 @@ export const Request = createPropertyAndParameterDecorator<string[]>((ctx, args)
  * Request
  */
 export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Response = createPropertyAndParameterDecorator<string[]>('Response', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -144,7 +144,7 @@ export const Response = createPropertyAndParameterDecorator<string[]>((ctx, args
 export interface Params {
     [key: string]: any;
 }
-export const Params = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Params = createPropertyAndParameterDecorator<string[]>('Params', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -162,7 +162,7 @@ export const Params = createPropertyAndParameterDecorator<string[]>((ctx, args) 
 export interface Files {
     [key: string]: any;
 }
-export const Files = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
+export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {

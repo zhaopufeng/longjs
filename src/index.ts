@@ -341,7 +341,7 @@ export default class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    private exception(response: ServerResponse | Http2ServerResponse, error: Core.HttpErrorConstructor) {
+    private exception(response: ServerResponse | Http2ServerResponse, error: Core.HttpErrorConstructor & Error) {
         let status: number;
         // If not number
         if (error.statusCode) {
@@ -394,7 +394,7 @@ export * from './lib/HttpException'
 
 export namespace Core {
 
-    export interface HttpException extends Error {
+    export interface HttpException {
         errors?: { [key: string]: Messages};
         statusCode?: number;
         type?: 'json' | 'html';

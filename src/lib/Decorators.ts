@@ -376,7 +376,7 @@ export function createPropertyAndParameterDecorator<T = any>(...ags: any[]) {
  */
 export function createMethodDecorator<K = any, V = any>(callback: MethodDecoratorCallback) {
     function decorator(target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
-    function decorator(key: K, value: V): MethodDecorator;
+    function decorator(key: K, value?: V): MethodDecorator;
     function decorator(...args: any[]): any {
         if (args.length < 3) {
             return (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {

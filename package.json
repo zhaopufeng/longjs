@@ -20,7 +20,7 @@
   "repository": "ranyunlong/longjs",
   "dependencies": {
     "@longjs/body-parser": "^1.0.0",
-    "@longjs/core": "^1.0.0-beta.3.4",
+    "@longjs/core": "^1.0.0-beta.3.5",
     "@longjs/database": "^1.0.0-beta.0.2",
     "@longjs/decorators": "^1.0.0-beta.1.3",
     "@longjs/proxy": "^1.0.0",

@@ -10,12 +10,14 @@ import * as pathToRegExp from 'path-to-regexp';
 interface Parameters {
     [key: string]: Array<{
         handler?: ParameterDecoratorCallback;
+        decoratorName?: string;
         arg?: any;
     }>;
 }
 interface Propertys {
     [key: string]: {
         handler?: PropertyDecoratorCallback;
+        decoratorName?: string;
         arg?: any;
     };
 }
@@ -88,7 +90,7 @@ export declare function createRequestDecorator<T = any>(type: RequestMethodType)
  * 创建参数装饰器方法
  * @param callback
  */
-export declare function createParameterDecorator<T = any>(callback: ParameterDecoratorCallback): {
+export declare function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback): {
     (target: any, propertyKey: string, parameterIndex: number): void;
     (arg: T): ParameterDecorator;
 };
@@ -97,7 +99,7 @@ export declare function createParameterDecorator<T = any>(callback: ParameterDec
  * 创建属性装饰器方法
  * @param callback
  */
-export declare function createPropertyDecorator<T = any>(callback: PropertyDecoratorCallback): {
+export declare function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback): {
     (target: any, propertyKey: string | symbol): void;
     (arg: T): PropertyDecorator;
 };
@@ -106,7 +108,7 @@ export declare function createPropertyDecorator<T = any>(callback: PropertyDecor
  * 创建同时能兼容参数装饰器和属性装饰器方法
  * @param callback
  */
-export declare function createPropertyAndParameterDecorator<T = any>(callback: ParameterDecoratorCallback | PropertyDecoratorCallback): {
+export declare function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback | PropertyDecoratorCallback): {
     (target: any, propertyKey: string, parameterIndex: number): void;
     (target: any, propertyKey: string | symbol): void;
     (arg: T): ParameterDecorator;

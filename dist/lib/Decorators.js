@@ -101,7 +101,7 @@ exports.createRequestDecorator = createRequestDecorator;
  * 创建参数装饰器方法
  * @param callback
  */
-function createParameterDecorator(callback) {
+function createParameterDecorator(decoratorName, callback) {
     function decorator(...args) {
         if (args.length === 1) {
             return (target, propertyKey, parameterIndex) => {
@@ -112,6 +112,7 @@ function createParameterDecorator(callback) {
                 }
                 parameters[propertyKey][parameterIndex] = {
                     handler: callback,
+                    decoratorName,
                     arg: args[0]
                 };
                 target.$options = options;
@@ -125,7 +126,8 @@ function createParameterDecorator(callback) {
                 parameters[propertyKey] = [];
             }
             parameters[propertyKey][parameterIndex] = {
-                handler: callback
+                handler: callback,
+                decoratorName
             };
             target.$options = options;
         }
@@ -138,7 +140,7 @@ exports.createParameterDecorator = createParameterDecorator;
  * 创建属性装饰器方法
  * @param callback
  */
-function createPropertyDecorator(callback) {
+function createPropertyDecorator(decoratorName, callback) {
     function decorator(...args) {
         if (args.length === 1) {
             return (target, propertyKey) => {
@@ -148,6 +150,7 @@ function createPropertyDecorator(callback) {
                 const { propertys } = options;
                 propertys[propertyKey] = {
                     handler: callback,
+                    decoratorName,
                     arg: args[0]
                 };
                 target.$options = options;
@@ -160,7 +163,8 @@ function createPropertyDecorator(callback) {
                 options.propertys = {};
             const { propertys } = options;
             propertys[propertyKey] = {
-                handler: callback
+                handler: callback,
+                decoratorName
             };
             target.$options = options;
         }
@@ -173,7 +177,7 @@ exports.createPropertyDecorator = createPropertyDecorator;
  * 创建同时能兼容参数装饰器和属性装饰器方法
  * @param callback
  */
-function createPropertyAndParameterDecorator(callback) {
+function createPropertyAndParameterDecorator(decoratorName, callback) {
     function decorator(...args) {
         if (args.length === 1) {
             function fn(...ags) {
@@ -204,12 +208,14 @@ function createPropertyAndParameterDecorator(callback) {
                     opts.propertys = {};
                     opts.propertys[propertyKey] = {
                         arg: args,
+                        decoratorName,
                         handler: callback
                     };
                 }
                 else {
                     opts.propertys[propertyKey] = {
                         arg: args,
+                        decoratorName,
                         handler: callback
                     };
                 }
@@ -220,6 +226,7 @@ function createPropertyAndParameterDecorator(callback) {
                     opts.parameters[propertyKey] = [];
                     opts.parameters[propertyKey][parameterIndex] = {
                         arg: args,
+                        decoratorName,
                         handler: callback
                     };
                 }
@@ -227,6 +234,7 @@ function createPropertyAndParameterDecorator(callback) {
                     if (Array.isArray(opts.parameters[propertyKey])) {
                         opts.parameters[propertyKey][parameterIndex] = {
                             arg: args,
+                            decoratorName,
                             handler: callback
                         };
                     }
@@ -234,6 +242,7 @@ function createPropertyAndParameterDecorator(callback) {
                         opts.parameters[propertyKey] = [];
                         opts.parameters[propertyKey][parameterIndex] = {
                             arg: args,
+                            decoratorName,
                             handler: callback
                         };
                     }

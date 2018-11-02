@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.2.5"
+    "@longjs/core": "^1.0.0-beta.2.8"
   },
   "dependencies": {
     "reflect-metadata": "^0.1.12"

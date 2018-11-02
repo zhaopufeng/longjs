@@ -39,7 +39,7 @@ export interface Headers {
  * Parameter && Property Decorator
  * Header
  */
-export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Headers = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -57,7 +57,7 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.
 export interface Body {
     [key: string]: any;
 }
-export const Body = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Body = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(ctx.body)) return ctx.body;
     if (Array.isArray(args)) {
         const data: any = {}
@@ -76,7 +76,7 @@ export const Body = createPropertyAndParameterDecorator<string[]>((ctx: Core.Con
 export interface Query {
     [key: string]: any;
 }
-export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Query = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -94,7 +94,7 @@ export const Query = createPropertyAndParameterDecorator<string[]>((ctx: Core.Co
 export interface Session {
     [key: string]: any;
 }
-export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Session = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -110,7 +110,7 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Request
  */
 export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string) => {
+export const Request = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -126,7 +126,7 @@ export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Request
  */
 export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string) => {
+export const Response = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -144,7 +144,7 @@ export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core
 export interface Params {
     [key: string]: any;
 }
-export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string) => {
+export const Params = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -162,7 +162,7 @@ export const Params = createPropertyAndParameterDecorator<string[]>((ctx: Core.C
 export interface Files {
     [key: string]: any;
 }
-export const Files = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Files = createPropertyAndParameterDecorator<string[]>((ctx, args) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -177,8 +177,30 @@ export const Files = createPropertyAndParameterDecorator<string[]>((ctx: Core.Co
  * MethodDecorators
  * Type
  */
-export const Type = createMethodDecorator((ctx: Core.Context, options: any, configs?: Core.Configs) => {
-    ctx.type = options.arg
+export const Type = createMethodDecorator<string>((ctx, options) => {
+    const { value } = options.descriptor
+    options.descriptor.value = async function(...args: any[]) {
+        let data = await value.call(this, ...args)
+        if (data) {
+            ctx.type = options.arg
+        }
+        return data
+    }
+})
+
+/**
+ * MethodDecorators
+ * Status
+ */
+export const Status = createMethodDecorator<string>((ctx, options) => {
+    const { value } = options.descriptor
+    options.descriptor.value = async function(...args: any[]) {
+        let data = await value.call(this, ...args)
+        if (data) {
+            ctx.status = options.arg
+        }
+        return data
+    }
 })
 
 /**

@@ -311,6 +311,7 @@ class Server extends EventEmitter {
             status = status || 500;
             const data = statuses[status];
             response.setHeader('Content-Length', Buffer.byteLength(data));
+            response.statusMessage = error.message;
             response.statusCode = status;
             response.end(data);
         }

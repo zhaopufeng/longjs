@@ -3,6 +3,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 
 export interface Plugin {
     readonly uid?: string;
+    init?(options: Core.Options): void;
     handlerRequest?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
     handlerRequested?(ctx: Core.Context, configs?: Core.Configs): Promise<any>
     handlerResponse?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;

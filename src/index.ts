@@ -43,15 +43,6 @@ export default class Server extends EventEmitter {
         this.keys = options.keys || ['long:sess']
         this.subdomainOffset = options.subdomainOffset || 2
         this.env = process.env.NODE_ENV as  Core.Env || 'development'
-
-        const { plugins = [] } = this.options
-            // Plugin register uid
-            plugins.forEach((plugin, i) => {
-            const uid = randomBytes(24).toString('hex')
-            ; (plugin as any).uid = uid
-            options.pluginConfigs[uid] = {}
-        })
-
          // Map controllers
         if (Array.isArray(options.controllers)) {
             const controllers  = options.controllers
@@ -74,6 +65,15 @@ export default class Server extends EventEmitter {
                 }
             })
         }
+
+        const { plugins = [] } = this.options
+            // Plugin register uid
+            plugins.forEach((plugin, i) => {
+            const uid = randomBytes(24).toString('hex')
+            if (typeof plugin.init === 'function') plugin.init(this.options)
+            ; (plugin as any).uid = uid
+            options.pluginConfigs[uid] = {}
+        })
 
         // Start server listen port
         if (options.port) {

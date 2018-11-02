@@ -128,6 +128,6 @@ export declare function createPropertyAndParameterDecorator<T = any>(decoratorNa
  */
 export declare function createMethodDecorator<K = any, V = any>(callback: MethodDecoratorCallback): {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: K, value: V): MethodDecorator;
+    (key: K, value?: V): MethodDecorator;
 };
 export {};

@@ -73,7 +73,7 @@ export * from './lib/Decorators';
 export * from './lib/Plugin';
 export * from './lib/HttpException';
 export declare namespace Core {
-    interface HttpException extends Error {
+    interface HttpException {
         errors?: {
             [key: string]: Messages;
         };

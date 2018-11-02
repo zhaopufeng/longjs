@@ -158,6 +158,9 @@ class Server extends EventEmitter {
                                                 if (catchs[propertyKey]) {
                                                     throw new catchs[propertyKey](error);
                                                 }
+                                                else {
+                                                    throw error;
+                                                }
                                             }
                                         });
                                     }

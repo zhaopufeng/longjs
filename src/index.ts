@@ -183,6 +183,8 @@ export default class Server extends EventEmitter {
                                             } catch (error) {
                                                 if (catchs[propertyKey]) {
                                                     throw new catchs[propertyKey](error)
+                                                } else {
+                                                    throw error
                                                 }
                                             }
                                         })

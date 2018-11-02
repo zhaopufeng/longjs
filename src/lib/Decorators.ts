@@ -424,7 +424,7 @@ export function createHttpExceptionDecorator<K = any>(callback: HttpExceptionDec
         if (args.length === 1) {
             return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
                 const options: ControllerOptions = target.$options || {}
-                if (!options.methods) options.methods = {}
+                if (!options.catchs) options.catchs = {}
                 options.catchs[propertyKey] = {
                     handler: callback,
                     options: {
@@ -439,7 +439,7 @@ export function createHttpExceptionDecorator<K = any>(callback: HttpExceptionDec
         } else {
             const [ target, propertyKey, descriptor ] = args;
             const options: ControllerOptions = target.$options || {}
-                if (!options.methods) options.methods = {}
+                if (!options.catchs) options.catchs = {}
                 options.catchs[propertyKey] = {
                     handler: callback,
                     options: {

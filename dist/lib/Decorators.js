@@ -304,8 +304,8 @@ function createHttpExceptionDecorator(callback) {
         if (args.length === 1) {
             return (target, propertyKey, descriptor) => {
                 const options = target.$options || {};
-                if (!options.methods)
-                    options.methods = {};
+                if (!options.catchs)
+                    options.catchs = {};
                 options.catchs[propertyKey] = {
                     handler: callback,
                     options: {
@@ -321,8 +321,8 @@ function createHttpExceptionDecorator(callback) {
         else {
             const [target, propertyKey, descriptor] = args;
             const options = target.$options || {};
-            if (!options.methods)
-                options.methods = {};
+            if (!options.catchs)
+                options.catchs = {};
             options.catchs[propertyKey] = {
                 handler: callback,
                 options: {

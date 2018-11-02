@@ -1,6 +1,7 @@
-import { Controller, Get, Session, Post, Body, Query } from '@longjs/decorators'
-import { TestService } from '../services/TestService';
-import { Database } from '@longjs/database';
+import { Controller, Get, Session, Post, Body, Query, Catch } from '@longjs/decorators'
+import { TestService } from '../services/TestService'
+import { Database } from '@longjs/database'
+import { CustomHttpException } from '../HttpException/CustomHttpException';
 
 @Controller('/')
 export class IndexController {
@@ -27,6 +28,7 @@ export class IndexController {
     }
 
     @Get
+    @Catch(CustomHttpException)
     public async test(@Query({
         username: {
             rules: 'required',

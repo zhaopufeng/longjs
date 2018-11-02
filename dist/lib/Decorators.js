@@ -299,3 +299,41 @@ function createMethodDecorator(callback) {
     return decorator;
 }
 exports.createMethodDecorator = createMethodDecorator;
+function createHttpExceptionDecorator(callback) {
+    function decorator(...args) {
+        if (args.length === 1) {
+            return (target, propertyKey, descriptor) => {
+                const options = target.$options || {};
+                if (!options.methods)
+                    options.methods = {};
+                options.catchs[propertyKey] = {
+                    handler: callback,
+                    options: {
+                        target,
+                        propertyKey,
+                        descriptor,
+                        arg: args[0]
+                    }
+                };
+                target.$options = options;
+            };
+        }
+        else {
+            const [target, propertyKey, descriptor] = args;
+            const options = target.$options || {};
+            if (!options.methods)
+                options.methods = {};
+            options.catchs[propertyKey] = {
+                handler: callback,
+                options: {
+                    target,
+                    propertyKey,
+                    descriptor
+                }
+            };
+            target.$options = options;
+        }
+    }
+    return decorator;
+}
+exports.createHttpExceptionDecorator = createHttpExceptionDecorator;

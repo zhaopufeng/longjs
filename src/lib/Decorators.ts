@@ -55,7 +55,10 @@ interface ControllerOptions {
     propertys?: Propertys;
     methods?: Methods;
     catchs?: {
-        [key: string]: Core.HttpErrorConstructor;
+        [key: string]: {
+            handler?: MethodDecoratorCallback;
+            options?: MethodsOptions;
+        };
     };
     target?: Controller;
     routes?: {
@@ -400,6 +403,43 @@ export function createMethodDecorator<K = any, V = any>(callback: MethodDecorato
             const options: ControllerOptions = target.$options || {}
                 if (!options.methods) options.methods = {}
                 options.methods[propertyKey] = {
+                    handler: callback,
+                    options: {
+                        target,
+                        propertyKey,
+                        descriptor
+                    }
+                }
+                target.$options = options
+        }
+    }
+    return decorator
+}
+
+export function createHttpExceptionDecorator<K = any>(callback: MethodDecoratorCallback) {
+    function decorator(target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
+    function decorator(key: K): MethodDecorator;
+    function decorator(...args: any[]): any {
+        if (args.length === 1) {
+            return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
+                const options: ControllerOptions = target.$options || {}
+                if (!options.methods) options.methods = {}
+                options.catchs[propertyKey] = {
+                    handler: callback,
+                    options: {
+                        target,
+                        propertyKey,
+                        descriptor,
+                        arg: args[0]
+                    }
+                }
+                target.$options = options
+            }
+        } else {
+            const [ target, propertyKey, descriptor ] = args;
+            const options: ControllerOptions = target.$options || {}
+                if (!options.methods) options.methods = {}
+                options.catchs[propertyKey] = {
                     handler: callback,
                     options: {
                         target,

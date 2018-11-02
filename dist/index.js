@@ -156,7 +156,7 @@ class Server extends EventEmitter {
                                             }
                                             catch (error) {
                                                 if (catchs[propertyKey]) {
-                                                    throw new catchs[propertyKey](error);
+                                                    return catchs[propertyKey].handler(context, catchs[propertyKey].options);
                                                 }
                                                 else {
                                                     throw error;

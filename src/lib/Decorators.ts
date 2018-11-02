@@ -185,7 +185,14 @@ export function createRequestDecorator<T = any>(type: RequestMethodType) {
  * 创建参数装饰器方法
  * @param callback
  */
-export function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback) {
+export function createParameterDecorator<T = any>(callback: ParameterDecoratorCallback): ParameterDecorator & {(arg: T): ParameterDecorator};
+export function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback): ParameterDecorator & {(arg: T): ParameterDecorator};
+export function createParameterDecorator<T = any>(...ags: any[]) {
+    let [ decoratorName, callback ] = ags;
+    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
+        callback = decoratorName
+        decoratorName = null
+    }
     function decorator(target: any, propertyKey: string, parameterIndex: number): void;
     function decorator(arg: T): ParameterDecorator;
     function decorator(...args: any[]): any {
@@ -226,7 +233,14 @@ export function createParameterDecorator<T = any>(decoratorName: string, callbac
  * 创建属性装饰器方法
  * @param callback
  */
-export function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback) {
+export function createPropertyDecorator<T = any>(callback: PropertyDecoratorCallback): PropertyDecorator & { (arg: T): PropertyDecorator };
+export function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback): PropertyDecorator & { (arg: T): PropertyDecorator };
+export function createPropertyDecorator<T = any>(...ags: any[]) {
+    let [ decoratorName, callback ] = ags;
+    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
+        callback = decoratorName
+        decoratorName = null
+    }
     function decorator(target: any, propertyKey: string | symbol): void;
     function decorator(arg: T): PropertyDecorator;
     function decorator(...args: any[]): any {
@@ -262,7 +276,14 @@ export function createPropertyDecorator<T = any>(decoratorName: string, callback
  * 创建同时能兼容参数装饰器和属性装饰器方法
  * @param callback
  */
-export function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback | PropertyDecoratorCallback) {
+export function createPropertyAndParameterDecorator<T = any>(callback: ParameterDecoratorCallback & PropertyDecoratorCallback): ParameterDecorator & PropertyDecorator & {(arg: T): ParameterDecorator & PropertyDecorator}
+export function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback & PropertyDecoratorCallback): ParameterDecorator & PropertyDecorator & {(arg: T): ParameterDecorator & PropertyDecorator}
+export function createPropertyAndParameterDecorator<T = any>(...ags: any[]) {
+    let [ decoratorName, callback ] = ags
+    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
+        callback = decoratorName
+        decoratorName = null
+    }
     function decorator(target: any, propertyKey: string, parameterIndex: number): void;
     function decorator(target: any, propertyKey: string | symbol): void;
     function decorator(arg: T): ParameterDecorator;

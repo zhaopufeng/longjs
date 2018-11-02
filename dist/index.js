@@ -48,7 +48,7 @@ exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validate
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request Body data is not valid.');
             error.errors = errors;
-            error.type = `Body`;
+            error.type = 'BodyDecorator';
             throw error;
         }
         return data;
@@ -65,7 +65,7 @@ exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, valida
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request query string data is not valid.');
             error.errors = errors;
-            error.type = `Query`;
+            error.type = 'QueryDecorator';
             throw error;
         }
         return data;
@@ -80,7 +80,10 @@ exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, vali
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            return;
+            const error = new Error('Request path parameter data is not valid.');
+            error.errors = errors;
+            error.type = 'ParamsDecorator';
+            throw error;
         }
         return data;
     }
@@ -153,6 +156,20 @@ exports.Status = Core_1.createMethodDecorator((ctx, options) => {
         }
         return data;
     };
+});
+/**
+ * MethodDecorators
+ * Catch
+ */
+exports.Catch = Core_1.createMethodDecorator((ctx, options) => {
+    const option = options.target.$options || {};
+    option.catchs = {};
+    option.catchs[options.propertyKey] = {
+        arg: options.arg,
+        key: options.key,
+        value: options.value
+    };
+    options.target.$options = option;
 });
 /**
  * RequestMethodDecorators

@@ -51,9 +51,14 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.
     return ctx.headers
 })
 
-export interface ValidateError extends Error {
+export interface HttpError extends Error {
     errors?: { [key: string]: Messages};
+    statusCode?: number;
     type?: string;
+}
+
+export interface HttpErrorConstructor extends HttpError {
+    new (...args: any[]): HttpError;
 }
 
 /**
@@ -69,9 +74,9 @@ export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: ValidateError = new Error('Request Body data is not valid.')
+            const error: HttpError = new Error('Request Body data is not valid.')
             error.errors = errors
-            error.type = `Body`
+            error.type = 'BodyDecorator'
             throw error
         }
         return data
@@ -93,9 +98,9 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: ValidateError = new Error('Request query string data is not valid.')
+            const error: HttpError = new Error('Request query string data is not valid.')
             error.errors = errors
-            error.type = `Query`
+            error.type = 'QueryDecorator'
             throw error
         }
         return data
@@ -116,7 +121,10 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            return;
+            const error: HttpError = new Error('Request path parameter data is not valid.')
+            error.errors = errors
+            error.type = 'ParamsDecorator'
+            throw error
         }
         return data
     }
@@ -219,6 +227,21 @@ export const Status = createMethodDecorator<string>((ctx, options) => {
         }
         return data
     }
+})
+
+/**
+ * MethodDecorators
+ * Catch
+ */
+export const Catch = createMethodDecorator<HttpErrorConstructor>((ctx, options) => {
+    const option: any = options.target.$options || {}
+    option.catchs = {}
+    option.catchs[options.propertyKey as string] = {
+        arg: options.arg,
+        key: options.key,
+        value: options.value
+    }
+    options.target.$options = option
 })
 
 /**

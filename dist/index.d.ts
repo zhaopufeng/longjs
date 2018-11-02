@@ -22,11 +22,15 @@ export interface Headers {
     [key: string]: any;
 }
 export declare const Headers: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
-export interface ValidateError extends Error {
+export interface HttpError extends Error {
     errors?: {
         [key: string]: Messages;
     };
+    statusCode?: number;
     type?: string;
+}
+export interface HttpErrorConstructor extends HttpError {
+    new (...args: any[]): HttpError;
 }
 /**
  * Parameter && Property Decorator
@@ -89,6 +93,14 @@ export declare const Type: {
 export declare const Status: {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
     (key: string, value: any): MethodDecorator;
+};
+/**
+ * MethodDecorators
+ * Catch
+ */
+export declare const Catch: {
+    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
+    (key: HttpErrorConstructor, value: any): MethodDecorator;
 };
 /**
  * RequestMethodDecorators

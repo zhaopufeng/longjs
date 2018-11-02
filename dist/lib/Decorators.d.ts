@@ -43,6 +43,9 @@ interface ControllerOptions {
     parameters?: Parameters;
     propertys?: Propertys;
     methods?: Methods;
+    catchs?: {
+        [key: string]: Core.HttpErrorConstructor;
+    };
     target?: Controller;
     routes?: {
         [key: string]: Array<{

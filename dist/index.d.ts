@@ -72,6 +72,16 @@ export default class Server extends EventEmitter {
 export * from './lib/Decorators';
 export * from './lib/Plugin';
 export declare namespace Core {
+    interface HttpException extends Error {
+        errors?: {
+            [key: string]: Messages;
+        };
+        statusCode?: number;
+        type?: string;
+    }
+    interface HttpErrorConstructor extends HttpException {
+        new (...args: any[]): HttpException;
+    }
     interface HttpHandler {
         (ctx?: Context): Promise<any>;
     }
@@ -503,5 +513,52 @@ export declare namespace Core {
     type Env = 'development' | 'production';
     interface Hook {
         (ctx?: Context): Promise<any>;
+    }
+    interface Messages<S = string> {
+        alpha?: string;
+        alphanumeric?: string;
+        ascii?: string;
+        base64?: string;
+        boolean?: string;
+        byteLength?: string;
+        creditCard?: string;
+        dataURI?: string;
+        magnetURI?: string;
+        decimal?: string;
+        email?: string;
+        float?: string;
+        hash?: string;
+        hexColor?: string;
+        hexadecimal?: string;
+        identityCard?: string;
+        ip?: string;
+        ipRange?: string;
+        ISBN?: string;
+        ISSN?: string;
+        ISIN?: string;
+        ISO8601?: string;
+        RFC3339?: string;
+        ISO31661Alpha?: string;
+        ISRC?: string;
+        in?: string;
+        int?: string;
+        json?: string;
+        jwt?: string;
+        latLong?: string;
+        length?: string;
+        lowercase?: string;
+        macAddress?: string;
+        md5?: string;
+        mimeType?: string;
+        mobilePhone?: string;
+        multibyte?: string;
+        numeric?: string;
+        port?: string;
+        postalCode?: string;
+        url?: string;
+        uuid?: string;
+        uppercase?: string;
+        required?: string;
+        validator?: string;
     }
 }

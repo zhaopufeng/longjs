@@ -97,7 +97,7 @@ class Server extends EventEmitter {
             // Map controllers
             for (let Controller of controllers) {
                 const $options = Controller.prototype.$options || {};
-                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = $options;
+                const { routes = {}, parameters = {}, propertys = {}, methods = {}, catchs = {} } = $options;
                 const matchRoutes = routes[method];
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {
@@ -148,10 +148,17 @@ class Server extends EventEmitter {
                                     const parameter = parameters[propertyKey];
                                     if (parameter) {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
-                                            if (parameter.arg) {
-                                                return parameter.handler(context, parameter.arg);
+                                            try {
+                                                if (parameter.arg) {
+                                                    return parameter.handler(context, parameter.arg);
+                                                }
+                                                return parameter.handler(context);
                                             }
-                                            return parameter.handler(context);
+                                            catch (error) {
+                                                if (catchs[propertyKey]) {
+                                                    throw new catchs[propertyKey](error);
+                                                }
+                                            }
                                         });
                                     }
                                 }
@@ -299,7 +306,10 @@ class Server extends EventEmitter {
     exception(response, error) {
         let status;
         // If not number
-        if (isNaN(error.message)) {
+        if (error.statusCode) {
+            status = error.statusCode;
+        }
+        else if (isNaN(error.message)) {
             status = statuses[error.message];
         }
         else {
@@ -311,9 +321,9 @@ class Server extends EventEmitter {
             status = status || 500;
             const data = statuses[status];
             response.setHeader('Content-Length', Buffer.byteLength(data));
-            response.statusMessage = error.message;
+            response.statusMessage = error.message || statuses[status];
             response.statusCode = status;
-            response.end(data);
+            response.end(error.errors || data);
         }
     }
     /**

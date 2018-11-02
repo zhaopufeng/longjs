@@ -122,7 +122,7 @@ export default class Server extends EventEmitter {
             // Map controllers
             for (let Controller of controllers) {
                 const $options = (Controller as ControllerConstructor).prototype.$options || {}
-                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = $options
+                const { routes = {}, parameters = {}, propertys = {}, methods = {}, catchs = {} } = $options
                 const matchRoutes = routes[method]
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {
@@ -175,10 +175,16 @@ export default class Server extends EventEmitter {
                                     const parameter = parameters[propertyKey]
                                     if (parameter) {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
-                                            if (parameter.arg) {
-                                                return parameter.handler(context, parameter.arg)
+                                            try {
+                                                if (parameter.arg) {
+                                                    return parameter.handler(context, parameter.arg)
+                                                }
+                                                return parameter.handler(context)
+                                            } catch (error) {
+                                                if (catchs[propertyKey]) {
+                                                    throw new catchs[propertyKey](error)
+                                                }
                                             }
-                                            return parameter.handler(context)
                                         })
                                     }
                                 }
@@ -337,7 +343,9 @@ export default class Server extends EventEmitter {
         let status: number;
 
         // If not number
-        if (isNaN(error.message as any)) {
+        if ((error as Core.HttpErrorConstructor).statusCode) {
+            status = (error as Core.HttpErrorConstructor).statusCode
+        } else if (isNaN(error.message as any)) {
             status = statuses[error.message]
         } else {
             status = ~~error.message
@@ -349,9 +357,9 @@ export default class Server extends EventEmitter {
             status = status || 500
             const data = statuses[status]
             response.setHeader('Content-Length', Buffer.byteLength(data))
-            response.statusMessage = error.message
+            response.statusMessage = error.message || statuses[status]
             response.statusCode = status
-            ; (response as ServerResponse).end(data);
+            ; (response as ServerResponse).end((error as Core.HttpErrorConstructor).errors || data);
         }
     }
 
@@ -377,6 +385,16 @@ export * from './lib/Decorators'
 export * from './lib/Plugin'
 
 export namespace Core {
+
+    export interface HttpException extends Error {
+        errors?: { [key: string]: Messages};
+        statusCode?: number;
+        type?: string;
+    }
+
+    export interface HttpErrorConstructor extends HttpException {
+        new (...args: any[]): HttpException;
+    }
 
     export interface HttpHandler {
         (ctx?: Context): Promise<any>
@@ -871,5 +889,53 @@ export namespace Core {
 
     export interface Hook {
         (ctx?: Context): Promise<any>;
+    }
+
+    export interface Messages<S = string> {
+        alpha?: string;
+        alphanumeric?: string;
+        ascii?: string;
+        base64?: string;
+        boolean?: string;
+        byteLength?: string;
+        creditCard?: string;
+        dataURI?: string;
+        magnetURI?: string;
+        decimal?: string;
+        email?: string;
+        float?: string;
+        hash?: string;
+        hexColor?: string;
+        hexadecimal?: string;
+        identityCard?: string;
+        ip?: string;
+        ipRange?: string;
+        ISBN?: string;
+        ISSN?: string;
+        ISIN?: string;
+        ISO8601?: string;
+        RFC3339?: string;
+        ISO31661Alpha?: string;
+        ISRC?: string;
+        in?: string;
+        int?: string;
+        json?: string;
+        jwt?: string;
+        latLong?: string;
+        length?: string;
+        lowercase?: string;
+        macAddress?: string;
+        md5?: string;
+        mimeType?: string;
+        mobilePhone?: string;
+        multibyte?: string;
+        numeric?: string;
+        port?: string;
+        postalCode?: string;
+        url?: string;
+        uuid?: string;
+        uppercase?: string;
+        required?: string;
+        validator?: string;
     }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Session, Post, Body } from '@longjs/decorators'
+import { Controller, Get, Session, Post, Body, Query } from '@longjs/decorators'
 import { TestService } from '../services/TestService';
 import { Database } from '@longjs/database';
 
@@ -27,7 +27,12 @@ export class IndexController {
     }
 
     @Get
-    public async test() {
+    public async test(@Query({
+        username: {
+            rules: 'required'
+        }
+    }) query: Query) {
+        // console.log(query)
         return this.session.users
     }
 }

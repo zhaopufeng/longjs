@@ -19,6 +19,7 @@ interface Options<T = any> {
 interface Parameters {
     [key: string]: Array<{
         handler?: ParameterDecoratorCallback;
+        decoratorName?: string;
         arg?: any;
     }>;
 }
@@ -26,6 +27,7 @@ interface Parameters {
 interface Propertys {
     [key: string]: {
         handler?: PropertyDecoratorCallback;
+        decoratorName?: string;
         arg?: any;
     }
 }
@@ -183,7 +185,7 @@ export function createRequestDecorator<T = any>(type: RequestMethodType) {
  * 创建参数装饰器方法
  * @param callback
  */
-export function createParameterDecorator<T = any>(callback: ParameterDecoratorCallback) {
+export function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback) {
     function decorator(target: any, propertyKey: string, parameterIndex: number): void;
     function decorator(arg: T): ParameterDecorator;
     function decorator(...args: any[]): any {
@@ -196,6 +198,7 @@ export function createParameterDecorator<T = any>(callback: ParameterDecoratorCa
                 }
                 parameters[propertyKey][parameterIndex] = {
                     handler: callback,
+                    decoratorName,
                     arg: args[0]
                 }
                 target.$options = options
@@ -208,7 +211,8 @@ export function createParameterDecorator<T = any>(callback: ParameterDecoratorCa
                 parameters[propertyKey] = []
             }
             parameters[propertyKey][parameterIndex] = {
-                handler: callback
+                handler: callback,
+                decoratorName
             }
             target.$options = options
         }
@@ -222,7 +226,7 @@ export function createParameterDecorator<T = any>(callback: ParameterDecoratorCa
  * 创建属性装饰器方法
  * @param callback
  */
-export function createPropertyDecorator<T = any>(callback: PropertyDecoratorCallback) {
+export function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback) {
     function decorator(target: any, propertyKey: string | symbol): void;
     function decorator(arg: T): PropertyDecorator;
     function decorator(...args: any[]): any {
@@ -233,6 +237,7 @@ export function createPropertyDecorator<T = any>(callback: PropertyDecoratorCall
                 const { propertys } = options
                 propertys[propertyKey as string] = {
                     handler: callback,
+                    decoratorName,
                     arg: args[0]
                 }
                 target.$options = options
@@ -243,7 +248,8 @@ export function createPropertyDecorator<T = any>(callback: PropertyDecoratorCall
             if (!options.propertys) options.propertys = {}
             const { propertys } = options
             propertys[propertyKey as string] = {
-                handler: callback
+                handler: callback,
+                decoratorName
             }
             target.$options = options
         }
@@ -256,7 +262,7 @@ export function createPropertyDecorator<T = any>(callback: PropertyDecoratorCall
  * 创建同时能兼容参数装饰器和属性装饰器方法
  * @param callback
  */
-export function createPropertyAndParameterDecorator<T = any>(callback: ParameterDecoratorCallback | PropertyDecoratorCallback) {
+export function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback | PropertyDecoratorCallback) {
     function decorator(target: any, propertyKey: string, parameterIndex: number): void;
     function decorator(target: any, propertyKey: string | symbol): void;
     function decorator(arg: T): ParameterDecorator;
@@ -297,11 +303,13 @@ export function createPropertyAndParameterDecorator<T = any>(callback: Parameter
                     opts.propertys = {}
                     opts.propertys[propertyKey as string] = {
                         arg: args,
+                        decoratorName,
                         handler: callback
                     }
                 } else {
                     opts.propertys[propertyKey as string] = {
                         arg: args,
+                        decoratorName,
                         handler: callback
                     }
                 }
@@ -311,18 +319,21 @@ export function createPropertyAndParameterDecorator<T = any>(callback: Parameter
                     opts.parameters[propertyKey as string] = []
                     opts.parameters[propertyKey as string][parameterIndex] = {
                         arg: args,
+                        decoratorName,
                         handler: callback
                     }
                 } else {
                     if (Array.isArray(opts.parameters[propertyKey as string])) {
                         opts.parameters[propertyKey as string][parameterIndex] = {
                             arg: args,
+                            decoratorName,
                             handler: callback
                         }
                     } else {
                         opts.parameters[propertyKey as string] = []
                         opts.parameters[propertyKey as string][parameterIndex] = {
                             arg: args,
+                            decoratorName,
                             handler: callback
                         }
                     }

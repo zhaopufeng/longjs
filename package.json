@@ -23,6 +23,8 @@
     "@longjs/core": "^1.0.0-beta.3.0"
   },
   "dependencies": {
-    "reflect-metadata": "^0.1.12"
+    "@types/validator": "^9.4.2",
+    "reflect-metadata": "^0.1.12",
+    "validator": "^10.8.0"
   }
 }

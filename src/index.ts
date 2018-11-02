@@ -15,8 +15,9 @@ import {
     createPropertyAndParameterDecorator,
     Core
 } from '@longjs/Core'
-
+import 'validator'
 import 'reflect-metadata'
+import validateParams, { ValidatorKeys } from './lib';
 
 /**
  * Controller Decorator
@@ -32,14 +33,14 @@ export function Controller(path: string): ClassDecorator {
     })
 }
 
-export interface Headers {
-    [key: string]: any;
-}
 /**
  * Parameter && Property Decorator
  * Header
  */
-export const Headers = createPropertyAndParameterDecorator<string[]>('Headers', (ctx, args) => {
+export interface Headers {
+    [key: string]: any;
+}
+export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -57,13 +58,18 @@ export const Headers = createPropertyAndParameterDecorator<string[]>('Headers', 
 export interface Body {
     [key: string]: any;
 }
-export const Body = createPropertyAndParameterDecorator<string[]>('Body', (ctx, args) => {
-    if (Array.isArray(ctx.body)) return ctx.body;
-    if (Array.isArray(args)) {
+export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+    if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = ctx.body[k]
+        Object.keys(validateKeys).forEach((k: string) => {
+            data[k] = ctx.body[k] || validateKeys[k].defalut
         })
+        const errors = validateParams(data, validateKeys)
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Request body data parameters is not valid')
+            ; (error as any).errors = errors
+            throw error;
+        }
         return data
     }
     return ctx.body
@@ -76,15 +82,45 @@ export const Body = createPropertyAndParameterDecorator<string[]>('Body', (ctx, 
 export interface Query {
     [key: string]: any;
 }
-export const Query = createPropertyAndParameterDecorator<string[]>('Query', (ctx, args) => {
-    if (Array.isArray(args)) {
+export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+    if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = ctx.query[k]
+        Object.keys(validateKeys).forEach((k: string) => {
+            data[k] = ctx.query[k] || validateKeys[k].defalut
         })
+        const errors = validateParams(data, validateKeys)
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Request query string data parameters is not valid')
+            ; (error as any).errors = errors
+            throw error;
+        }
         return data
     }
     return ctx.query
+})
+
+/**
+ * Parameter && Property Decorator
+ * Request
+ */
+export interface Params {
+    [key: string]: any;
+}
+export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+    if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
+        const data: any = {}
+        Object.keys(validateKeys).forEach((k: string) => {
+            data[k] = ctx.params[k] || validateKeys[k].defalut
+        })
+        const errors = validateParams(data, validateKeys)
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Request query string data parameters is not valid')
+            ; (error as any).errors = errors
+            throw error;
+        }
+        return data
+    }
+    return ctx.params
 })
 
 /**
@@ -94,7 +130,7 @@ export const Query = createPropertyAndParameterDecorator<string[]>('Query', (ctx
 export interface Session {
     [key: string]: any;
 }
-export const Session = createPropertyAndParameterDecorator<string[]>('Session', (ctx, args) => {
+export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -110,7 +146,7 @@ export const Session = createPropertyAndParameterDecorator<string[]>('Session', 
  * Request
  */
 export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>('Request', (ctx, args) => {
+export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -126,7 +162,7 @@ export const Request = createPropertyAndParameterDecorator<string[]>('Request', 
  * Request
  */
 export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>('Response', (ctx, args) => {
+export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -139,30 +175,12 @@ export const Response = createPropertyAndParameterDecorator<string[]>('Response'
 
 /**
  * Parameter && Property Decorator
- * Request
- */
-export interface Params {
-    [key: string]: any;
-}
-export const Params = createPropertyAndParameterDecorator<string[]>('Params', (ctx, args) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = (ctx.params as any)[k]
-        })
-        return data
-    }
-    return ctx.params
-})
-
-/**
- * Parameter && Property Decorator
  * Files
  */
 export interface Files {
     [key: string]: any;
 }
-export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx, args) => {
+export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -250,3 +268,5 @@ export const Post = createRequestDecorator<string>('POST')
  * Put
  */
 export const Put = createRequestDecorator<string>('PUT')
+
+export * from './lib'

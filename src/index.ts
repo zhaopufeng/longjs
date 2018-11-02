@@ -12,6 +12,7 @@ import {
     createParameterDecorator,
     createPropertyDecorator,
     createRequestDecorator,
+    createHttpExceptionDecorator,
     createPropertyAndParameterDecorator,
     Core
 } from '@longjs/Core'
@@ -220,11 +221,8 @@ export const Status = createMethodDecorator<string>((ctx, options) => {
  * MethodDecorators
  * Catch
  */
-export const Catch = createMethodDecorator<Core.HttpErrorConstructor>((ctx, options) => {
-    const option: any = options.target.$options || {}
-    option.catchs = {}
-    option.catchs[options.propertyKey as string] = options.arg
-    options.target.$options = option
+export const Catch = createHttpExceptionDecorator<Core.HttpErrorConstructor>((ctx, options, error) => {
+    throw new options.arg(error)
 })
 
 /**

@@ -158,11 +158,8 @@ exports.Status = Core_1.createMethodDecorator((ctx, options) => {
  * MethodDecorators
  * Catch
  */
-exports.Catch = Core_1.createMethodDecorator((ctx, options) => {
-    const option = options.target.$options || {};
-    option.catchs = {};
-    option.catchs[options.propertyKey] = options.arg;
-    options.target.$options = option;
+exports.Catch = Core_1.createHttpExceptionDecorator((ctx, options, error) => {
+    throw new options.arg(error);
 });
 /**
  * RequestMethodDecorators

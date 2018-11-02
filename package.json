@@ -1,6 +1,6 @@
 {
   "name": "@longjs/decorators",
-  "version": "1.0.0-beta.1.4",
+  "version": "1.0.0-beta.1.5",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.3.5"
+    "@longjs/core": "^1.0.0-beta.3.6"
   },
   "dependencies": {
     "@types/validator": "^9.4.2",

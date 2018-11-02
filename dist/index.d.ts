@@ -89,8 +89,8 @@ export declare const Status: {
  * Catch
  */
 export declare const Catch: {
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: Core.HttpErrorConstructor, value?: any): MethodDecorator;
+    (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
+    (key: Core.HttpErrorConstructor): MethodDecorator;
 };
 /**
  * RequestMethodDecorators

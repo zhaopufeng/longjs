@@ -60,7 +60,7 @@ export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (
     const data: Body = {}
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         Object.keys(validateKeys).forEach((k: string) => {
-            data.data[k] = ctx.body[k] || validateKeys[k].defalut
+            data[k] = ctx.body[k] || validateKeys[k].defalut
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
@@ -84,7 +84,7 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
     const data: Query = {}
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         Object.keys(validateKeys).forEach((k: string) => {
-            data.data[k] = ctx.query[k] || validateKeys[k].defalut
+            data[k] = ctx.query[k] || validateKeys[k].defalut
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
@@ -107,7 +107,7 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
     const data: Params = {}
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         Object.keys(validateKeys).forEach((k: string) => {
-            data.data[k] = ctx.params[k] || validateKeys[k].defalut
+            data[k] = ctx.params[k] || validateKeys[k].defalut
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {

@@ -42,7 +42,7 @@ exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validate
     const data = {};
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         Object.keys(validateKeys).forEach((k) => {
-            data.data[k] = ctx.body[k] || validateKeys[k].defalut;
+            data[k] = ctx.body[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
@@ -59,7 +59,7 @@ exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, valida
     const data = {};
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         Object.keys(validateKeys).forEach((k) => {
-            data.data[k] = ctx.query[k] || validateKeys[k].defalut;
+            data[k] = ctx.query[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
@@ -76,7 +76,7 @@ exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, vali
     const data = {};
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
         Object.keys(validateKeys).forEach((k) => {
-            data.data[k] = ctx.params[k] || validateKeys[k].defalut;
+            data[k] = ctx.params[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {

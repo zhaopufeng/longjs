@@ -26,13 +26,17 @@ export class IndexController {
         return await this.users.select()
     }
 
-    @Get
-    public async test(@Query({
+    @Query({
         username: {
-            rules: 'required'
+            rules: 'required',
+            message: {
+                required: '老子错误了'
+            }
         }
-    }) query: Query) {
-        // console.log(query)
-        return this.session.users
+    }) query: Query
+
+    @Get
+    public async test() {
+       return this.query.getError()
     }
 }

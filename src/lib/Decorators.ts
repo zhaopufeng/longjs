@@ -56,7 +56,7 @@ interface ControllerOptions {
     methods?: Methods;
     catchs?: {
         [key: string]: {
-            handler?: MethodDecoratorCallback;
+            handler?: HttpExceptionDecoratorCallback;
             options?: MethodsOptions;
         };
     };
@@ -92,6 +92,7 @@ type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' 
 type ParameterDecoratorCallback = (ctx: Core.Context, arg?: any) => any;
 type PropertyDecoratorCallback = (ctx: Core.Context, arg?: any) => any;
 type MethodDecoratorCallback = (ctx: Core.Context, options: MethodsOptions) => void;
+type HttpExceptionDecoratorCallback = (ctx: Core.Context, options: MethodsOptions, error: Core.HttpException) => void;
 /**
  * createClassDecorator
  * 创建类装饰器方法
@@ -416,7 +417,7 @@ export function createMethodDecorator<K = any, V = any>(callback: MethodDecorato
     return decorator
 }
 
-export function createHttpExceptionDecorator<K = any>(callback: MethodDecoratorCallback) {
+export function createHttpExceptionDecorator<K = any>(callback: HttpExceptionDecoratorCallback) {
     function decorator(target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
     function decorator(key: K): MethodDecorator;
     function decorator(...args: any[]): any {

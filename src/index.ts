@@ -182,7 +182,7 @@ export default class Server extends EventEmitter {
                                                 return parameter.handler(context)
                                             } catch (error) {
                                                 if (catchs[propertyKey]) {
-                                                    return catchs[propertyKey].handler(context, catchs[propertyKey].options)
+                                                    return catchs[propertyKey].handler(context, catchs[propertyKey].options, error)
                                                 } else {
                                                     throw error
                                                 }

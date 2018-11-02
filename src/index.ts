@@ -17,7 +17,7 @@ import {
 } from '@longjs/Core'
 import 'validator'
 import 'reflect-metadata'
-import validateParams, { ValidatorKeys } from './lib';
+import validateParams, { ValidatorKeys, Messages } from './lib';
 
 /**
  * Controller Decorator
@@ -103,25 +103,44 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
  * Parameter && Property Decorator
  * Request
  */
-export interface Params {
-    [key: string]: any;
+export interface Params<T = { [key: string]: any }> {
+    data: T;
+    getError: () => { [K in keyof T]: Messages } | false
 }
-export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params', (ctx: Core.Context, validateKeys: ValidatorKeys): Params => {
+    const data: Params = {
+        data: {},
+        getError() {
+            return false;
+        }
+    }
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
-        const data: any = {}
         Object.keys(validateKeys).forEach((k: string) => {
-            data[k] = ctx.params[k] || validateKeys[k].defalut
+            data.data[k] = ctx.params[k] || validateKeys[k].defalut
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request query string data parameters is not valid')
-            ; (error as any).errors = errors
-            throw error;
+           data.getError = function() {
+               return errors
+           }
         }
         return data
     }
-    return ctx.params
+
+    data.data = ctx.params
+    return data
 })
+
+const aa: Params<{username: string}> = {
+    data: {username: '11'},
+    getError() {
+        return {
+            username: {
+                alpha: 'x'
+            }
+        }
+    }
+}
 
 /**
  * Parameter && Property Decorator

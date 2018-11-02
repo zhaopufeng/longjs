@@ -350,6 +350,7 @@ export default class Server extends EventEmitter {
 
             const data = statuses[status]
             response.setHeader('Content-Length', Buffer.byteLength(data))
+            response.statusMessage = error.message
             response.statusCode = status
             ; (response as ServerResponse).end(data);
         }

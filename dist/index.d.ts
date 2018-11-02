@@ -8,7 +8,7 @@
 import { Core } from '@longjs/Core';
 import 'validator';
 import 'reflect-metadata';
-import { ValidatorKeys } from './lib';
+import { ValidatorKeys, Messages } from './lib';
 /**
  * Controller Decorator
  * @param path
@@ -26,24 +26,33 @@ export declare const Headers: ((target: Object, propertyKey: string | symbol, pa
  * Parameter && Property Decorator
  * Body
  */
-export interface Body {
-    [key: string]: any;
+export interface Body<T = any> {
+    data: T;
+    getError: () => {
+        [K in keyof T]: Messages;
+    } | false;
 }
 export declare const Body: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Query
  */
-export interface Query {
-    [key: string]: any;
+export interface Query<T = any> {
+    data: T;
+    getError: () => {
+        [K in keyof T]: Messages;
+    } | false;
 }
 export declare const Query: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**
  * Parameter && Property Decorator
  * Request
  */
-export interface Params {
-    [key: string]: any;
+export interface Params<T = any> {
+    data: T;
+    getError: () => {
+        [K in keyof T]: Messages;
+    } | false;
 }
 export declare const Params: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
 /**

@@ -39,52 +39,70 @@ exports.Headers = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     return ctx.headers;
 });
 exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validateKeys) => {
+    const data = {
+        data: {},
+        getError() {
+            return false;
+        }
+    };
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
-        const data = {};
         Object.keys(validateKeys).forEach((k) => {
-            data[k] = ctx.body[k] || validateKeys[k].defalut;
+            data.data[k] = ctx.body[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request body data parameters is not valid');
-            error.errors = errors;
-            throw error;
+            data.getError = function () {
+                return errors;
+            };
         }
         return data;
     }
-    return ctx.body;
+    data.data = ctx.body;
+    return data;
 });
 exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, validateKeys) => {
+    const data = {
+        data: {},
+        getError() {
+            return false;
+        }
+    };
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
-        const data = {};
         Object.keys(validateKeys).forEach((k) => {
-            data[k] = ctx.query[k] || validateKeys[k].defalut;
+            data.data[k] = ctx.query[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request query string data parameters is not valid');
-            error.errors = errors;
-            throw error;
+            data.getError = function () {
+                return errors;
+            };
         }
         return data;
     }
-    return ctx.query;
+    data.data = ctx.query;
+    return data;
 });
 exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, validateKeys) => {
+    const data = {
+        data: {},
+        getError() {
+            return false;
+        }
+    };
     if (!Array.isArray(validateKeys) && typeof validateKeys === 'object') {
-        const data = {};
         Object.keys(validateKeys).forEach((k) => {
-            data[k] = ctx.params[k] || validateKeys[k].defalut;
+            data.data[k] = ctx.params[k] || validateKeys[k].defalut;
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request query string data parameters is not valid');
-            error.errors = errors;
-            throw error;
+            data.getError = function () {
+                return errors;
+            };
         }
         return data;
     }
-    return ctx.params;
+    data.data = ctx.params;
+    return data;
 });
 exports.Session = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     if (Array.isArray(args)) {

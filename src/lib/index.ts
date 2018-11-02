@@ -260,54 +260,7 @@ export interface ParamsRuleOption {
     defalut?: any;
 }
 
-export interface Messages<S = string> {
-    alpha?: S;
-    alphanumeric?: S;
-    ascii?: S;
-    base64?: S;
-    boolean?: S;
-    byteLength?: S;
-    creditCard?: S;
-    dataURI?: S;
-    magnetURI?: S;
-    decimal?: S;
-    email?: S;
-    float?: S;
-    hash?: S;
-    hexColor?: S;
-    hexadecimal?: S;
-    identityCard?: S;
-    ip?: S;
-    ipRange?: S;
-    ISBN?: S;
-    ISSN?: S;
-    ISIN?: S;
-    ISO8601?: S;
-    RFC3339?: S;
-    ISO31661Alpha?: S;
-    ISRC?: S;
-    in?: S;
-    int?: S;
-    json?: S;
-    jwt?: S;
-    latLong?: S;
-    length?: S;
-    lowercase?: S;
-    macAddress?: S;
-    md5?: S;
-    mimeType?: S;
-    mobilePhone?: S;
-    multibyte?: S;
-    numeric?: S;
-    port?: S;
-    postalCode?: S;
-    url?: S;
-    uuid?: S;
-    uppercase?: S;
-    required?: S;
-    validator?: S;
-    [key: string]: S;
-}
+export type Messages<S = string, P = ParamsRules> = { [K in keyof P]: S }
 
 export interface ParamsRules<
     T = true,

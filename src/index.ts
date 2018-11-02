@@ -55,55 +55,71 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Parameter && Property Decorator
  * Body
  */
-export interface Body {
-    [key: string]: any;
+export interface Body<T = any> {
+    data: T;
+    getError: () => { [K in keyof T]: Messages } | false
 }
 export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+    const data: Body = {
+        data: {},
+        getError() {
+            return false;
+        }
+    }
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
-        const data: any = {}
         Object.keys(validateKeys).forEach((k: string) => {
-            data[k] = ctx.body[k] || validateKeys[k].defalut
+            data.data[k] = ctx.body[k] || validateKeys[k].defalut
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request body data parameters is not valid')
-            ; (error as any).errors = errors
-            throw error;
+           data.getError = function() {
+               return errors
+           }
         }
         return data
     }
-    return ctx.body
+
+    data.data = ctx.body
+    return data
 })
 
 /**
  * Parameter && Property Decorator
  * Query
  */
-export interface Query {
-    [key: string]: any;
+export interface Query<T = any> {
+    data: T;
+    getError: () => { [K in keyof T]: Messages } | false
 }
 export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+    const data: Query = {
+        data: {},
+        getError() {
+            return false;
+        }
+    }
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
-        const data: any = {}
         Object.keys(validateKeys).forEach((k: string) => {
-            data[k] = ctx.query[k] || validateKeys[k].defalut
+            data.data[k] = ctx.query[k] || validateKeys[k].defalut
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request query string data parameters is not valid')
-            ; (error as any).errors = errors
-            throw error;
+           data.getError = function() {
+               return errors
+           }
         }
         return data
     }
-    return ctx.query
+
+    data.data = ctx.query
+    return data
 })
 
 /**
  * Parameter && Property Decorator
  * Request
  */
-export interface Params<T = { [key: string]: any }> {
+export interface Params<T = any> {
     data: T;
     getError: () => { [K in keyof T]: Messages } | false
 }
@@ -130,17 +146,6 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
     data.data = ctx.params
     return data
 })
-
-const aa: Params<{username: string}> = {
-    data: {username: '11'},
-    getError() {
-        return {
-            username: {
-                alpha: 'x'
-            }
-        }
-    }
-}
 
 /**
  * Parameter && Property Decorator

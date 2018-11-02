@@ -74,7 +74,7 @@ export declare const Files: ((target: Object, propertyKey: string | symbol, para
  */
 export declare const Type: {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: string, value: any): MethodDecorator;
+    (key: string, value?: any): MethodDecorator;
 };
 /**
  * MethodDecorators
@@ -82,7 +82,7 @@ export declare const Type: {
  */
 export declare const Status: {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: string, value: any): MethodDecorator;
+    (key: string, value?: any): MethodDecorator;
 };
 /**
  * MethodDecorators
@@ -90,7 +90,7 @@ export declare const Status: {
  */
 export declare const Catch: {
     (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: Core.HttpErrorConstructor, value: any): MethodDecorator;
+    (key: Core.HttpErrorConstructor, value?: any): MethodDecorator;
 };
 /**
  * RequestMethodDecorators

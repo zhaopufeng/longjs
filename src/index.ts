@@ -64,9 +64,8 @@ export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException = new Error('Request Body data is not valid.')
+            const error: Core.HttpException & Error = new Error('Request Body data is not valid.')
             error.errors = errors
-            error.type = 'BodyDecorator'
             throw error
         }
         return data
@@ -88,9 +87,8 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException = new Error('Request query string data is not valid.')
+            const error: Core.HttpException & Error = new Error('Request query string data is not valid.')
             error.errors = errors
-            error.type = 'QueryDecorator'
             throw error
         }
         return data
@@ -111,9 +109,8 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException = new Error('Request path parameter data is not valid.')
+            const error: Core.HttpException & Error = new Error('Request path parameter data is not valid.')
             error.errors = errors
-            error.type = 'ParamsDecorator'
             throw error
         }
         return data

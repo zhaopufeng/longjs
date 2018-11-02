@@ -48,7 +48,6 @@ exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validate
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request Body data is not valid.');
             error.errors = errors;
-            error.type = 'BodyDecorator';
             throw error;
         }
         return data;
@@ -65,7 +64,6 @@ exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, valida
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request query string data is not valid.');
             error.errors = errors;
-            error.type = 'QueryDecorator';
             throw error;
         }
         return data;
@@ -82,7 +80,6 @@ exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, vali
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request path parameter data is not valid.');
             error.errors = errors;
-            error.type = 'ParamsDecorator';
             throw error;
         }
         return data;

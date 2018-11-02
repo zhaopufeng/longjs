@@ -71,16 +71,17 @@ export default class Server extends EventEmitter {
 }
 export * from './lib/Decorators';
 export * from './lib/Plugin';
+export * from './lib/HttpException';
 export declare namespace Core {
     interface HttpException extends Error {
         errors?: {
             [key: string]: Messages;
         };
         statusCode?: number;
-        type?: string;
+        type?: 'json' | 'html';
     }
     interface HttpErrorConstructor extends HttpException {
-        new (...args: any[]): HttpException;
+        new (error: HttpException): HttpException;
     }
     interface HttpHandler {
         (ctx?: Context): Promise<any>;

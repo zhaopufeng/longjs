@@ -341,12 +341,11 @@ export default class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    private exception(response: ServerResponse | Http2ServerResponse, error: Error) {
+    private exception(response: ServerResponse | Http2ServerResponse, error: Core.HttpErrorConstructor) {
         let status: number;
-
         // If not number
-        if ((error as Core.HttpErrorConstructor).statusCode) {
-            status = (error as Core.HttpErrorConstructor).statusCode
+        if (error.statusCode) {
+            status = error.statusCode
         } else if (isNaN(error.message as any)) {
             status = statuses[error.message]
         } else {
@@ -357,11 +356,17 @@ export default class Server extends EventEmitter {
 
         if (!response.finished) {
             status = status || 500
-            const data = statuses[status]
+            let data = statuses[status]
+            if (error.errors) data = JSON.stringify(error.errors)
             response.setHeader('Content-Length', Buffer.byteLength(data))
+            if (error.type === 'html') {
+                response.setHeader('Content-Type', 'text/html')
+            } else {
+                response.setHeader('Content-Type', 'application/json')
+            }
             response.statusMessage = error.message || statuses[status]
             response.statusCode = status
-            ; (response as ServerResponse).end((error as Core.HttpErrorConstructor).errors || data);
+            ; (response as ServerResponse).end(data);
         }
     }
 
@@ -385,17 +390,18 @@ export default class Server extends EventEmitter {
 
 export * from './lib/Decorators'
 export * from './lib/Plugin'
+export * from './lib/HttpException'
 
 export namespace Core {
 
     export interface HttpException extends Error {
         errors?: { [key: string]: Messages};
         statusCode?: number;
-        type?: string;
+        type?: 'json' | 'html';
     }
 
     export interface HttpErrorConstructor extends HttpException {
-        new (...args: any[]): HttpException;
+        new (error: HttpException): HttpException;
     }
 
     export interface HttpHandler {

@@ -322,11 +322,19 @@ class Server extends EventEmitter {
             console.log(error);
         if (!response.finished) {
             status = status || 500;
-            const data = statuses[status];
+            let data = statuses[status];
+            if (error.errors)
+                data = JSON.stringify(error.errors);
             response.setHeader('Content-Length', Buffer.byteLength(data));
+            if (error.type === 'html') {
+                response.setHeader('Content-Type', 'text/html');
+            }
+            else {
+                response.setHeader('Content-Type', 'application/json');
+            }
             response.statusMessage = error.message || statuses[status];
             response.statusCode = status;
-            response.end(error.errors || data);
+            response.end(data);
         }
     }
     /**
@@ -345,3 +353,4 @@ class Server extends EventEmitter {
 }
 exports.default = Server;
 __export(require("./lib/Decorators"));
+__export(require("./lib/HttpException"));

@@ -113,7 +113,7 @@ function createPropertyAndParameterDecorator(id, callback) {
             else {
                 const options = target[exports.$options] || {};
                 const propertys = options.propertys = options.propertys || {};
-                const property = propertys[propertyKey] = propertys[propertyKey];
+                const property = propertys[propertyKey] = propertys[propertyKey] || {};
                 property.callback = callback;
                 property.value = value;
             }

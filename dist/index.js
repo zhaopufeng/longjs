@@ -125,7 +125,7 @@ class Server extends EventEmitter {
                             });
                         }
                         // Map metadata
-                        let { metadatas } = Controller.prototype.$options;
+                        let { metadatas } = Controller.prototype[Decorators_1.$options];
                         if (Array.isArray(metadatas)) {
                             metadatas = metadatas.map((K) => {
                                 return new K(context, this.options.configs);

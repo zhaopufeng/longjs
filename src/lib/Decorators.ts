@@ -11,9 +11,9 @@ import * as pathToRegExp from 'path-to-regexp'
 
 type ClassDecoratorCallback = (options: ControllerOptions) => void;
 type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT' | 'COPY' | 'LINK' | 'UNLINK' | 'PURGE' | 'LOCK' | 'UNLOCK' | 'PORPFIND' | 'VIEW'
-type ParameterDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
-type PropertyDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
-type MethodDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
+type ParameterDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
+type PropertyDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
+type MethodDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
 
 interface Parameter {
     callback?: ParameterDecoratorHttpCallback;
@@ -46,7 +46,7 @@ interface Router {
     RegExp?: RegExp;
 }
 
-interface ControllerOptions {
+export interface ControllerOptions {
     route?: string;
     metadatas?: Array<{ new(...args: any[]): any }>;
     parameters?: Parameters;
@@ -183,7 +183,7 @@ export function createParameterDecorator<K, V = any, D = ParameterDecoratorInter
  */
 export type PropertyAndParameterDecorator = ParameterDecorator & PropertyDecorator
 export type FnPropertyAndParameterDecorator<V> = (arg: V) => PropertyAndParameterDecorator
-export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: any): D {
+export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: MethodDecoratorHttpCallback): D {
     function decorator(...args: any[]) {
         if (args.length === 1) {
             const [ arg ] = args

@@ -9,9 +9,9 @@ import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp';
 declare type ClassDecoratorCallback = (options: ControllerOptions) => void;
 declare type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT' | 'COPY' | 'LINK' | 'UNLINK' | 'PURGE' | 'LOCK' | 'UNLOCK' | 'PORPFIND' | 'VIEW';
-declare type ParameterDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
-declare type PropertyDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
-declare type MethodDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
+declare type ParameterDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
+declare type PropertyDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
+declare type MethodDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
 interface Parameter {
     callback?: ParameterDecoratorHttpCallback;
     id?: string;
@@ -38,7 +38,7 @@ interface Router {
     keys?: pathToRegExp.Key[];
     RegExp?: RegExp;
 }
-interface ControllerOptions {
+export interface ControllerOptions {
     route?: string;
     metadatas?: Array<{
         new (...args: any[]): any;
@@ -112,7 +112,7 @@ export declare function createParameterDecorator<K, V = any, D = ParameterDecora
  */
 export declare type PropertyAndParameterDecorator = ParameterDecorator & PropertyDecorator;
 export declare type FnPropertyAndParameterDecorator<V> = (arg: V) => PropertyAndParameterDecorator;
-export declare function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: any): D;
+export declare function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: MethodDecoratorHttpCallback): D;
 /**
  * RequestMethodDecorator
  * 创建http请求方式装饰器

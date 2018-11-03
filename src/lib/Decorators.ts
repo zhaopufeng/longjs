@@ -196,7 +196,7 @@ export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterD
         function handler(value: V, ...sagrs: any[]) {
             const [ target, propertyKey, parameterIndex ] = sagrs
             if (typeof parameterIndex === 'number' && sagrs.length === 3) {
-                const options: ControllerOptions = target[$options]
+                const options: ControllerOptions = target[$options] || {}
                 const parameters = options.parameters = options.parameters || {}
                 const parameter = parameters[propertyKey] = parameters[propertyKey] || []
                 parameter[parameterIndex] = {
@@ -205,7 +205,7 @@ export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterD
                     id
                 }
             } else {
-                const options: ControllerOptions = target[$options]
+                const options: ControllerOptions = target[$options] || {}
                 const propertys = options.propertys = options.propertys || {}
                 const property = propertys[propertyKey] = propertys[propertyKey]
                 property.callback = callback

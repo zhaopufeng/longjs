@@ -101,7 +101,7 @@ function createPropertyAndParameterDecorator(id, callback) {
         function handler(value, ...sagrs) {
             const [target, propertyKey, parameterIndex] = sagrs;
             if (typeof parameterIndex === 'number' && sagrs.length === 3) {
-                const options = target[exports.$options];
+                const options = target[exports.$options] || {};
                 const parameters = options.parameters = options.parameters || {};
                 const parameter = parameters[propertyKey] = parameters[propertyKey] || [];
                 parameter[parameterIndex] = {
@@ -111,7 +111,7 @@ function createPropertyAndParameterDecorator(id, callback) {
                 };
             }
             else {
-                const options = target[exports.$options];
+                const options = target[exports.$options] || {};
                 const propertys = options.propertys = options.propertys || {};
                 const property = propertys[propertyKey] = propertys[propertyKey];
                 property.callback = callback;

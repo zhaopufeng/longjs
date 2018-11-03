@@ -23,7 +23,7 @@ import { CreateRequest } from './lib/CreateRequest'
 import { Stream } from 'stream'
 import { isJSON } from './lib/utils'
 import { Plugins } from './lib/Plugin'
-import { Controller, ControllerConstructor } from './lib/Decorators'
+import { Controller, ControllerConstructor, $options } from './lib/Decorators'
 import { randomBytes } from 'crypto'
 
 export default class Server extends EventEmitter {
@@ -48,8 +48,8 @@ export default class Server extends EventEmitter {
             const controllers  = options.controllers
             controllers.forEach((Controller: Controller) => {
                 Controller.prototype.$app = this;
-                if (typeof Controller.prototype.$options !== 'object' || !Controller.prototype.$options) Controller.prototype.$options = {}
-                const { routes = {}, route = ''} = Controller.prototype.$options
+                if (typeof Controller.prototype[$options] !== 'object' || !Controller.prototype[$options]) Controller.prototype[$options] = {}
+                const { routes = {}, route = ''} = Controller.prototype[$options]
                 if (routes) {
                     Object.keys(routes).forEach((key: string) => {
                         if (Array.isArray(routes[key])) {
@@ -121,8 +121,8 @@ export default class Server extends EventEmitter {
 
             // Map controllers
             for (let Controller of controllers) {
-                const $options = (Controller as ControllerConstructor).prototype.$options || {}
-                const { routes = {}, parameters = {}, propertys = {}, methods = {}, catchs = {} } = $options
+                const options = (Controller as ControllerConstructor).prototype[$options] || {}
+                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = options
                 const matchRoutes = routes[method]
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {
@@ -138,15 +138,15 @@ export default class Server extends EventEmitter {
                         if (propertys) {
                             Object.keys(propertys).forEach((key: string) => {
                                 const property = propertys[key]
-                                const { handler, arg } = property
-                                ; (Controller as any).prototype[key] = handler(context, arg)
+                                const { callback, value } = property
+                                ; (Controller as any).prototype[key] = callback(context, value)
                             })
                         }
 
                         if (methods) {
                             Object.keys(methods).forEach((key: string) => {
                                 const method = methods[key]
-                                method.handler(context, method.options)
+                                method.callback(context, method.value)
                             })
                         }
                         // Map metadata
@@ -176,16 +176,13 @@ export default class Server extends EventEmitter {
                                     if (parameter) {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
                                             try {
-                                                if (parameter.arg) {
-                                                    return parameter.handler(context, parameter.arg)
+                                                const { value, callback } = parameter
+                                                if (value) {
+                                                    return callback(context, value)
                                                 }
-                                                return parameter.handler(context)
+                                                return value(context)
                                             } catch (error) {
-                                                if (catchs[propertyKey]) {
-                                                    return catchs[propertyKey].handler(context, catchs[propertyKey].options, error)
-                                                } else {
-                                                    throw error
-                                                }
+                                                return error
                                             }
                                         })
                                     }
@@ -341,7 +338,7 @@ export default class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    private exception(response: ServerResponse | Http2ServerResponse, error: Core.HttpErrorConstructor & Error) {
+    private exception(response: ServerResponse | Http2ServerResponse, error: Core.HttpExceptionCapture & Error) {
         let status: number;
         // If not number
         if (error.statusCode) {
@@ -394,14 +391,14 @@ export * from './lib/HttpException'
 
 export namespace Core {
 
-    export interface HttpException {
+    export interface HttpExceptionCapture {
         errors?: { [key: string]: Messages};
         statusCode?: number;
         type?: 'json' | 'html';
     }
 
-    export interface HttpErrorConstructor extends HttpException {
-        new (error: HttpException): HttpException;
+    export interface HttpExceptionCaptureConstructor extends HttpExceptionCapture {
+        new (error: HttpExceptionCapture): HttpExceptionCapture;
     }
 
     export interface HttpHandler {

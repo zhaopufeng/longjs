@@ -19,6 +19,7 @@ const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
 const stream_1 = require("stream");
 const utils_1 = require("./lib/utils");
+const Decorators_1 = require("./lib/Decorators");
 const crypto_1 = require("crypto");
 class Server extends EventEmitter {
     /**
@@ -39,9 +40,9 @@ class Server extends EventEmitter {
             const controllers = options.controllers;
             controllers.forEach((Controller) => {
                 Controller.prototype.$app = this;
-                if (typeof Controller.prototype.$options !== 'object' || !Controller.prototype.$options)
-                    Controller.prototype.$options = {};
-                const { routes = {}, route = '' } = Controller.prototype.$options;
+                if (typeof Controller.prototype[Decorators_1.$options] !== 'object' || !Controller.prototype[Decorators_1.$options])
+                    Controller.prototype[Decorators_1.$options] = {};
+                const { routes = {}, route = '' } = Controller.prototype[Decorators_1.$options];
                 if (routes) {
                     Object.keys(routes).forEach((key) => {
                         if (Array.isArray(routes[key])) {
@@ -96,8 +97,8 @@ class Server extends EventEmitter {
             const { path, method } = context;
             // Map controllers
             for (let Controller of controllers) {
-                const $options = Controller.prototype.$options || {};
-                const { routes = {}, parameters = {}, propertys = {}, methods = {}, catchs = {} } = $options;
+                const options = Controller.prototype[Decorators_1.$options] || {};
+                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = options;
                 const matchRoutes = routes[method];
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {
@@ -113,14 +114,14 @@ class Server extends EventEmitter {
                         if (propertys) {
                             Object.keys(propertys).forEach((key) => {
                                 const property = propertys[key];
-                                const { handler, arg } = property;
-                                Controller.prototype[key] = handler(context, arg);
+                                const { callback, value } = property;
+                                Controller.prototype[key] = callback(context, value);
                             });
                         }
                         if (methods) {
                             Object.keys(methods).forEach((key) => {
                                 const method = methods[key];
-                                method.handler(context, method.options);
+                                method.callback(context, method.value);
                             });
                         }
                         // Map metadata
@@ -149,18 +150,14 @@ class Server extends EventEmitter {
                                     if (parameter) {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
                                             try {
-                                                if (parameter.arg) {
-                                                    return parameter.handler(context, parameter.arg);
+                                                const { value, callback } = parameter;
+                                                if (value) {
+                                                    return callback(context, value);
                                                 }
-                                                return parameter.handler(context);
+                                                return value(context);
                                             }
                                             catch (error) {
-                                                if (catchs[propertyKey]) {
-                                                    return catchs[propertyKey].handler(context, catchs[propertyKey].options, error);
-                                                }
-                                                else {
-                                                    throw error;
-                                                }
+                                                return error;
                                             }
                                         });
                                     }

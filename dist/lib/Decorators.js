@@ -7,6 +7,7 @@
  * @export Decorators
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.$options = Symbol('$options');
 /**
  * createClassDecorator
  * 创建类装饰器方法
@@ -14,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function createClassDecorator(callback) {
     return (target) => {
         // Get options
-        let options = target.prototype.$options || {};
+        let options = target.prototype[exports.$options] || {};
         // Check options target is defined
         if (!options.target)
             options.target = target;
@@ -28,312 +29,150 @@ function createClassDecorator(callback) {
         if (metadatas)
             options.metadatas = metadatas;
         // Set options
-        target.prototype.$options = options;
+        target.prototype[exports.$options] = options;
     };
 }
 exports.createClassDecorator = createClassDecorator;
-/**
- * 创建http请求装饰器方法
- * @param type
- */
-function createRequestDecorator(type) {
-    function decorator(...args) {
-        if (args.length === 1) {
-            const [route] = args;
-            return handler(route);
-        }
-        else {
-            return handler(null, ...args);
-        }
-    }
-    function handler(route, ...args) {
-        if (route) {
-            return (target, propertyKey, descriptor) => {
-                appendRoute(route, target, propertyKey, descriptor);
-            };
-        }
-        else {
-            appendRoute(route, ...args);
-        }
-        function appendRoute(route, ...args) {
-            const [target, propertyKey, descriptor] = args;
-            if (!route)
-                route = propertyKey;
-            // If the path does not start with '/',insert '/' before route.
-            if (!/^\//.test(route)) {
-                route = `/${route}`;
-            }
-            // If the path Contains double `//`, replace with '/'.
-            route = route.replace(/[\/]{2,}/g, '/');
-            const options = target.$options || {};
-            const { routes } = options;
-            options.routes = routes || {};
-            // Check if the route is duplicated
-            const theTypeRoutes = options.routes[type];
-            if (Array.isArray(theTypeRoutes)) {
-                const filters = theTypeRoutes.filter((k) => {
-                    return k.routePath === route;
-                });
-                // If not is duplicated
-                if (!filters.length) {
-                    theTypeRoutes.push({
-                        routePath: route,
-                        propertyKey: propertyKey
-                    });
-                    return;
-                }
-                throw new Error(`In class ${target.constructor.name}, function ${propertyKey}(), route path '${route}' Repeat in request type '${type}'.`);
-            }
-            else {
-                options.routes[type] = [{
-                        routePath: route,
-                        propertyKey: propertyKey
-                    }];
-            }
-            target.$options = options;
-        }
-    }
-    return decorator;
-}
-exports.createRequestDecorator = createRequestDecorator;
-function createParameterDecorator(...ags) {
-    let [decoratorName, callback] = ags;
-    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
-        callback = decoratorName;
-        decoratorName = null;
-    }
-    function decorator(...args) {
-        if (args.length === 1) {
-            return (target, propertyKey, parameterIndex) => {
-                const options = target.$options || {};
-                const parameters = options.parameters = options.parameters || {};
-                if (!Array.isArray(parameters[propertyKey])) {
-                    parameters[propertyKey] = [];
-                }
-                parameters[propertyKey][parameterIndex] = {
-                    handler: callback,
-                    decoratorName,
-                    arg: args[0]
-                };
-                target.$options = options;
-            };
-        }
-        else {
-            const [target, propertyKey, parameterIndex] = args;
-            const options = target.$options || {};
-            const parameters = options.parameters = options.parameters || {};
-            if (!Array.isArray(parameters[propertyKey])) {
-                parameters[propertyKey] = [];
-            }
-            parameters[propertyKey][parameterIndex] = {
-                handler: callback,
-                decoratorName
-            };
-            target.$options = options;
-        }
-    }
-    return decorator;
-}
-exports.createParameterDecorator = createParameterDecorator;
-function createPropertyDecorator(...ags) {
-    let [decoratorName, callback] = ags;
-    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
-        callback = decoratorName;
-        decoratorName = null;
-    }
-    function decorator(...args) {
-        if (args.length === 1) {
-            return (target, propertyKey) => {
-                const options = target.$options || {};
-                if (!options.propertys)
-                    options.propertys = {};
-                const { propertys } = options;
-                propertys[propertyKey] = {
-                    handler: callback,
-                    decoratorName,
-                    arg: args[0]
-                };
-                target.$options = options;
-            };
-        }
-        else {
-            const [target, propertyKey] = args;
-            const options = target.$options || {};
-            if (!options.propertys)
-                options.propertys = {};
-            const { propertys } = options;
-            propertys[propertyKey] = {
-                handler: callback,
-                decoratorName
-            };
-            target.$options = options;
-        }
-    }
-    return decorator;
-}
-exports.createPropertyDecorator = createPropertyDecorator;
-function createPropertyAndParameterDecorator(...ags) {
-    let [decoratorName, callback] = ags;
-    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
-        callback = decoratorName;
-        decoratorName = null;
-    }
-    function decorator(...args) {
-        if (args.length === 1) {
-            function fn(...ags) {
-                const [target, propertyKey, parameterIndex] = ags;
-                handler({
-                    target,
-                    propertyKey,
-                    parameterIndex,
-                    args: args[0]
-                });
-            }
-            return fn;
-        }
-        else {
-            const [target, propertyKey, parameterIndex] = args;
-            handler({
-                target,
-                propertyKey,
-                parameterIndex
-            });
-        }
-        function handler(options) {
-            const { target, propertyKey, parameterIndex, args } = options;
-            // If the parameterIndex is an number, it is a parameter decorator, otherwise it is an property decorator.
-            const opts = target.$options || {};
-            if (typeof parameterIndex !== 'number') {
-                if (!opts.propertys) {
-                    opts.propertys = {};
-                    opts.propertys[propertyKey] = {
-                        arg: args,
-                        decoratorName,
-                        handler: callback
-                    };
-                }
-                else {
-                    opts.propertys[propertyKey] = {
-                        arg: args,
-                        decoratorName,
-                        handler: callback
-                    };
-                }
-            }
-            else {
-                if (!opts.parameters) {
-                    opts.parameters = {};
-                    opts.parameters[propertyKey] = [];
-                    opts.parameters[propertyKey][parameterIndex] = {
-                        arg: args,
-                        decoratorName,
-                        handler: callback
-                    };
-                }
-                else {
-                    if (Array.isArray(opts.parameters[propertyKey])) {
-                        opts.parameters[propertyKey][parameterIndex] = {
-                            arg: args,
-                            decoratorName,
-                            handler: callback
-                        };
-                    }
-                    else {
-                        opts.parameters[propertyKey] = [];
-                        opts.parameters[propertyKey][parameterIndex] = {
-                            arg: args,
-                            decoratorName,
-                            handler: callback
-                        };
-                    }
-                }
-            }
-            target.$options = opts;
-        }
-    }
-    return decorator;
-}
-exports.createPropertyAndParameterDecorator = createPropertyAndParameterDecorator;
-/**
- * createMethodDecorator
- * 创建方法装饰器
- * @param callback
- */
 function createMethodDecorator(callback) {
     function decorator(...args) {
-        if (args.length < 3) {
+        if (args.length < 3 && args.length > 0) {
             return (target, propertyKey, descriptor) => {
-                const options = target.$options || {};
-                if (!options.methods)
-                    options.methods = {};
-                options.methods[propertyKey] = {
-                    handler: callback,
-                    options: {
-                        target,
-                        propertyKey,
-                        descriptor,
-                        arg: args[0],
-                        key: args[0],
-                        value: args[1]
-                    }
-                };
-                target.$options = options;
+                const [key, value] = args;
+                const options = target[exports.$options] || {};
+                target[exports.$options] = callback(options, [target, propertyKey, descriptor], key, value);
             };
         }
         else {
             const [target, propertyKey, descriptor] = args;
-            const options = target.$options || {};
-            if (!options.methods)
-                options.methods = {};
-            options.methods[propertyKey] = {
-                handler: callback,
-                options: {
-                    target,
-                    propertyKey,
-                    descriptor
-                }
-            };
-            target.$options = options;
+            const options = target[exports.$options] || {};
+            target[exports.$options] = callback(options, [target, propertyKey, descriptor]);
         }
     }
     return decorator;
 }
 exports.createMethodDecorator = createMethodDecorator;
-function createHttpExceptionDecorator(callback) {
+function createPropertyDecorator(callback) {
     function decorator(...args) {
         if (args.length === 1) {
-            return (target, propertyKey, descriptor) => {
-                const options = target.$options || {};
-                if (!options.catchs)
-                    options.catchs = {};
-                options.catchs[propertyKey] = {
-                    handler: callback,
-                    options: {
-                        target,
-                        propertyKey,
-                        descriptor,
-                        arg: args[0]
-                    }
-                };
-                target.$options = options;
+            return (target, propertyKey) => {
+                const [arg] = args;
+                const options = target[exports.$options] || {};
+                target[exports.$options] = callback(options, [target, propertyKey], arg);
             };
         }
         else {
-            const [target, propertyKey, descriptor] = args;
-            const options = target.$options || {};
-            if (!options.catchs)
-                options.catchs = {};
-            options.catchs[propertyKey] = {
-                handler: callback,
-                options: {
-                    target,
-                    propertyKey,
-                    descriptor
-                }
-            };
-            target.$options = options;
+            const [target, propertyKey] = args;
+            const options = target[exports.$options] || {};
+            target[exports.$options] = callback(options, [target, propertyKey]);
         }
     }
     return decorator;
 }
-exports.createHttpExceptionDecorator = createHttpExceptionDecorator;
+exports.createPropertyDecorator = createPropertyDecorator;
+function createParameterDecorator(callback) {
+    function decorator(...args) {
+        if (args.length === 1) {
+            return (target, propertyKey, parameterIndex) => {
+                const [key, value] = args;
+                const options = target[exports.$options] || {};
+                target[exports.$options] = callback(options, [target, propertyKey, parameterIndex], key, value);
+            };
+        }
+        else {
+            const [target, propertyKey, parameterIndex] = args;
+            const options = target[exports.$options] || {};
+            target[exports.$options] = callback(options, [target, propertyKey, parameterIndex]);
+        }
+    }
+    return decorator;
+}
+exports.createParameterDecorator = createParameterDecorator;
+function createPropertyAndParameterDecorator(id, callback) {
+    function decorator(...args) {
+        if (args.length === 1) {
+            const [arg] = args;
+            return (...targs) => {
+                handler(arg, ...targs);
+            };
+        }
+        else {
+            handler(null, ...args);
+        }
+        function handler(value, ...sagrs) {
+            const [target, propertyKey, parameterIndex] = sagrs;
+            if (typeof parameterIndex === 'number' && sagrs.length === 3) {
+                const options = target[exports.$options];
+                const parameters = options.parameters = options.parameters || {};
+                const parameter = parameters[propertyKey] = parameters[propertyKey] || [];
+                parameter[parameterIndex] = {
+                    callback,
+                    value,
+                    id
+                };
+            }
+            else {
+                const options = target[exports.$options];
+                const propertys = options.propertys = options.propertys || {};
+                const property = propertys[propertyKey] = propertys[propertyKey];
+                property.callback = callback;
+                property.value = value;
+            }
+        }
+    }
+    return decorator;
+}
+exports.createPropertyAndParameterDecorator = createPropertyAndParameterDecorator;
+function createRequestMethodDecorator(type) {
+    return createMethodDecorator((options, decorator, route) => {
+        const [target, propertyKey] = decorator;
+        const routes = options.routes = options.routes || {};
+        if (!route)
+            route = propertyKey;
+        // If the path does not start with '/',insert '/' before route.
+        if (!/^\//.test(route))
+            route = `/${route}`;
+        // If the path Contains double `//`, replace with '/'.
+        route = route.replace(/[\/]{2,}/g, '/');
+        // If request type `ALL` in routes return
+        if (routes['ALL']) {
+            if (routes['ALL'].length > 0)
+                return options;
+        }
+        const router = routes[type] = routes[type] || [];
+        // Check if the route is duplicated
+        const filters = router.filter((k) => k.routePath === route);
+        // If not is duplicated
+        if (filters.length > 0)
+            throw new Error(`In class ${target.constructor.name}, function ${propertyKey}(), route path '${route}' Repeat in request type '${type}'.`);
+        // Append this router
+        router.push({ routePath: route, propertyKey: propertyKey });
+        return options;
+    });
+}
+exports.createRequestMethodDecorator = createRequestMethodDecorator;
+function createHttpExceptionCaptureDecorator() {
+    return createMethodDecorator((options, decorator, HttpExceptionCapture) => {
+        const [target, propertyKey, descriptor] = decorator;
+        const { value } = descriptor;
+        descriptor.value = function (...args) {
+            try {
+                args.forEach((k) => {
+                    if (k instanceof Error) {
+                        throw k;
+                    }
+                });
+                value.call(this, ...args);
+            }
+            catch (error) {
+                if (HttpExceptionCapture) {
+                    throw HttpExceptionCapture(error);
+                }
+                else {
+                    throw error;
+                }
+            }
+        };
+        return options;
+    });
+}
+exports.createHttpExceptionCaptureDecorator = createHttpExceptionCaptureDecorator;

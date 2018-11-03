@@ -4,7 +4,6 @@
  * @license MIT
  * @copyright Ranyunlong 2018-09-23 1:19
  */
-/// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
 import TkServer from '..';
 import * as net from 'net';

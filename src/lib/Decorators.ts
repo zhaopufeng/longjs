@@ -9,43 +9,41 @@
 import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp'
 
-interface Options<T = any> {
-    target?: Controller;
-    propertyKey?: string | symbol;
-    descriptor?: TypedPropertyDescriptor<T>
-    parameterIndex?: number;
+type ClassDecoratorCallback = (options: ControllerOptions) => void;
+type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT' | 'COPY' | 'LINK' | 'UNLINK' | 'PURGE' | 'LOCK' | 'UNLOCK' | 'PORPFIND' | 'VIEW'
+type ParameterDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
+type PropertyDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
+type MethodDecoratorHttpCallback = (ctx: Core.Context, arg?: any) => void;
+
+interface Parameter {
+    callback?: ParameterDecoratorHttpCallback;
+    id?: string;
+    value?: any;
 }
 
 interface Parameters {
-    [key: string]: Array<{
-        handler?: ParameterDecoratorCallback;
-        decoratorName?: string;
-        arg?: any;
-    }>;
+    [key: string]: Parameter[];
 }
 
 interface Propertys {
     [key: string]: {
-        handler?: PropertyDecoratorCallback;
-        decoratorName?: string;
-        arg?: any;
+        callback?: PropertyDecoratorHttpCallback;
+        value?: any;
     }
-}
-
-interface MethodsOptions {
-    target?: any;
-    propertyKey?: string | symbol;
-    descriptor?: TypedPropertyDescriptor<any>,
-    arg?: any;
-    key?: string;
-    value?: any;
 }
 
 interface Methods {
     [key: string]: {
-        handler?: MethodDecoratorCallback;
-        options?: MethodsOptions;
+        callback?: MethodDecoratorHttpCallback;
+        value?: any;
     }
+}
+
+interface Router {
+    routePath?: string;
+    propertyKey?: string;
+    keys?: pathToRegExp.Key[];
+    RegExp?: RegExp;
 }
 
 interface ControllerOptions {
@@ -54,27 +52,18 @@ interface ControllerOptions {
     parameters?: Parameters;
     propertys?: Propertys;
     methods?: Methods;
-    catchs?: {
-        [key: string]: {
-            handler?: HttpExceptionDecoratorCallback;
-            options?: MethodsOptions;
-        };
-    };
     target?: Controller;
     routes?: {
-        [key: string]: Array<{
-            routePath?: string;
-            propertyKey?: string;
-            keys?: pathToRegExp.Key[];
-            RegExp?: RegExp;
-        }>
+        [key: string]: Router[]
     }
 }
+
+export const $options = Symbol('$options')
 
 export interface Controller {
     readonly prototype: {
         $app: Server;
-        $options: ControllerOptions;
+        [$options]: ControllerOptions;
     };
     [key: string]: any;
 }
@@ -82,17 +71,10 @@ export interface Controller {
 export interface ControllerConstructor {
     new (...args: any[]): Controller;
     readonly prototype: {
-        $options: ControllerOptions;
+        [$options]: ControllerOptions;
     };
 }
 
-type ParameterDecorator = (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-type ClassDecoratorCallback = (options: ControllerOptions) => void;
-type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT';
-type ParameterDecoratorCallback = (ctx: Core.Context, arg?: any) => any;
-type PropertyDecoratorCallback = (ctx: Core.Context, arg?: any) => any;
-type MethodDecoratorCallback = (ctx: Core.Context, options: MethodsOptions) => void;
-type HttpExceptionDecoratorCallback = (ctx: Core.Context, options: MethodsOptions, error: Core.HttpException) => void;
 /**
  * createClassDecorator
  * 创建类装饰器方法
@@ -100,7 +82,7 @@ type HttpExceptionDecoratorCallback = (ctx: Core.Context, options: MethodsOption
 export function createClassDecorator(callback: ClassDecoratorCallback): ClassDecorator {
     return <C extends Controller>(target: C): C | void => {
         // Get options
-        let options = target.prototype.$options || {}
+        let options = target.prototype[$options] || {}
         // Check options target is defined
         if (!options.target) options.target = target
 
@@ -113,264 +95,8 @@ export function createClassDecorator(callback: ClassDecoratorCallback): ClassDec
         if (metadatas) options.metadatas = metadatas
 
         // Set options
-        target.prototype.$options = options
+        target.prototype[$options] = options
     }
-}
-
-/**
- * 创建http请求装饰器方法
- * @param type
- */
-export function createRequestDecorator<T = any>(type: RequestMethodType) {
-    function decorator(route: T): MethodDecorator;
-    function decorator(target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
-    function decorator(...args: any[]): MethodDecorator | TypedPropertyDescriptor<any> | void {
-        if (args.length === 1) {
-            const [ route ] = args
-            return handler(route)
-        } else {
-            return handler(null, ...args)
-        }
-    }
-
-    function handler(route: string | null, ...args: any[]) {
-        if (route) {
-            return (target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
-                appendRoute(route, target, propertyKey, descriptor)
-            }
-        } else {
-            appendRoute(route, ...args)
-        }
-
-        function appendRoute(route: string, ...args: any[]) {
-            const [target, propertyKey, descriptor] = args
-            if (!route) route = propertyKey;
-            // If the path does not start with '/',insert '/' before route.
-            if (!/^\//.test(route)) {
-                route = `/${route}`
-            }
-
-            // If the path Contains double `//`, replace with '/'.
-            route = route.replace(/[\/]{2,}/g, '/')
-            const options: ControllerOptions = (target as Controller).$options || {}
-            const { routes } = options
-            options.routes = routes || {}
-
-            // Check if the route is duplicated
-            const theTypeRoutes = options.routes[type]
-            if (Array.isArray(theTypeRoutes)) {
-                const filters = theTypeRoutes.filter((k) => {
-                   return k.routePath === route
-                })
-
-                // If not is duplicated
-                if (!filters.length) {
-                    theTypeRoutes.push({
-                        routePath: route,
-                        propertyKey: propertyKey
-                    })
-                    return
-                }
-
-                throw new Error(`In class ${target.constructor.name}, function ${propertyKey}(), route path '${route}' Repeat in request type '${type}'.`)
-            } else {
-                options.routes[type] = [{
-                    routePath: route,
-                    propertyKey: propertyKey
-                }]
-            }
-
-            target.$options = options
-        }
-    }
-
-    return decorator;
-}
-
-/**
- * createParameterDecorator
- * 创建参数装饰器方法
- * @param callback
- */
-export function createParameterDecorator<T = any>(callback: ParameterDecoratorCallback): ParameterDecorator & {(arg: T): ParameterDecorator};
-export function createParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback): ParameterDecorator & {(arg: T): ParameterDecorator};
-export function createParameterDecorator<T = any>(...ags: any[]) {
-    let [ decoratorName, callback ] = ags;
-    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
-        callback = decoratorName
-        decoratorName = null
-    }
-    function decorator(target: any, propertyKey: string, parameterIndex: number): void;
-    function decorator(arg: T): ParameterDecorator;
-    function decorator(...args: any[]): any {
-        if (args.length === 1) {
-            return (target: any, propertyKey: string, parameterIndex: number): void => {
-                const options = target.$options || {}
-                const parameters: Parameters = options.parameters = options.parameters || {}
-                if (!Array.isArray(parameters[propertyKey])) {
-                    parameters[propertyKey] = []
-                }
-                parameters[propertyKey][parameterIndex] = {
-                    handler: callback,
-                    decoratorName,
-                    arg: args[0]
-                }
-                target.$options = options
-            }
-        } else {
-            const [target, propertyKey, parameterIndex] = args
-            const options = target.$options || {}
-            const parameters: Parameters = options.parameters = options.parameters || {}
-            if (!Array.isArray(parameters[propertyKey])) {
-                parameters[propertyKey] = []
-            }
-            parameters[propertyKey][parameterIndex] = {
-                handler: callback,
-                decoratorName
-            }
-            target.$options = options
-        }
-    }
-
-    return decorator
-}
-
-/**
- * createPropertyDecorator
- * 创建属性装饰器方法
- * @param callback
- */
-export function createPropertyDecorator<T = any>(callback: PropertyDecoratorCallback): PropertyDecorator & { (arg: T): PropertyDecorator };
-export function createPropertyDecorator<T = any>(decoratorName: string, callback: PropertyDecoratorCallback): PropertyDecorator & { (arg: T): PropertyDecorator };
-export function createPropertyDecorator<T = any>(...ags: any[]) {
-    let [ decoratorName, callback ] = ags;
-    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
-        callback = decoratorName
-        decoratorName = null
-    }
-    function decorator(target: any, propertyKey: string | symbol): void;
-    function decorator(arg: T): PropertyDecorator;
-    function decorator(...args: any[]): any {
-        if (args.length === 1) {
-            return (target: any, propertyKey: string | symbol): void => {
-                const options: ControllerOptions = target.$options || {}
-                if (!options.propertys) options.propertys = {}
-                const { propertys } = options
-                propertys[propertyKey as string] = {
-                    handler: callback,
-                    decoratorName,
-                    arg: args[0]
-                }
-                target.$options = options
-            }
-        } else {
-            const [target, propertyKey] = args
-            const options: ControllerOptions = target.$options || {}
-            if (!options.propertys) options.propertys = {}
-            const { propertys } = options
-            propertys[propertyKey as string] = {
-                handler: callback,
-                decoratorName
-            }
-            target.$options = options
-        }
-    }
-    return decorator
-}
-
-/**
- * createPropertyAndParameterDecorator
- * 创建同时能兼容参数装饰器和属性装饰器方法
- * @param callback
- */
-export function createPropertyAndParameterDecorator<T = any>(callback: ParameterDecoratorCallback & PropertyDecoratorCallback): ParameterDecorator & PropertyDecorator & {(arg: T): ParameterDecorator & PropertyDecorator}
-export function createPropertyAndParameterDecorator<T = any>(decoratorName: string, callback: ParameterDecoratorCallback & PropertyDecoratorCallback): ParameterDecorator & PropertyDecorator & {(arg: T): ParameterDecorator & PropertyDecorator}
-export function createPropertyAndParameterDecorator<T = any>(...ags: any[]) {
-    let [ decoratorName, callback ] = ags
-    if (typeof decoratorName !== 'string' && typeof decoratorName === 'function') {
-        callback = decoratorName
-        decoratorName = null
-    }
-    function decorator(target: any, propertyKey: string, parameterIndex: number): void;
-    function decorator(target: any, propertyKey: string | symbol): void;
-    function decorator(arg: T): ParameterDecorator;
-    function decorator(...args: any[]): any {
-        if (args.length === 1) {
-            function fn(target: any, propertyKey: string, parameterIndex: number): void;
-            function fn(target: any, propertyKey: string | symbol): void;
-            function fn(...ags: any[]): any {
-                const [target, propertyKey, parameterIndex] = ags
-                handler({
-                    target,
-                    propertyKey,
-                    parameterIndex,
-                    args: args[0]
-                })
-            }
-            return fn
-        } else {
-            const [target, propertyKey, parameterIndex] = args
-            handler({
-                target,
-                propertyKey,
-                parameterIndex
-            })
-        }
-
-        function handler(options: {
-            target: any,
-            propertyKey: string | symbol,
-            parameterIndex: number
-            args?: any
-        }) {
-            const { target, propertyKey, parameterIndex, args} = options
-            // If the parameterIndex is an number, it is a parameter decorator, otherwise it is an property decorator.
-            const opts: ControllerOptions = target.$options || {}
-            if (typeof parameterIndex !== 'number' ) {
-                if (!opts.propertys) {
-                    opts.propertys = {}
-                    opts.propertys[propertyKey as string] = {
-                        arg: args,
-                        decoratorName,
-                        handler: callback
-                    }
-                } else {
-                    opts.propertys[propertyKey as string] = {
-                        arg: args,
-                        decoratorName,
-                        handler: callback
-                    }
-                }
-            } else {
-                if (!opts.parameters) {
-                    opts.parameters = {}
-                    opts.parameters[propertyKey as string] = []
-                    opts.parameters[propertyKey as string][parameterIndex] = {
-                        arg: args,
-                        decoratorName,
-                        handler: callback
-                    }
-                } else {
-                    if (Array.isArray(opts.parameters[propertyKey as string])) {
-                        opts.parameters[propertyKey as string][parameterIndex] = {
-                            arg: args,
-                            decoratorName,
-                            handler: callback
-                        }
-                    } else {
-                        opts.parameters[propertyKey as string] = []
-                        opts.parameters[propertyKey as string][parameterIndex] = {
-                            arg: args,
-                            decoratorName,
-                            handler: callback
-                        }
-                    }
-                }
-            }
-            target.$options = opts
-        }
-    }
-    return decorator
 }
 
 /**
@@ -378,78 +104,181 @@ export function createPropertyAndParameterDecorator<T = any>(...ags: any[]) {
  * 创建方法装饰器
  * @param callback
  */
-export function createMethodDecorator<K = any, V = any>(callback: MethodDecoratorCallback) {
-    function decorator(target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
-    function decorator(key: K, value?: V): MethodDecorator;
-    function decorator(...args: any[]): any {
-        if (args.length < 3) {
-            return (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
-                const options: ControllerOptions = target.$options || {}
-                if (!options.methods) options.methods = {}
-                options.methods[propertyKey as string] = {
-                    handler: callback,
-                    options: {
-                        target,
-                        propertyKey,
-                        descriptor,
-                        arg: args[0],
-                        key: args[0],
-                        value: args[1]
-                    }
-                }
-                target.$options = options
+export type MethodDecoratorInterface<K, V> = MethodDecorator & { (key: K, value?: V): MethodDecorator }
+export interface MethodDecoratorCallback<K, V> {
+    (options: ControllerOptions, decorator: [Object, string, TypedPropertyDescriptor<any>], key?: K, value?: V, ...args: any[]): ControllerOptions;
+}
+export function createMethodDecorator<K, V = any, D = MethodDecoratorInterface<K, V>>(callback: MethodDecoratorCallback<K, V>): D {
+    function decorator(...args: any[]) {
+        if (args.length < 3 && args.length > 0) {
+            return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
+                const [key, value] = args
+                const options: ControllerOptions = target[$options] || {}
+                target[$options] = callback(options, [target, propertyKey, descriptor], key, value)
             }
         } else {
-            const [ target, propertyKey, descriptor ] = args;
-            const options: ControllerOptions = target.$options || {}
-                if (!options.methods) options.methods = {}
-                options.methods[propertyKey] = {
-                    handler: callback,
-                    options: {
-                        target,
-                        propertyKey,
-                        descriptor
-                    }
-                }
-                target.$options = options
+            const [ target, propertyKey, descriptor ] = args
+            const options: ControllerOptions = target[$options] || {}
+            target[$options] = callback(options, [target, propertyKey, descriptor])
         }
     }
-    return decorator
+    return decorator as any
 }
 
-export function createHttpExceptionDecorator<K = any>(callback: HttpExceptionDecoratorCallback) {
-    function decorator(target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void;
-    function decorator(key: K): MethodDecorator;
-    function decorator(...args: any[]): any {
+/**
+ * createPropertyDecorator
+ * 创建属性装饰器方法
+ * @param callback
+ */
+export type PropertyDecoratorInterface<K> = PropertyDecorator & { (arg: K): PropertyDecorator }
+export interface PropertyDecoratorCallback<K> {
+    (options: ControllerOptions, decorator: [Object, string], key?: K, ...args: any[]): ControllerOptions;
+}
+export function createPropertyDecorator<K, D = PropertyDecoratorInterface<K>>(callback: PropertyDecoratorCallback<K>): D {
+    function decorator(...args: any[]) {
         if (args.length === 1) {
-            return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
-                const options: ControllerOptions = target.$options || {}
-                if (!options.catchs) options.catchs = {}
-                options.catchs[propertyKey] = {
-                    handler: callback,
-                    options: {
-                        target,
-                        propertyKey,
-                        descriptor,
-                        arg: args[0]
-                    }
-                }
-                target.$options = options
+            return (target: any, propertyKey: string): void => {
+                const [arg] = args
+                const options: ControllerOptions = target[$options] || {}
+                target[$options] = callback(options, [target, propertyKey], arg)
             }
         } else {
-            const [ target, propertyKey, descriptor ] = args;
-            const options: ControllerOptions = target.$options || {}
-                if (!options.catchs) options.catchs = {}
-                options.catchs[propertyKey] = {
-                    handler: callback,
-                    options: {
-                        target,
-                        propertyKey,
-                        descriptor
-                    }
-                }
-                target.$options = options
+            const [ target, propertyKey ] = args
+            const options: ControllerOptions = target[$options] || {}
+            target[$options] = callback(options, [target, propertyKey])
         }
     }
-    return decorator
+    return decorator as any
+}
+
+/**
+ * createPropertyDecorator
+ * 创建属性装饰器方法
+ * @param callback
+ */
+export type ParameterDecoratorInterface<K, V>  = ParameterDecorator & { (key: K, value?: V): ParameterDecorator }
+export interface ParameterDecoratorCallback<K, V> {
+    (options: ControllerOptions, decorator: [Object, string, number], key?: K, value?: V, ...args: any[]): ControllerOptions;
+}
+export function createParameterDecorator<K, V = any, D = ParameterDecoratorInterface<K, V>>(callback: ParameterDecoratorCallback<K, V>): D {
+    function decorator(...args: any[]) {
+        if (args.length === 1) {
+            return (target: any, propertyKey: string, parameterIndex: number): void => {
+                const [key, value] = args
+                const options: ControllerOptions = target[$options] || {}
+                target[$options] = callback(options, [target, propertyKey, parameterIndex], key, value)
+            }
+        } else {
+            const [ target, propertyKey, parameterIndex ] = args
+            const options: ControllerOptions = target[$options] || {}
+            target[$options] = callback(options, [target, propertyKey, parameterIndex])
+        }
+    }
+    return decorator as any
+}
+
+/**
+ * createPropertyAndParameterDecorator
+ * 创建同时能兼容参数装饰器和属性装饰器方法
+ */
+export type PropertyAndParameterDecorator = ParameterDecorator & PropertyDecorator
+export type FnPropertyAndParameterDecorator<V> = (arg: V) => PropertyAndParameterDecorator
+export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: any): D {
+    function decorator(...args: any[]) {
+        if (args.length === 1) {
+            const [ arg ] = args
+            return (...targs: any[]) => {
+                handler(arg, ...targs)
+            }
+        } else {
+            handler(null, ...args)
+        }
+        function handler(value: V, ...sagrs: any[]) {
+            const [ target, propertyKey, parameterIndex ] = sagrs
+            if (typeof parameterIndex === 'number' && sagrs.length === 3) {
+                const options: ControllerOptions = target[$options]
+                const parameters = options.parameters = options.parameters || {}
+                const parameter = parameters[propertyKey] = parameters[propertyKey] || []
+                parameter[parameterIndex] = {
+                    callback,
+                    value,
+                    id
+                }
+            } else {
+                const options: ControllerOptions = target[$options]
+                const propertys = options.propertys = options.propertys || {}
+                const property = propertys[propertyKey] = propertys[propertyKey]
+                property.callback = callback
+                property.value = value
+            }
+        }
+    }
+    return decorator as any
+}
+
+/**
+ * RequestMethodDecorator
+ * 创建http请求方式装饰器
+ */
+export type RequestMethodDecorator = MethodDecorator & { (route: string): MethodDecorator; }
+export function createRequestMethodDecorator(type: RequestMethodType): RequestMethodDecorator {
+    return createMethodDecorator<string, any, RequestMethodDecorator>((options, decorator, route) => {
+        const [ target, propertyKey ] = decorator
+        const routes = options.routes = options.routes || {}
+
+        if (!route) route = propertyKey;
+        // If the path does not start with '/',insert '/' before route.
+        if (!/^\//.test(route)) route = `/${route}`
+
+        // If the path Contains double `//`, replace with '/'.
+        route = route.replace(/[\/]{2,}/g, '/')
+
+        // If request type `ALL` in routes return
+        if (routes['ALL']) {
+            if (routes['ALL'].length > 0) return options
+        }
+
+        const router = routes[type] = routes[type] || []
+
+        // Check if the route is duplicated
+        const filters = router.filter((k) =>  k.routePath === route)
+
+        // If not is duplicated
+        if (filters.length > 0) throw new Error(`In class ${target.constructor.name}, function ${propertyKey}(), route path '${route}' Repeat in request type '${type}'.`)
+
+        // Append this router
+        router.push({ routePath: route, propertyKey: propertyKey })
+
+        return options
+    })
+}
+
+/**
+ * createHttpExceptionDecorator
+ * 创建http异常捕获装饰器
+ */
+
+export type HttpExceptionCaptureDecorator = MethodDecorator & { (HttpExceptionCaptureConstructor: Core.HttpExceptionCaptureConstructor): MethodDecorator }
+export function createHttpExceptionCaptureDecorator<T>(): HttpExceptionCaptureDecorator {
+    return createMethodDecorator<any, any, HttpExceptionCaptureDecorator>((options, decorator, HttpExceptionCapture) => {
+        const [ target, propertyKey, descriptor] = decorator
+        const { value } = descriptor
+        descriptor.value = function(...args: any[]) {
+            try {
+                args.forEach((k) => {
+                    if (k instanceof Error) {
+                        throw k
+                    }
+                })
+                value.call(this, ...args)
+            } catch (error) {
+                if (HttpExceptionCapture) {
+                    throw HttpExceptionCapture(error)
+                } else {
+                    throw error
+                }
+            }
+        }
+        return options
+    })
 }

@@ -5,41 +5,47 @@
  * @copyright Ranyunlong 2018-10-29 15:50
  * @export Decorators
  */
+/// <reference types="node" />
 import { Core } from '@longjs/Core';
 import 'validator';
 import 'reflect-metadata';
 import { ValidatorKeys } from './lib';
+import { IncomingHttpHeaders } from 'http';
 /**
  * Controller Decorator
  * @param path
  */
 export declare function Controller(path: string): ClassDecorator;
 /**
- * Parameter && Property Decorator
- * Header
+ * HeadersDecorator
  */
 export interface Headers {
     [key: string]: any;
 }
-export declare const Headers: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+interface HeadersFnDecorator {
+    (key: {
+        [K in keyof IncomingHttpHeaders]: string;
+    }): ParameterDecorator;
+}
+export declare const Headers: PropertyDecorator & ParameterDecorator & HeadersFnDecorator;
 /**
  * Parameter && Property Decorator
  * Body
  */
 export declare type Body<T = any> = T;
-export declare const Body: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export declare const Body: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<number>;
 /**
  * Parameter && Property Decorator
  * Query
  */
 export declare type Query<T = any> = T;
-export declare const Query: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export declare const Query: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Params<T = any> = T;
-export declare const Params: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: ValidatorKeys) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export declare const Params: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Session
@@ -47,19 +53,19 @@ export declare const Params: ((target: Object, propertyKey: string | symbol, par
 export interface Session {
     [key: string]: any;
 }
-export declare const Session: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export declare const Session: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Request = Core.Request;
-export declare const Request: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export declare const Request: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Response = Core.Response;
-export declare const Response: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
+export declare const Response: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Files
@@ -67,93 +73,90 @@ export declare const Response: ((target: Object, propertyKey: string | symbol, p
 export interface Files {
     [key: string]: any;
 }
-export declare const Files: ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator & ((arg: string[]) => ((target: Object, propertyKey: string | symbol, parameterIndex?: number) => void) & PropertyDecorator);
-/**
- * MethodDecorators
- * Type
- */
-export declare const Type: {
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: string, value?: any): MethodDecorator;
-};
-/**
- * MethodDecorators
- * Status
- */
-export declare const Status: {
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: string, value?: any): MethodDecorator;
-};
+export declare const Files: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * MethodDecorators
  * Catch
  */
-export declare const Catch: {
-    (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-    (key: Core.HttpErrorConstructor): MethodDecorator;
-};
+export declare const Catch: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator;
 /**
  * RequestMethodDecorators
  * Get
  */
-export declare const Get: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Get: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * All
  */
-export declare const All: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const All: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * Delete
  */
-export declare const Delete: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Delete: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * Head
  */
-export declare const Head: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Head: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * Options
  */
-export declare const Options: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Options: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * Patch
  */
-export declare const Patch: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Patch: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * Post
  */
-export declare const Post: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Post: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 /**
  * RequestMethodDecorators
  * Put
  */
-export declare const Put: {
-    (route: string): MethodDecorator;
-    (target: any, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<any>): void | TypedPropertyDescriptor<any>;
-};
+export declare const Put: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Copy
+ */
+export declare const Copy: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Link
+ */
+export declare const Link: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Unlink
+ */
+export declare const Unlink: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Purge
+ */
+export declare const Purge: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Lock
+ */
+export declare const Lock: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Unlock
+ */
+export declare const Unlock: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * Porpfind
+ */
+export declare const Porpfind: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
+/**
+ * RequestMethodDecorators
+ * View
+ */
+export declare const View: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 export * from './lib';

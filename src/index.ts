@@ -11,14 +11,17 @@ import {
     createMethodDecorator,
     createParameterDecorator,
     createPropertyDecorator,
-    createRequestDecorator,
-    createHttpExceptionDecorator,
+    createRequestMethodDecorator,
+    createHttpExceptionCaptureDecorator,
     createPropertyAndParameterDecorator,
-    Core
+    Core,
+    ControllerOptions
 } from '@longjs/Core'
 import 'validator'
 import 'reflect-metadata'
 import validateParams, { ValidatorKeys } from './lib';
+import { IncomingHttpHeaders } from 'http';
+import * as assert from 'assert'
 
 /**
  * Controller Decorator
@@ -35,17 +38,25 @@ export function Controller(path: string): ClassDecorator {
 }
 
 /**
- * Parameter && Property Decorator
- * Header
+ * HeadersDecorator
  */
 export interface Headers {
     [key: string]: any;
 }
-export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = ctx.headers[k]
+type HeadersDecorator = PropertyDecorator & ParameterDecorator
+interface HeadersFnDecorator {
+    (key: { [K in keyof IncomingHttpHeaders]: string }): ParameterDecorator
+}
+export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator & HeadersFnDecorator>('Headers', (ctx: Core.Context, value: { [K in keyof IncomingHttpHeaders]: string }) => {
+    if (typeof value === 'object') {
+        assert(Array.isArray(value), 'Headers validator object invalid.')
+        const { headers } = ctx
+        const data: { [K in keyof IncomingHttpHeaders]: string } = {}
+        Object.keys(value).forEach((k) => {
+            if (headers[k] !== value[k]) {
+                const error = new Error(`Headers ${k} invalid.`)
+            }
+            data[k] = value[k]
         })
         return data
     }
@@ -57,7 +68,7 @@ export const Headers = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Body
  */
 export type Body<T = any> = T;
-export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+export const Body = createPropertyAndParameterDecorator<number>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
     const data: Body = {}
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         Object.keys(validateKeys).forEach((k: string) => {
@@ -65,7 +76,7 @@ export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request Body data is not valid.')
+            const error: Core.HttpExceptionCapture & Error = new Error('Request Body data is not valid.')
             error.errors = errors
             throw error
         }
@@ -88,7 +99,7 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request query string data is not valid.')
+            const error: Core.HttpExceptionCapture & Error = new Error('Request query string data is not valid.')
             error.errors = errors
             throw error
         }
@@ -110,7 +121,7 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request path parameter data is not valid.')
+            const error: Core.HttpExceptionCapture & Error = new Error('Request path parameter data is not valid.')
             error.errors = errors
             throw error
         }
@@ -126,7 +137,7 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
 export interface Session {
     [key: string]: any;
 }
-export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Session = createPropertyAndParameterDecorator<string[]>('Session', (ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -142,7 +153,7 @@ export const Session = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Request
  */
 export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Request = createPropertyAndParameterDecorator<string[]>('Request', (ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -158,7 +169,7 @@ export const Request = createPropertyAndParameterDecorator<string[]>((ctx: Core.
  * Request
  */
 export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>((ctx: Core.Context, args: string[]) => {
+export const Response = createPropertyAndParameterDecorator<string[]>('Response', (ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
         args.forEach((k: string) => {
@@ -189,88 +200,104 @@ export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx
 
 /**
  * MethodDecorators
- * Type
- */
-export const Type = createMethodDecorator<string>((ctx, options) => {
-    const { value } = options.descriptor
-    options.descriptor.value = async function(...args: any[]) {
-        let data = await value.call(this, ...args)
-        if (data) {
-            ctx.type = options.arg
-        }
-        return data
-    }
-})
-
-/**
- * MethodDecorators
- * Status
- */
-export const Status = createMethodDecorator<string>((ctx, options) => {
-    const { value } = options.descriptor
-    options.descriptor.value = async function(...args: any[]) {
-        let data = await value.call(this, ...args)
-        if (data) {
-            ctx.status = options.arg
-        }
-        return data
-    }
-})
-
-/**
- * MethodDecorators
  * Catch
  */
-export const Catch = createHttpExceptionDecorator<Core.HttpErrorConstructor>((ctx, options, error) => {
-    throw new options.arg(error)
-})
+export const Catch = createHttpExceptionCaptureDecorator<Core.HttpExceptionCaptureConstructor>()
 
 /**
  * RequestMethodDecorators
  * Get
  */
-export const Get = createRequestDecorator<string>('GET')
+export const Get = createRequestMethodDecorator('GET')
 
 /**
  * RequestMethodDecorators
  * All
  */
-export const All = createRequestDecorator<string>('ALL')
+export const All = createRequestMethodDecorator('ALL')
 
 /**
  * RequestMethodDecorators
  * Delete
  */
-export const Delete = createRequestDecorator<string>('DELETE')
+export const Delete = createRequestMethodDecorator('DELETE')
 
 /**
  * RequestMethodDecorators
  * Head
  */
-export const Head = createRequestDecorator<string>('HEAD')
+export const Head = createRequestMethodDecorator('HEAD')
 
 /**
  * RequestMethodDecorators
  * Options
  */
-export const Options = createRequestDecorator<string>('OPTIONS')
+export const Options = createRequestMethodDecorator('OPTIONS')
 
 /**
  * RequestMethodDecorators
  * Patch
  */
-export const Patch = createRequestDecorator<string>('PATCH')
+export const Patch = createRequestMethodDecorator('PATCH')
 
 /**
  * RequestMethodDecorators
  * Post
  */
-export const Post = createRequestDecorator<string>('POST')
+export const Post = createRequestMethodDecorator('POST')
 
 /**
  * RequestMethodDecorators
  * Put
  */
-export const Put = createRequestDecorator<string>('PUT')
+export const Put = createRequestMethodDecorator('PUT')
+
+/**
+ * RequestMethodDecorators
+ * Copy
+ */
+export const Copy = createRequestMethodDecorator('COPY')
+
+/**
+ * RequestMethodDecorators
+ * Link
+ */
+export const Link = createRequestMethodDecorator('LINK')
+
+/**
+ * RequestMethodDecorators
+ * Unlink
+ */
+export const Unlink = createRequestMethodDecorator('UNLINK')
+
+/**
+ * RequestMethodDecorators
+ * Purge
+ */
+export const Purge = createRequestMethodDecorator('PURGE')
+
+/**
+ * RequestMethodDecorators
+ * Lock
+ */
+export const Lock = createRequestMethodDecorator('LOCK')
+
+/**
+ * RequestMethodDecorators
+ * Unlock
+ */
+export const Unlock = createRequestMethodDecorator('UNLOCK')
+
+/**
+ * RequestMethodDecorators
+ * Porpfind
+ */
+export const Porpfind = createRequestMethodDecorator('PORPFIND')
+
+/**
+ * RequestMethodDecorators
+ * View
+ */
+export const View = createRequestMethodDecorator('VIEW')
 
 export * from './lib'

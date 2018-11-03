@@ -14,6 +14,7 @@ const Core_1 = require("@longjs/Core");
 require("validator");
 require("reflect-metadata");
 const lib_1 = require("./lib");
+const assert = require("assert");
 /**
  * Controller Decorator
  * @param path
@@ -28,11 +29,16 @@ function Controller(path) {
     });
 }
 exports.Controller = Controller;
-exports.Headers = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
-    if (Array.isArray(args)) {
+exports.Headers = Core_1.createPropertyAndParameterDecorator('Headers', (ctx, value) => {
+    if (typeof value === 'object') {
+        assert(Array.isArray(value), 'Headers validator object invalid.');
+        const { headers } = ctx;
         const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.headers[k];
+        Object.keys(value).forEach((k) => {
+            if (headers[k] !== value[k]) {
+                const error = new Error(`Headers ${k} invalid.`);
+            }
+            data[k] = value[k];
         });
         return data;
     }
@@ -86,7 +92,7 @@ exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, vali
     }
     return ctx.params;
 });
-exports.Session = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Session = Core_1.createPropertyAndParameterDecorator('Session', (ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -96,7 +102,7 @@ exports.Session = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.session;
 });
-exports.Request = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Request = Core_1.createPropertyAndParameterDecorator('Request', (ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -106,7 +112,7 @@ exports.Request = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
     }
     return ctx.request;
 });
-exports.Response = Core_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Response = Core_1.createPropertyAndParameterDecorator('Response', (ctx, args) => {
     if (Array.isArray(args)) {
         const data = {};
         args.forEach((k) => {
@@ -128,77 +134,87 @@ exports.Files = Core_1.createPropertyAndParameterDecorator('Files', (ctx, args) 
 });
 /**
  * MethodDecorators
- * Type
- */
-exports.Type = Core_1.createMethodDecorator((ctx, options) => {
-    const { value } = options.descriptor;
-    options.descriptor.value = async function (...args) {
-        let data = await value.call(this, ...args);
-        if (data) {
-            ctx.type = options.arg;
-        }
-        return data;
-    };
-});
-/**
- * MethodDecorators
- * Status
- */
-exports.Status = Core_1.createMethodDecorator((ctx, options) => {
-    const { value } = options.descriptor;
-    options.descriptor.value = async function (...args) {
-        let data = await value.call(this, ...args);
-        if (data) {
-            ctx.status = options.arg;
-        }
-        return data;
-    };
-});
-/**
- * MethodDecorators
  * Catch
  */
-exports.Catch = Core_1.createHttpExceptionDecorator((ctx, options, error) => {
-    throw new options.arg(error);
-});
+exports.Catch = Core_1.createHttpExceptionCaptureDecorator();
 /**
  * RequestMethodDecorators
  * Get
  */
-exports.Get = Core_1.createRequestDecorator('GET');
+exports.Get = Core_1.createRequestMethodDecorator('GET');
 /**
  * RequestMethodDecorators
  * All
  */
-exports.All = Core_1.createRequestDecorator('ALL');
+exports.All = Core_1.createRequestMethodDecorator('ALL');
 /**
  * RequestMethodDecorators
  * Delete
  */
-exports.Delete = Core_1.createRequestDecorator('DELETE');
+exports.Delete = Core_1.createRequestMethodDecorator('DELETE');
 /**
  * RequestMethodDecorators
  * Head
  */
-exports.Head = Core_1.createRequestDecorator('HEAD');
+exports.Head = Core_1.createRequestMethodDecorator('HEAD');
 /**
  * RequestMethodDecorators
  * Options
  */
-exports.Options = Core_1.createRequestDecorator('OPTIONS');
+exports.Options = Core_1.createRequestMethodDecorator('OPTIONS');
 /**
  * RequestMethodDecorators
  * Patch
  */
-exports.Patch = Core_1.createRequestDecorator('PATCH');
+exports.Patch = Core_1.createRequestMethodDecorator('PATCH');
 /**
  * RequestMethodDecorators
  * Post
  */
-exports.Post = Core_1.createRequestDecorator('POST');
+exports.Post = Core_1.createRequestMethodDecorator('POST');
 /**
  * RequestMethodDecorators
  * Put
  */
-exports.Put = Core_1.createRequestDecorator('PUT');
+exports.Put = Core_1.createRequestMethodDecorator('PUT');
+/**
+ * RequestMethodDecorators
+ * Copy
+ */
+exports.Copy = Core_1.createRequestMethodDecorator('COPY');
+/**
+ * RequestMethodDecorators
+ * Link
+ */
+exports.Link = Core_1.createRequestMethodDecorator('LINK');
+/**
+ * RequestMethodDecorators
+ * Unlink
+ */
+exports.Unlink = Core_1.createRequestMethodDecorator('UNLINK');
+/**
+ * RequestMethodDecorators
+ * Purge
+ */
+exports.Purge = Core_1.createRequestMethodDecorator('PURGE');
+/**
+ * RequestMethodDecorators
+ * Lock
+ */
+exports.Lock = Core_1.createRequestMethodDecorator('LOCK');
+/**
+ * RequestMethodDecorators
+ * Unlock
+ */
+exports.Unlock = Core_1.createRequestMethodDecorator('UNLOCK');
+/**
+ * RequestMethodDecorators
+ * Porpfind
+ */
+exports.Porpfind = Core_1.createRequestMethodDecorator('PORPFIND');
+/**
+ * RequestMethodDecorators
+ * View
+ */
+exports.View = Core_1.createRequestMethodDecorator('VIEW');
 __export(require("./lib"));

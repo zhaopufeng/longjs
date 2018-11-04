@@ -12,10 +12,6 @@ export class IndexController {
     }
 
     @Get
-    @Exception(new HttpException({
-        statusCode: 500,
-        message: 'your are da sha bi'
-    }))
     public async test(@Headers({
         'content-length': '100'
     }) h: Headers) {

@@ -146,6 +146,11 @@ exports.Files = Core_1.createPropertyAndParameterDecorator('Files', (ctx, args) 
  */
 exports.Catch = Core_1.createHttpExceptionCaptureDecorator();
 /**
+ * MethodDecorators
+ * HttpException
+ */
+exports.HttpException = Core_1.createHttpExceptionCaptureDecorator();
+/**
  * RequestMethodDecorators
  * Get
  */

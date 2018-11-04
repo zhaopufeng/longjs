@@ -4,7 +4,7 @@
  * @license MIT
  */
 /// <reference types="node" />
-import { Core } from '@longjs/core';
+import { Core, Plugin } from '@longjs/core';
 import * as url from 'url';
 import * as stream from 'stream';
 import { Agent } from 'http';
@@ -71,4 +71,12 @@ export interface Options {
 }
 export declare function proxyTable(ctx: Core.Context, options?: Options): Promise<void>;
 export declare function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions): Promise<{}>;
-export default proxyTable;
+export declare class Proxy implements Plugin {
+    options: Options;
+    private _proxy;
+    constructor(options: Options);
+    handlerRequest(ctx: Core.Context, configs: any): Promise<void>;
+    proxyTable(ctx: Core.Context, options?: Options): Promise<void>;
+    proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions): Promise<{}>;
+}
+export default Proxy;

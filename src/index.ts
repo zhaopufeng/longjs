@@ -82,6 +82,8 @@ export async function proxyTable(ctx: Core.Context, options: Options = {}) {
 export async function proxy(path: string, ctx: Core.Context, proxyOptions: ProxyOptions) {
     return new Promise((next, reject) => {
         const { changeOrigin, pathRewrite } = proxyOptions
+        if (!/\^/.test(path)) path = `^${path}`
+        if (!/\$$/.test(path)) path = `${path}$`
         if (RegExp(path).test(ctx.path)) {
             if (typeof changeOrigin === 'undefined') proxyOptions.changeOrigin = true
             const path = ctx.path

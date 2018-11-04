@@ -16,6 +16,10 @@ exports.proxyTable = proxyTable;
 async function proxy(path, ctx, proxyOptions) {
     return new Promise((next, reject) => {
         const { changeOrigin, pathRewrite } = proxyOptions;
+        if (!/\^/.test(path))
+            path = `^${path}`;
+        if (!/\$$/.test(path))
+            path = `${path}$`;
         if (RegExp(path).test(ctx.path)) {
             if (typeof changeOrigin === 'undefined')
                 proxyOptions.changeOrigin = true;

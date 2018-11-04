@@ -352,27 +352,25 @@ export default class Server extends EventEmitter {
             status = error.statusCode
         } else if (isNaN(error.message as any)) {
             status = statuses[error.message]
-        } else {
-            status = ~~error.message
         }
 
         if ('development' === this.env && !status) console.log(error)
 
         if (!context.finished) {
             status = status || 500
-            let data: any = statuses[status]
-            if (error.data) data = error.data
-            if (error.message) {
-                if (error.message.length > 0) {
-                    context.message = error.message
-                } else {
-                    context.message = statuses[status]
-                }
+            let message: string = statuses[status]
+            let data: any;
+            if (error.data) {
+                data = error.data
             } else {
-                context.message = statuses[status]
+                data = statuses[status]
             }
-
+            if (error.message) {
+                if (error.message.length > 0) message = error.message;
+            }
+            context.message = message
             context.status = status
+            context.length = data.length
             context.body = data
             this.respond(context)
         }

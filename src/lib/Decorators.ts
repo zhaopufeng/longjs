@@ -267,7 +267,9 @@ export function createRequestMethodDecorator(type: RequestMethodType): RequestMe
  * 创建http异常捕获装饰器
  */
 
-export type HttpExceptionCaptureDecorator = MethodDecorator & { (HttpExceptionCaptureConstructor: Core.HttpException): MethodDecorator }
+export interface HttpExceptionCaptureDecorator {
+    (HttpExceptionCaptureConstructor: Core.HttpException): MethodDecorator;
+}
 export function createHttpExceptionCaptureDecorator<T>(): HttpExceptionCaptureDecorator {
     return createMethodDecorator<any, any, HttpExceptionCaptureDecorator>((options, decorator, HttpException) => {
         const [ target, propertyKey, descriptor] = decorator

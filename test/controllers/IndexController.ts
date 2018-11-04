@@ -7,6 +7,7 @@ export class IndexController {
 
     @Get('/')
     public async index() {
+        throw new Error('')
         return 'xx'
     }
 

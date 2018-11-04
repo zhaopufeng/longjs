@@ -1,5 +1,6 @@
 import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers } from '@longjs/decorators'
 import { HttpException } from '@longjs/core'
+import { TestHttpException } from '../exception/TestException';
 
 @Controller('/')
 export class IndexController {
@@ -12,6 +13,7 @@ export class IndexController {
     }
 
     @Get
+    @Catch(TestHttpException)
     public async test(@Headers({
         'content-length': '100'
     }) h: Headers) {

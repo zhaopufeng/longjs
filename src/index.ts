@@ -139,13 +139,15 @@ export default class Server extends EventEmitter {
                             Object.keys(propertys).forEach((key: string) => {
                                 const property = propertys[key]
                                 const { callback, value } = property
-                                ; (Controller as any).prototype[key] = callback(context, value)
+                                if (typeof callback === 'function')
+                                (Controller as any).prototype[key] = callback(context, value)
                             })
                         }
 
                         if (methods) {
                             Object.keys(methods).forEach((key: string) => {
                                 const method = methods[key]
+                                if (typeof method.callback === 'function')
                                 method.callback(context, method.value)
                             })
                         }
@@ -177,10 +179,12 @@ export default class Server extends EventEmitter {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
                                             try {
                                                 const { value, callback } = parameter
-                                                if (value) {
-                                                    return callback(context, value)
+                                                if (typeof callback === 'function') {
+                                                    if (value) {
+                                                        return callback(context, value)
+                                                    }
+                                                    return callback(context)
                                                 }
-                                                return value(context)
                                             } catch (error) {
                                                 return error
                                             }

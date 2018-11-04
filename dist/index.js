@@ -114,13 +114,15 @@ class Server extends EventEmitter {
                             Object.keys(propertys).forEach((key) => {
                                 const property = propertys[key];
                                 const { callback, value } = property;
-                                Controller.prototype[key] = callback(context, value);
+                                if (typeof callback === 'function')
+                                    Controller.prototype[key] = callback(context, value);
                             });
                         }
                         if (methods) {
                             Object.keys(methods).forEach((key) => {
                                 const method = methods[key];
-                                method.callback(context, method.value);
+                                if (typeof method.callback === 'function')
+                                    method.callback(context, method.value);
                             });
                         }
                         // Map metadata
@@ -150,10 +152,12 @@ class Server extends EventEmitter {
                                         injectParameters = parameters[propertyKey].map((parameter) => {
                                             try {
                                                 const { value, callback } = parameter;
-                                                if (value) {
-                                                    return callback(context, value);
+                                                if (typeof callback === 'function') {
+                                                    if (value) {
+                                                        return callback(context, value);
+                                                    }
+                                                    return callback(context);
                                                 }
-                                                return value(context);
                                             }
                                             catch (error) {
                                                 return error;

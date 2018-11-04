@@ -7,7 +7,6 @@
  * @export Decorators
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.$options = Symbol('$options');
 /**
  * createClassDecorator
  * 创建类装饰器方法
@@ -15,7 +14,7 @@ exports.$options = Symbol('$options');
 function createClassDecorator(callback) {
     return (target) => {
         // Get options
-        let options = target.prototype[exports.$options] || {};
+        let options = target.prototype.____$options || {};
         // Check options target is defined
         if (!options.target)
             options.target = target;
@@ -29,7 +28,7 @@ function createClassDecorator(callback) {
         if (metadatas)
             options.metadatas = metadatas;
         // Set options
-        target.prototype[exports.$options] = options;
+        target.prototype.____$options = options;
     };
 }
 exports.createClassDecorator = createClassDecorator;
@@ -38,14 +37,14 @@ function createMethodDecorator(callback) {
         if (args.length < 3 && args.length > 0) {
             return (target, propertyKey, descriptor) => {
                 const [key, value] = args;
-                const options = target[exports.$options] || {};
-                target[exports.$options] = callback(options, [target, propertyKey, descriptor], key, value);
+                const options = target.____$options || {};
+                target.____$options = callback(options, [target, propertyKey, descriptor], key, value);
             };
         }
         else {
             const [target, propertyKey, descriptor] = args;
-            const options = target[exports.$options] || {};
-            target[exports.$options] = callback(options, [target, propertyKey, descriptor]);
+            const options = target.____$options || {};
+            target.____$options = callback(options, [target, propertyKey, descriptor]);
         }
     }
     return decorator;
@@ -56,14 +55,14 @@ function createPropertyDecorator(callback) {
         if (args.length === 1) {
             return (target, propertyKey) => {
                 const [arg] = args;
-                const options = target[exports.$options] || {};
-                target[exports.$options] = callback(options, [target, propertyKey], arg);
+                const options = target.____$options || {};
+                target.____$options = callback(options, [target, propertyKey], arg);
             };
         }
         else {
             const [target, propertyKey] = args;
-            const options = target[exports.$options] || {};
-            target[exports.$options] = callback(options, [target, propertyKey]);
+            const options = target.____$options || {};
+            target.____$options = callback(options, [target, propertyKey]);
         }
     }
     return decorator;
@@ -74,14 +73,14 @@ function createParameterDecorator(callback) {
         if (args.length === 1) {
             return (target, propertyKey, parameterIndex) => {
                 const [key, value] = args;
-                const options = target[exports.$options] || {};
-                target[exports.$options] = callback(options, [target, propertyKey, parameterIndex], key, value);
+                const options = target.____$options || {};
+                target.____$options = callback(options, [target, propertyKey, parameterIndex], key, value);
             };
         }
         else {
             const [target, propertyKey, parameterIndex] = args;
-            const options = target[exports.$options] || {};
-            target[exports.$options] = callback(options, [target, propertyKey, parameterIndex]);
+            const options = target.____$options || {};
+            target.____$options = callback(options, [target, propertyKey, parameterIndex]);
         }
     }
     return decorator;
@@ -101,7 +100,7 @@ function createPropertyAndParameterDecorator(id, callback) {
         function handler(value, ...sagrs) {
             const [target, propertyKey, parameterIndex] = sagrs;
             if (typeof parameterIndex === 'number' && sagrs.length === 3) {
-                const options = target[exports.$options] || {};
+                const options = target.____$options || {};
                 const parameters = options.parameters = options.parameters || {};
                 const parameter = parameters[propertyKey] = parameters[propertyKey] || [];
                 parameter[parameterIndex] = {
@@ -111,7 +110,7 @@ function createPropertyAndParameterDecorator(id, callback) {
                 };
             }
             else {
-                const options = target[exports.$options] || {};
+                const options = target.____$options || {};
                 const propertys = options.propertys = options.propertys || {};
                 const property = propertys[propertyKey] = propertys[propertyKey] || {};
                 property.callback = callback;

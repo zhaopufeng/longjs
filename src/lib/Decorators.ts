@@ -58,12 +58,10 @@ export interface ControllerOptions {
     }
 }
 
-export const $options = Symbol('$options')
-
 export interface Controller {
     readonly prototype: {
         $app: Server;
-        [$options]: ControllerOptions;
+        ____$options: ControllerOptions;
     };
     [key: string]: any;
 }
@@ -71,7 +69,7 @@ export interface Controller {
 export interface ControllerConstructor {
     new (...args: any[]): Controller;
     readonly prototype: {
-        [$options]: ControllerOptions;
+        ____$options: ControllerOptions;
     };
 }
 
@@ -82,7 +80,7 @@ export interface ControllerConstructor {
 export function createClassDecorator(callback: ClassDecoratorCallback): ClassDecorator {
     return <C extends Controller>(target: C): C | void => {
         // Get options
-        let options = target.prototype[$options] || {}
+        let options = target.prototype.____$options || {}
         // Check options target is defined
         if (!options.target) options.target = target
 
@@ -95,7 +93,7 @@ export function createClassDecorator(callback: ClassDecoratorCallback): ClassDec
         if (metadatas) options.metadatas = metadatas
 
         // Set options
-        target.prototype[$options] = options
+        target.prototype.____$options = options
     }
 }
 
@@ -113,13 +111,13 @@ export function createMethodDecorator<K, V = any, D = MethodDecoratorInterface<K
         if (args.length < 3 && args.length > 0) {
             return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
                 const [key, value] = args
-                const options: ControllerOptions = target[$options] || {}
-                target[$options] = callback(options, [target, propertyKey, descriptor], key, value)
+                const options: ControllerOptions = target.____$options || {}
+                target.____$options = callback(options, [target, propertyKey, descriptor], key, value)
             }
         } else {
             const [ target, propertyKey, descriptor ] = args
-            const options: ControllerOptions = target[$options] || {}
-            target[$options] = callback(options, [target, propertyKey, descriptor])
+            const options: ControllerOptions = target.____$options || {}
+            target.____$options = callback(options, [target, propertyKey, descriptor])
         }
     }
     return decorator as any
@@ -139,13 +137,13 @@ export function createPropertyDecorator<K, D = PropertyDecoratorInterface<K>>(ca
         if (args.length === 1) {
             return (target: any, propertyKey: string): void => {
                 const [arg] = args
-                const options: ControllerOptions = target[$options] || {}
-                target[$options] = callback(options, [target, propertyKey], arg)
+                const options: ControllerOptions = target.____$options || {}
+                target.____$options = callback(options, [target, propertyKey], arg)
             }
         } else {
             const [ target, propertyKey ] = args
-            const options: ControllerOptions = target[$options] || {}
-            target[$options] = callback(options, [target, propertyKey])
+            const options: ControllerOptions = target.____$options || {}
+            target.____$options = callback(options, [target, propertyKey])
         }
     }
     return decorator as any
@@ -165,13 +163,13 @@ export function createParameterDecorator<K, V = any, D = ParameterDecoratorInter
         if (args.length === 1) {
             return (target: any, propertyKey: string, parameterIndex: number): void => {
                 const [key, value] = args
-                const options: ControllerOptions = target[$options] || {}
-                target[$options] = callback(options, [target, propertyKey, parameterIndex], key, value)
+                const options: ControllerOptions = target.____$options || {}
+                target.____$options = callback(options, [target, propertyKey, parameterIndex], key, value)
             }
         } else {
             const [ target, propertyKey, parameterIndex ] = args
-            const options: ControllerOptions = target[$options] || {}
-            target[$options] = callback(options, [target, propertyKey, parameterIndex])
+            const options: ControllerOptions = target.____$options || {}
+            target.____$options = callback(options, [target, propertyKey, parameterIndex])
         }
     }
     return decorator as any
@@ -196,7 +194,7 @@ export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterD
         function handler(value: V, ...sagrs: any[]) {
             const [ target, propertyKey, parameterIndex ] = sagrs
             if (typeof parameterIndex === 'number' && sagrs.length === 3) {
-                const options: ControllerOptions = target[$options] || {}
+                const options: ControllerOptions = target.____$options || {}
                 const parameters = options.parameters = options.parameters || {}
                 const parameter = parameters[propertyKey] = parameters[propertyKey] || []
                 parameter[parameterIndex] = {
@@ -205,7 +203,7 @@ export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterD
                     id
                 }
             } else {
-                const options: ControllerOptions = target[$options] || {}
+                const options: ControllerOptions = target.____$options || {}
                 const propertys = options.propertys = options.propertys || {}
                 const property = propertys[propertyKey] = propertys[propertyKey] || {}
                 property.callback = callback

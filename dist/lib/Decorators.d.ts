@@ -51,18 +51,17 @@ export interface ControllerOptions {
         [key: string]: Router[];
     };
 }
-export declare const $options: unique symbol;
 export interface Controller {
     readonly prototype: {
         $app: Server;
-        [$options]: ControllerOptions;
+        ____$options: ControllerOptions;
     };
     [key: string]: any;
 }
 export interface ControllerConstructor {
     new (...args: any[]): Controller;
     readonly prototype: {
-        [$options]: ControllerOptions;
+        ____$options: ControllerOptions;
     };
 }
 /**

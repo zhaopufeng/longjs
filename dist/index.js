@@ -19,7 +19,6 @@ const CreateResponse_1 = require("./lib/CreateResponse");
 const CreateRequest_1 = require("./lib/CreateRequest");
 const stream_1 = require("stream");
 const utils_1 = require("./lib/utils");
-const Decorators_1 = require("./lib/Decorators");
 const crypto_1 = require("crypto");
 class Server extends EventEmitter {
     /**
@@ -40,9 +39,9 @@ class Server extends EventEmitter {
             const controllers = options.controllers;
             controllers.forEach((Controller) => {
                 Controller.prototype.$app = this;
-                if (typeof Controller.prototype[Decorators_1.$options] !== 'object' || !Controller.prototype[Decorators_1.$options])
-                    Controller.prototype[Decorators_1.$options] = {};
-                const { routes = {}, route = '' } = Controller.prototype[Decorators_1.$options];
+                if (typeof Controller.prototype.____$options !== 'object' || !Controller.prototype.____$options)
+                    Controller.prototype.____$options = {};
+                const { routes = {}, route = '' } = Controller.prototype.____$options;
                 if (routes) {
                     Object.keys(routes).forEach((key) => {
                         if (Array.isArray(routes[key])) {
@@ -97,7 +96,7 @@ class Server extends EventEmitter {
             const { path, method } = context;
             // Map controllers
             for (let Controller of controllers) {
-                const options = Controller.prototype[Decorators_1.$options] || {};
+                const options = Controller.prototype.____$options || {};
                 const { routes = {}, parameters = {}, propertys = {}, methods = {} } = options;
                 const matchRoutes = routes[method];
                 // Check matchRoutes is Array
@@ -125,7 +124,7 @@ class Server extends EventEmitter {
                             });
                         }
                         // Map metadata
-                        let { metadatas } = Controller.prototype[Decorators_1.$options];
+                        let { metadatas } = Controller.prototype.____$options;
                         if (Array.isArray(metadatas)) {
                             metadatas = metadatas.map((K) => {
                                 return new K(context, this.options.configs);

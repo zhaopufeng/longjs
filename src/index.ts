@@ -52,12 +52,20 @@ export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator
         assert(Array.isArray(value), 'Headers validator object invalid.')
         const { headers } = ctx
         const data: { [K in keyof IncomingHttpHeaders]: string } = {}
+        const errors: any = {}
         Object.keys(value).forEach((k) => {
             if (headers[k] !== value[k]) {
-                const error = new Error(`Headers ${k} invalid.`)
+                errors[k] = value[k]
+            } else {
+                data[k] = value[k]
             }
-            data[k] = value[k]
         })
+
+        if (Object.keys(errors).length > 0) {
+            const error: Core.HttpExceptionCapture & Error = new Error('Authentication Failed on http request headers.')
+            error.errors = errors
+            throw error
+        }
         return data
     }
     return ctx.headers

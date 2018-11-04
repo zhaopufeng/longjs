@@ -94,6 +94,14 @@ interface StatusDecorator {
 export declare const Status: StatusDecorator;
 /**
  * MethodDecorators
+ * Type
+ */
+interface TypeDecorator {
+    (type: string): any;
+}
+export declare const Type: TypeDecorator;
+/**
+ * MethodDecorators
  * Header
  */
 declare type Header = {

@@ -166,6 +166,22 @@ exports.Status = Core_1.createMethodDecorator((options, decorator, status) => {
     });
     return options;
 });
+exports.Type = Core_1.createMethodDecorator((options, decorator, type) => {
+    assert(typeof type === 'string', 'Response type is not an string.');
+    const [target, PropertyKey] = decorator;
+    options.methods = options.methods = {};
+    options.methods[PropertyKey] = options.methods[PropertyKey] = [];
+    const responseTypes = options.responseType = options.responseType || {};
+    if (!responseTypes[PropertyKey])
+        responseTypes[PropertyKey] = type;
+    options.methods[PropertyKey].push({
+        callback(ctx) {
+            ctx.type = type;
+        },
+        value: type
+    });
+    return options;
+});
 exports.Header = Core_1.createMethodDecorator((options, decorator, headers) => {
     assert(!Array.isArray(headers), 'Header cannot be an array.');
     assert(typeof headers === 'object', 'Header is not an object.');

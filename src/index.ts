@@ -243,6 +243,29 @@ export const Status = createMethodDecorator<any, any, StatusDecorator>((options,
 
 /**
  * MethodDecorators
+ * Type
+ */
+interface TypeDecorator {
+    (type: string): any;
+}
+export const Type = createMethodDecorator<any, any, TypeDecorator>((options, decorator, type) => {
+    assert(typeof type === 'string', 'Response type is not an string.')
+    const [ target, PropertyKey ] = decorator
+    options.methods = options.methods = {}
+    options.methods[PropertyKey] = options.methods[PropertyKey] = []
+    const responseTypes = options.responseType = options.responseType || {}
+    if (!responseTypes[PropertyKey]) responseTypes[PropertyKey] = type
+    options.methods[PropertyKey].push({
+        callback(ctx) {
+            ctx.type = type
+        },
+        value: type
+    })
+    return options
+})
+
+/**
+ * MethodDecorators
  * Header
  */
 type Header = { [K in keyof IncomingHttpHeaders]: string; }

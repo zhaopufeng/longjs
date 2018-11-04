@@ -33,7 +33,7 @@ export declare const Headers: PropertyDecorator & ParameterDecorator & HeadersFn
  * Body
  */
 export declare type Body<T = any> = T;
-export declare const Body: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<number>;
+export declare const Body: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Query

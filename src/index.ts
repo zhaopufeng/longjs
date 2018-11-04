@@ -76,7 +76,7 @@ export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator
  * Body
  */
 export type Body<T = any> = T;
-export const Body = createPropertyAndParameterDecorator<number>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
+export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
     const data: Body = {}
     if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
         Object.keys(validateKeys).forEach((k: string) => {

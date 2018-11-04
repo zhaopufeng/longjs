@@ -180,49 +180,6 @@ class CreateResponse {
      * @property body
      * Set response body.
      */
-    // public set body(val: String | Buffer | Object | Stream) {
-    //     if (this.finished) return;
-    //     this._body = val;
-    //     const response = this.res as ServerResponse
-    //     if (typeof val === 'string') {
-    //         if (!this.status) this.status = 200
-    //         this.type = 'html'
-    //         this.length = Buffer.byteLength(val)
-    //         response.end(val)
-    //     } else if (Buffer.isBuffer(val)) {
-    //         if (!this.status) this.status = 200
-    //         this.type = 'application/octet-stream'
-    //         this.length = val.byteLength
-    //         response.end(val)
-    //     } else if (val instanceof Stream) {
-    //         if (!this.status) this.status = 200
-    //         this.type = 'application/octet-stream'
-    //         response.on('error', this.onError)
-    //         val.pipe(response)
-    //     } else if (Array.isArray(Array)) {
-    //         if (!this.status) this.status = 200
-    //         this.type = 'json'
-    //         const data = JSON.stringify(val)
-    //         this.length = this.length = Buffer.byteLength(data)
-    //         response.end(data)
-    //     } else if ('object' === typeof val) {
-    //         if (!this.status) this.status = 200
-    //         this.type = 'json'
-    //         const data = JSON.stringify(val)
-    //         this.length = Buffer.byteLength(data)
-    //         response.end(data)
-    //     } else if (typeof val === 'number') {
-    //         if (!this.status) this.status = 200
-    //         this.type = 'html'
-    //         const data = (val as number).toString()
-    //         this.length = Buffer.byteLength(data)
-    //         response.end(data)
-    //     }
-    // }
-    /**
-     * @property body
-     * Set response body.
-     */
     set body(val) {
         if (this.finished)
             return;

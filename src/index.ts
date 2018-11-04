@@ -254,7 +254,7 @@ export default class Server extends EventEmitter {
             }
 
             // Core run respond
-            await this.respond(context, response as ServerResponse)
+            await this.respond(context)
 
             // Run plugin responded
             for (let plugin of plugins) {
@@ -286,7 +286,7 @@ export default class Server extends EventEmitter {
      * respond
      * Application respond
      */
-    private async respond(context: Core.Context, response: ServerResponse): Promise<any> {
+    private async respond(context: Core.Context): Promise<any> {
         // Check context writable
         if (!context.writable) return;
 
@@ -295,6 +295,8 @@ export default class Server extends EventEmitter {
 
         // check response statusCode
         const code = context.status;
+
+        const response = context.res as ServerResponse
 
         // ignore body
         if (statuses.empty[code]) {
@@ -358,9 +360,10 @@ export default class Server extends EventEmitter {
             status = status || 500
             let data: any = statuses[status]
             if (error.errors) data = error.errors
-            context.res.statusMessage = error.message || statuses[status]
+            context.message = error.message || statuses[status]
             context.status = status
             context.body = data
+            this.respond(context)
         }
     }
 

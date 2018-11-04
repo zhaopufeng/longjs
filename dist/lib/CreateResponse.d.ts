@@ -101,10 +101,6 @@ export declare class CreateResponse implements Core.Response {
     * @property body
     * Set response body.
     */
-    /**
-    * @property body
-    * Set response body.
-    */
     body: String | Buffer | Object | Stream;
     /**
      * Get the ETag of a response.

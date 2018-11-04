@@ -224,7 +224,7 @@ class Server extends EventEmitter {
                     await plugin.handlerResponseAfter(context, configs);
             }
             // Core run respond
-            await this.respond(context, response);
+            await this.respond(context);
             // Run plugin responded
             for (let plugin of plugins) {
                 const configs = this.options.pluginConfigs[plugin.uid];
@@ -257,7 +257,7 @@ class Server extends EventEmitter {
      * respond
      * Application respond
      */
-    async respond(context, response) {
+    async respond(context) {
         // Check context writable
         if (!context.writable)
             return;
@@ -265,6 +265,7 @@ class Server extends EventEmitter {
         let body = context.response.body;
         // check response statusCode
         const code = context.status;
+        const response = context.res;
         // ignore body
         if (statuses.empty[code]) {
             // strip headers
@@ -325,9 +326,10 @@ class Server extends EventEmitter {
             let data = statuses[status];
             if (error.errors)
                 data = error.errors;
-            context.res.statusMessage = error.message || statuses[status];
+            context.message = error.message || statuses[status];
             context.status = status;
             context.body = data;
+            this.respond(context);
         }
     }
     /**

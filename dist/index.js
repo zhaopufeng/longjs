@@ -31,15 +31,23 @@ function Controller(path) {
 exports.Controller = Controller;
 exports.Headers = Core_1.createPropertyAndParameterDecorator('Headers', (ctx, value) => {
     if (typeof value === 'object') {
-        assert(Array.isArray(value), 'Headers validator object invalid.');
+        assert(!Array.isArray(value), 'Headers decorator parameter is not a object.');
         const { headers } = ctx;
         const data = {};
+        const errors = {};
         Object.keys(value).forEach((k) => {
             if (headers[k] !== value[k]) {
-                const error = new Error(`Headers ${k} invalid.`);
+                errors[k] = value[k];
             }
-            data[k] = value[k];
+            else {
+                data[k] = value[k];
+            }
         });
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Authentication Failed on http request headers.');
+            error.errors = errors;
+            throw error;
+        }
         return data;
     }
     return ctx.headers;

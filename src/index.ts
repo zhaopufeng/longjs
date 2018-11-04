@@ -49,7 +49,7 @@ interface HeadersFnDecorator {
 }
 export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator & HeadersFnDecorator>('Headers', (ctx: Core.Context, value: { [K in keyof IncomingHttpHeaders]: string }) => {
     if (typeof value === 'object') {
-        assert(Array.isArray(value), 'Headers validator object invalid.')
+        assert(!Array.isArray(value), 'Headers decorator parameter is not a object.')
         const { headers } = ctx
         const data: { [K in keyof IncomingHttpHeaders]: string } = {}
         const errors: any = {}

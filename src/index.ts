@@ -210,13 +210,52 @@ export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx
  * MethodDecorators
  * Catch
  */
-export const Catch = createHttpExceptionCaptureDecorator<Core.HttpException>()
+export const Catch = createHttpExceptionCaptureDecorator<Core.HttpExceptionConstructor>()
 
 /**
  * MethodDecorators
  * HttpException
  */
-export const HttpException = createHttpExceptionCaptureDecorator<Core.HttpExceptionConstructor>()
+export const Exception = createHttpExceptionCaptureDecorator<Core.HttpException>()
+
+// Status
+export const Status = createMethodDecorator<any, any, any>((options, decorator, headers) => {
+    const [ target, PropertyKey ] = decorator
+    options.methods = options.methods = {}
+    options.methods[PropertyKey] = options.methods[PropertyKey] = {}
+    options.methods[PropertyKey].callback = function(ctx) {
+        assert(!Array.isArray(headers), 'Header cannot be an array.')
+        assert(typeof headers === 'object', 'Header is not an object.')
+        Object.keys(headers).forEach((key) => {
+            ctx.response.set(key, headers[key])
+        })
+    }
+    options.methods[PropertyKey].value = headers
+    return options
+})
+
+/**
+ * MethodDecorators
+ * Header
+ */
+type Header = { [K in keyof IncomingHttpHeaders]: string; }
+interface HeaderDecorator {
+    (header: Header): any;
+}
+export const Header = createMethodDecorator<any, any, HeaderDecorator>((options, decorator, headers) => {
+    const [ target, PropertyKey ] = decorator
+    options.methods = options.methods = {}
+    options.methods[PropertyKey] = options.methods[PropertyKey] = {}
+    options.methods[PropertyKey].callback = function(ctx) {
+        assert(!Array.isArray(headers), 'Header cannot be an array.')
+        assert(typeof headers === 'object', 'Header is not an object.')
+        Object.keys(headers).forEach((key) => {
+            ctx.response.set(key, headers[key])
+        })
+    }
+    options.methods[PropertyKey].value = headers
+    return options
+})
 
 /**
  * RequestMethodDecorators

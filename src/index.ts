@@ -218,19 +218,27 @@ export const Catch = createHttpExceptionCaptureDecorator<Core.HttpExceptionConst
  */
 export const Exception = createHttpExceptionCaptureDecorator<Core.HttpException>()
 
-// Status
-export const Status = createMethodDecorator<any, any, any>((options, decorator, headers) => {
+/**
+ * MethodDecorators
+ * Header
+ */
+interface StatusDecorator {
+    (statusCode: number): any;
+}
+export const Status = createMethodDecorator<any, any, StatusDecorator>((options, decorator, status) => {
+    assert(typeof status === 'number', 'StatusCode is not an number.')
     const [ target, PropertyKey ] = decorator
     options.methods = options.methods = {}
-    options.methods[PropertyKey] = options.methods[PropertyKey] = {}
-    options.methods[PropertyKey].callback = function(ctx) {
-        assert(!Array.isArray(headers), 'Header cannot be an array.')
-        assert(typeof headers === 'object', 'Header is not an object.')
-        Object.keys(headers).forEach((key) => {
-            ctx.response.set(key, headers[key])
-        })
-    }
-    options.methods[PropertyKey].value = headers
+    options.methods[PropertyKey] = options.methods[PropertyKey] = []
+    //  Mark it, next version delete, now version 1.0.0-beta.2.2
+    const optionStatus = (options as any).status = (options as any).status || {}
+    if (!optionStatus[PropertyKey]) optionStatus[PropertyKey] = status
+    options.methods[PropertyKey].push({
+        callback(ctx) {
+            ctx.status = status
+        },
+        value: status
+    })
     return options
 })
 
@@ -243,17 +251,22 @@ interface HeaderDecorator {
     (header: Header): any;
 }
 export const Header = createMethodDecorator<any, any, HeaderDecorator>((options, decorator, headers) => {
+    assert(!Array.isArray(headers), 'Header cannot be an array.')
+    assert(typeof headers === 'object', 'Header is not an object.')
     const [ target, PropertyKey ] = decorator
     options.methods = options.methods = {}
-    options.methods[PropertyKey] = options.methods[PropertyKey] = {}
-    options.methods[PropertyKey].callback = function(ctx) {
-        assert(!Array.isArray(headers), 'Header cannot be an array.')
-        assert(typeof headers === 'object', 'Header is not an object.')
-        Object.keys(headers).forEach((key) => {
-            ctx.response.set(key, headers[key])
-        })
-    }
-    options.methods[PropertyKey].value = headers
+    options.methods[PropertyKey] = options.methods[PropertyKey] = []
+    // Mark it, next version delete (options as any), now version 1.0.0-beta.2.2
+    const optionsHeaders = (options as any).headers = (options as any).headers || {}
+    if (!optionsHeaders[PropertyKey]) optionsHeaders[PropertyKey] = headers
+    options.methods[PropertyKey].push({
+        callback(ctx) {
+            Object.keys(headers).forEach((key) => {
+                ctx.response.set(key, headers[key])
+            })
+        },
+        value: headers
+    })
     return options
 })
 

@@ -149,7 +149,44 @@ exports.Catch = Core_1.createHttpExceptionCaptureDecorator();
  * MethodDecorators
  * HttpException
  */
-exports.HttpException = Core_1.createHttpExceptionCaptureDecorator();
+exports.Exception = Core_1.createHttpExceptionCaptureDecorator();
+exports.Status = Core_1.createMethodDecorator((options, decorator, status) => {
+    assert(typeof status === 'number', 'StatusCode is not an number.');
+    const [target, PropertyKey] = decorator;
+    options.methods = options.methods = {};
+    options.methods[PropertyKey] = options.methods[PropertyKey] = [];
+    //  Mark it, next version delete, now version 1.0.0-beta.2.2
+    const optionStatus = options.status = options.status || {};
+    if (!optionStatus[PropertyKey])
+        optionStatus[PropertyKey] = status;
+    options.methods[PropertyKey].push({
+        callback(ctx) {
+            ctx.status = status;
+        },
+        value: status
+    });
+    return options;
+});
+exports.Header = Core_1.createMethodDecorator((options, decorator, headers) => {
+    assert(!Array.isArray(headers), 'Header cannot be an array.');
+    assert(typeof headers === 'object', 'Header is not an object.');
+    const [target, PropertyKey] = decorator;
+    options.methods = options.methods = {};
+    options.methods[PropertyKey] = options.methods[PropertyKey] = [];
+    // Mark it, next version delete (options as any), now version 1.0.0-beta.2.2
+    const optionsHeaders = options.headers = options.headers || {};
+    if (!optionsHeaders[PropertyKey])
+        optionsHeaders[PropertyKey] = headers;
+    options.methods[PropertyKey].push({
+        callback(ctx) {
+            Object.keys(headers).forEach((key) => {
+                ctx.response.set(key, headers[key]);
+            });
+        },
+        value: headers
+    });
+    return options;
+});
 /**
  * RequestMethodDecorators
  * Get

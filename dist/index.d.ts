@@ -83,7 +83,26 @@ export declare const Catch: import("@longjs/Core/dist/lib/Decorators").HttpExcep
  * MethodDecorators
  * HttpException
  */
-export declare const HttpException: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator;
+export declare const Exception: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator;
+/**
+ * MethodDecorators
+ * Header
+ */
+interface StatusDecorator {
+    (statusCode: number): any;
+}
+export declare const Status: StatusDecorator;
+/**
+ * MethodDecorators
+ * Header
+ */
+declare type Header = {
+    [K in keyof IncomingHttpHeaders]: string;
+};
+interface HeaderDecorator {
+    (header: Header): any;
+}
+export declare const Header: HeaderDecorator;
 /**
  * RequestMethodDecorators
  * Get

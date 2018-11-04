@@ -144,13 +144,6 @@ export default class Server extends EventEmitter {
                             })
                         }
 
-                        if (methods) {
-                            Object.keys(methods).forEach((key: string) => {
-                                const method = methods[key]
-                                if (typeof method.callback === 'function')
-                                method.callback(context, method.value)
-                            })
-                        }
                         // Map metadata
                         let { metadatas } = Controller.prototype.____$options
                         if (Array.isArray(metadatas)) {
@@ -171,7 +164,16 @@ export default class Server extends EventEmitter {
                                     context.params[name] = params[index + 1]
                                 })
 
-                                // Inject parameters
+                                // Inject method decorator
+                                if (methods) {
+                                    const method = methods[propertyKey]
+                                    if (Array.isArray(method)) {
+                                        method.forEach((key) => {
+                                            key.callback(context, key.value)
+                                        })
+                                    }
+                                }
+                                // Inject parameter decorator
                                 let injectParameters: any = []
                                 if (parameters) {
                                     const parameter = parameters[propertyKey]

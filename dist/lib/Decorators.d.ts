@@ -26,11 +26,12 @@ interface Propertys {
         value?: any;
     };
 }
+interface Method {
+    callback?: MethodDecoratorHttpCallback;
+    value?: any;
+}
 interface Methods {
-    [key: string]: {
-        callback?: MethodDecoratorHttpCallback;
-        value?: any;
-    };
+    [key: string]: Method[];
 }
 interface Router {
     routePath?: string;

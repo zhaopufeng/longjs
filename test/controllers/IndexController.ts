@@ -13,10 +13,9 @@ export class IndexController {
     }
 
     @Get
+    @Post
     @Catch(TestHttpException)
-    public async test(@Headers({
-        'content-length': '100'
-    }) h: Headers) {
-       return h
+    public async test() {
+       return 'xx'
     }
 }

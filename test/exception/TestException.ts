@@ -5,7 +5,9 @@ export class TestHttpException extends HttpException {
         super(options)
         this.data = {
             code: 0,
-            errMsg: options.data
+            errMsg: options.message,
+            errData: options.data
         }
+        this.statusCode = 404
     }
 }

@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.4.7"
+    "@longjs/core": "^1.0.0-beta.4.8"
   },
   "dependencies": {
     "@types/validator": "^9.4.2",

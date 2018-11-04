@@ -125,8 +125,8 @@ export declare function createRequestMethodDecorator(type: RequestMethodType): R
  * createHttpExceptionDecorator
  * 创建http异常捕获装饰器
  */
-export interface HttpExceptionCaptureDecorator {
-    (HttpExceptionCaptureConstructor: Core.HttpException): MethodDecorator;
+export interface HttpExceptionCaptureDecorator<T = Core.HttpException> {
+    (HttpExceptionCaptureConstructor: T): MethodDecorator;
 }
-export declare function createHttpExceptionCaptureDecorator<T>(): HttpExceptionCaptureDecorator;
+export declare function createHttpExceptionCaptureDecorator<T>(): HttpExceptionCaptureDecorator<T>;
 export {};

@@ -230,8 +230,7 @@ export const Status = createMethodDecorator<any, any, StatusDecorator>((options,
     const [ target, PropertyKey ] = decorator
     options.methods = options.methods = {}
     options.methods[PropertyKey] = options.methods[PropertyKey] = []
-    //  Mark it, next version delete, now version 1.0.0-beta.2.2
-    const optionStatus = (options as any).status = (options as any).status || {}
+    const optionStatus = options.status = options.status || {}
     if (!optionStatus[PropertyKey]) optionStatus[PropertyKey] = status
     options.methods[PropertyKey].push({
         callback(ctx) {
@@ -256,8 +255,7 @@ export const Header = createMethodDecorator<any, any, HeaderDecorator>((options,
     const [ target, PropertyKey ] = decorator
     options.methods = options.methods = {}
     options.methods[PropertyKey] = options.methods[PropertyKey] = []
-    // Mark it, next version delete (options as any), now version 1.0.0-beta.2.2
-    const optionsHeaders = (options as any).headers = (options as any).headers || {}
+    const optionsHeaders = options.headers = options.headers || {}
     if (!optionsHeaders[PropertyKey]) optionsHeaders[PropertyKey] = headers
     options.methods[PropertyKey].push({
         callback(ctx) {

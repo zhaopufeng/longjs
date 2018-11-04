@@ -155,7 +155,6 @@ exports.Status = Core_1.createMethodDecorator((options, decorator, status) => {
     const [target, PropertyKey] = decorator;
     options.methods = options.methods = {};
     options.methods[PropertyKey] = options.methods[PropertyKey] = [];
-    //  Mark it, next version delete, now version 1.0.0-beta.2.2
     const optionStatus = options.status = options.status || {};
     if (!optionStatus[PropertyKey])
         optionStatus[PropertyKey] = status;
@@ -173,7 +172,6 @@ exports.Header = Core_1.createMethodDecorator((options, decorator, headers) => {
     const [target, PropertyKey] = decorator;
     options.methods = options.methods = {};
     options.methods[PropertyKey] = options.methods[PropertyKey] = [];
-    // Mark it, next version delete (options as any), now version 1.0.0-beta.2.2
     const optionsHeaders = options.headers = options.headers || {};
     if (!optionsHeaders[PropertyKey])
         optionsHeaders[PropertyKey] = headers;

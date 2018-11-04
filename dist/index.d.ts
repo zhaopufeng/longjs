@@ -78,12 +78,12 @@ export declare const Files: ParameterDecorator & PropertyDecorator & import("@lo
  * MethodDecorators
  * Catch
  */
-export declare const Catch: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator;
+export declare const Catch: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator<Core.HttpExceptionConstructor>;
 /**
  * MethodDecorators
  * HttpException
  */
-export declare const Exception: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator;
+export declare const Exception: import("@longjs/Core/dist/lib/Decorators").HttpExceptionCaptureDecorator<Core.HttpException>;
 /**
  * MethodDecorators
  * Header

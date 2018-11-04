@@ -163,14 +163,14 @@ function createHttpExceptionCaptureDecorator() {
     return createMethodDecorator((options, decorator, HttpException) => {
         const [target, propertyKey, descriptor] = decorator;
         const { value } = descriptor;
-        descriptor.value = function (...args) {
+        descriptor.value = async function (...args) {
             try {
                 args.forEach((k) => {
                     if (k instanceof Error) {
                         throw k;
                     }
                 });
-                value.call(this, ...args);
+                return await value.call(this, ...args);
             }
             catch (error) {
                 if (typeof HttpException === 'function') {

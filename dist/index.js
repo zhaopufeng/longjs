@@ -142,7 +142,10 @@ class Server extends EventEmitter {
                                     const method = methods[propertyKey];
                                     if (Array.isArray(method)) {
                                         method.forEach((key) => {
-                                            key.callback(context, key.value);
+                                            const { callback, value } = key;
+                                            if (typeof callback === 'function') {
+                                                callback(context, value);
+                                            }
                                         });
                                     }
                                 }

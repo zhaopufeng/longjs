@@ -5,8 +5,10 @@
  * @copyright Ranyunlong 2018-10-08 14:35
  * @export Decorators
  */
+/// <reference types="node" />
 import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp';
+import { IncomingHttpHeaders } from 'http';
 declare type ClassDecoratorCallback = (options: ControllerOptions) => void;
 declare type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT' | 'COPY' | 'LINK' | 'UNLINK' | 'PURGE' | 'LOCK' | 'UNLOCK' | 'PORPFIND' | 'VIEW';
 declare type ParameterDecoratorHttpCallback = (ctx: Core.Context, data?: any) => void;
@@ -46,6 +48,12 @@ export interface ControllerOptions {
     }>;
     parameters?: Parameters;
     propertys?: Propertys;
+    headers?: {
+        [key: string]: IncomingHttpHeaders;
+    };
+    status?: {
+        [key: string]: number;
+    };
     methods?: Methods;
     target?: Controller;
     routes?: {

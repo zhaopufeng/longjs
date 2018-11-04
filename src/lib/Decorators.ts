@@ -8,6 +8,7 @@
 
 import Server, { Core } from '..';
 import * as pathToRegExp from 'path-to-regexp'
+import { IncomingHttpHeaders } from 'http';
 
 type ClassDecoratorCallback = (options: ControllerOptions) => void;
 type RequestMethodType = 'ALL' | 'DELETE' | 'GET' | 'POST' | 'HEAD' | 'OPTIONS' | 'PATCH' | 'PUT' | 'COPY' | 'LINK' | 'UNLINK' | 'PURGE' | 'LOCK' | 'UNLOCK' | 'PORPFIND' | 'VIEW'
@@ -53,6 +54,12 @@ export interface ControllerOptions {
     metadatas?: Array<{ new(...args: any[]): any }>;
     parameters?: Parameters;
     propertys?: Propertys;
+    headers?: {
+        [key: string]: IncomingHttpHeaders;
+    };
+    status?: {
+        [key: string]: number;
+    };
     methods?: Methods;
     target?: Controller;
     routes?: {

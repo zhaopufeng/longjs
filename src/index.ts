@@ -62,8 +62,8 @@ export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator
         })
 
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpExceptionCapture & Error = new Error('Authentication Failed on http request headers.')
-            error.errors = errors
+            const error: Core.HttpException & Error = new Error('Authentication Failed on http request headers.')
+            error.data = errors
             throw error
         }
         return data
@@ -84,8 +84,8 @@ export const Body = createPropertyAndParameterDecorator<number>('Body', (ctx: Co
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpExceptionCapture & Error = new Error('Request Body data is not valid.')
-            error.errors = errors
+            const error: Core.HttpException & Error = new Error('Request Body data is not valid.')
+            error.data = errors
             throw error
         }
         return data
@@ -107,8 +107,8 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpExceptionCapture & Error = new Error('Request query string data is not valid.')
-            error.errors = errors
+            const error: Core.HttpException & Error = new Error('Request query string data is not valid.')
+            error.data = errors
             throw error
         }
         return data
@@ -129,8 +129,8 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpExceptionCapture & Error = new Error('Request path parameter data is not valid.')
-            error.errors = errors
+            const error: Core.HttpException & Error = new Error('Request path parameter data is not valid.')
+            error.data = errors
             throw error
         }
         return data
@@ -210,7 +210,7 @@ export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx
  * MethodDecorators
  * Catch
  */
-export const Catch = createHttpExceptionCaptureDecorator<Core.HttpExceptionCaptureConstructor>()
+export const Catch = createHttpExceptionCaptureDecorator<Core.HttpException>()
 
 /**
  * RequestMethodDecorators

@@ -45,7 +45,7 @@ exports.Headers = Core_1.createPropertyAndParameterDecorator('Headers', (ctx, va
         });
         if (Object.keys(errors).length > 0) {
             const error = new Error('Authentication Failed on http request headers.');
-            error.errors = errors;
+            error.data = errors;
             throw error;
         }
         return data;
@@ -61,7 +61,7 @@ exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validate
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request Body data is not valid.');
-            error.errors = errors;
+            error.data = errors;
             throw error;
         }
         return data;
@@ -77,7 +77,7 @@ exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, valida
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request query string data is not valid.');
-            error.errors = errors;
+            error.data = errors;
             throw error;
         }
         return data;
@@ -93,7 +93,7 @@ exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, vali
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
             const error = new Error('Request path parameter data is not valid.');
-            error.errors = errors;
+            error.data = errors;
             throw error;
         }
         return data;

@@ -73,15 +73,13 @@ export * from './lib/Decorators';
 export * from './lib/Plugin';
 export * from './lib/HttpException';
 export declare namespace Core {
-    interface HttpExceptionCapture {
-        errors?: {
-            [key: string]: Messages;
-        };
+    interface HttpException {
         statusCode?: number;
-        type?: 'json' | 'html';
+        message?: string;
+        data?: any;
     }
-    interface HttpExceptionCaptureConstructor extends HttpExceptionCapture {
-        new (error: HttpExceptionCapture): HttpExceptionCapture;
+    interface HttpExceptionConstructor extends HttpException {
+        new (error: HttpException): HttpException;
     }
     interface HttpHandler {
         (ctx?: Context): Promise<any>;

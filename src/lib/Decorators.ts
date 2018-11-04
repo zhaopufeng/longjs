@@ -267,9 +267,9 @@ export function createRequestMethodDecorator(type: RequestMethodType): RequestMe
  * 创建http异常捕获装饰器
  */
 
-export type HttpExceptionCaptureDecorator = MethodDecorator & { (HttpExceptionCaptureConstructor: Core.HttpExceptionCaptureConstructor): MethodDecorator }
+export type HttpExceptionCaptureDecorator = MethodDecorator & { (HttpExceptionCaptureConstructor: Core.HttpException): MethodDecorator }
 export function createHttpExceptionCaptureDecorator<T>(): HttpExceptionCaptureDecorator {
-    return createMethodDecorator<any, any, HttpExceptionCaptureDecorator>((options, decorator, HttpExceptionCapture) => {
+    return createMethodDecorator<any, any, HttpExceptionCaptureDecorator>((options, decorator, HttpException) => {
         const [ target, propertyKey, descriptor] = decorator
         const { value } = descriptor
         descriptor.value = function(...args: any[]) {
@@ -281,8 +281,14 @@ export function createHttpExceptionCaptureDecorator<T>(): HttpExceptionCaptureDe
                 })
                 value.call(this, ...args)
             } catch (error) {
-                if (HttpExceptionCapture) {
-                    throw new HttpExceptionCapture(error)
+                if (typeof HttpException === 'function') {
+                    throw new HttpException({
+                        message: error.message,
+                        data: error.data,
+                        statusCode: error.statusCode
+                    })
+                } else if (typeof HttpException === 'object') {
+                    throw HttpException
                 } else {
                     throw error
                 }

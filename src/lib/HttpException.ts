@@ -1,7 +1,11 @@
 import { Core } from '..';
 
-export class HttpException extends Error implements Core.HttpExceptionCapture {
-    public errors: { [key: string]: Core.Messages};
+export class HttpException extends Error implements Core.HttpException {
     public statusCode: number;
-    public type: 'json' | 'html';
+    public data: any;
+    constructor(public options: Core.HttpException) {
+        super(options.message || `Internal server error`)
+        this.statusCode = options.statusCode || 500
+        this.data = options.data || `Internal server error`
+    }
 }

@@ -1,8 +1,7 @@
 import { Core } from '..';
-export declare class HttpException extends Error implements Core.HttpExceptionCapture {
-    errors: {
-        [key: string]: Core.Messages;
-    };
+export declare class HttpException extends Error implements Core.HttpException {
+    options: Core.HttpException;
     statusCode: number;
-    type: 'json' | 'html';
+    data: any;
+    constructor(options: Core.HttpException);
 }

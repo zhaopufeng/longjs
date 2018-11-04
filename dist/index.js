@@ -62,7 +62,7 @@ class Server extends EventEmitter {
         plugins.forEach((plugin, i) => {
             const uid = crypto_1.randomBytes(24).toString('hex');
             if (typeof plugin.init === 'function')
-                plugin.init(this.options);
+                plugin.init(this.options, this.options.configs);
             plugin.uid = uid;
             options.pluginConfigs[uid] = {};
         });
@@ -249,7 +249,7 @@ class Server extends EventEmitter {
             for (let plugin of plugins) {
                 const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerException === 'function')
-                    await plugin.handlerException(error, context);
+                    await plugin.handlerException(error, context, configs);
             }
         }
     }
@@ -324,8 +324,8 @@ class Server extends EventEmitter {
         if (!context.finished) {
             status = status || 500;
             let data = statuses[status];
-            if (error.errors)
-                data = error.errors;
+            if (error.data)
+                data = error.data;
             context.message = error.message || statuses[status];
             context.status = status;
             context.body = data;

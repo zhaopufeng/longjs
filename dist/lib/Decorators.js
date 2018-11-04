@@ -160,7 +160,7 @@ function createRequestMethodDecorator(type) {
 }
 exports.createRequestMethodDecorator = createRequestMethodDecorator;
 function createHttpExceptionCaptureDecorator() {
-    return createMethodDecorator((options, decorator, HttpExceptionCapture) => {
+    return createMethodDecorator((options, decorator, HttpException) => {
         const [target, propertyKey, descriptor] = decorator;
         const { value } = descriptor;
         descriptor.value = function (...args) {
@@ -173,8 +173,15 @@ function createHttpExceptionCaptureDecorator() {
                 value.call(this, ...args);
             }
             catch (error) {
-                if (HttpExceptionCapture) {
-                    throw new HttpExceptionCapture(error);
+                if (typeof HttpException === 'function') {
+                    throw new HttpException({
+                        message: error.message,
+                        data: error.data,
+                        statusCode: error.statusCode
+                    });
+                }
+                else if (typeof HttpException === 'object') {
+                    throw HttpException;
                 }
                 else {
                     throw error;

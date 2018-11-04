@@ -70,7 +70,7 @@ export default class Server extends EventEmitter {
             // Plugin register uid
             plugins.forEach((plugin, i) => {
             const uid = randomBytes(24).toString('hex')
-            if (typeof plugin.init === 'function') plugin.init(this.options)
+            if (typeof plugin.init === 'function') plugin.init(this.options, this.options.configs)
             ; (plugin as any).uid = uid
             options.pluginConfigs[uid] = {}
         })
@@ -277,7 +277,7 @@ export default class Server extends EventEmitter {
             const { plugins = [] } = this.options
             for (let plugin of plugins) {
                 const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerException === 'function')  await plugin.handlerException(error, context)
+                if (typeof plugin.handlerException === 'function')  await plugin.handlerException(error, context, configs)
             }
         }
     }
@@ -343,7 +343,7 @@ export default class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    private exception(context: Core.Context, error: Core.HttpExceptionCapture & Error) {
+    private exception(context: Core.Context, error: Core.HttpException & Error) {
         let status: number;
         // If not number
         if (error.statusCode) {
@@ -359,7 +359,7 @@ export default class Server extends EventEmitter {
         if (!context.finished) {
             status = status || 500
             let data: any = statuses[status]
-            if (error.errors) data = error.errors
+            if (error.data) data = error.data
             context.message = error.message || statuses[status]
             context.status = status
             context.body = data
@@ -391,14 +391,14 @@ export * from './lib/HttpException'
 
 export namespace Core {
 
-    export interface HttpExceptionCapture {
-        errors?: { [key: string]: Messages};
+    export interface HttpException {
         statusCode?: number;
-        type?: 'json' | 'html';
+        message?: string;
+        data?: any;
     }
 
-    export interface HttpExceptionCaptureConstructor extends HttpExceptionCapture {
-        new (error: HttpExceptionCapture): HttpExceptionCapture;
+    export interface HttpExceptionConstructor extends HttpException {
+        new (error: HttpException): HttpException;
     }
 
     export interface HttpHandler {

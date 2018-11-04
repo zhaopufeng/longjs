@@ -213,6 +213,12 @@ export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx
 export const Catch = createHttpExceptionCaptureDecorator<Core.HttpException>()
 
 /**
+ * MethodDecorators
+ * HttpException
+ */
+export const HttpException = createHttpExceptionCaptureDecorator<Core.HttpExceptionConstructor>()
+
+/**
  * RequestMethodDecorators
  * Get
  */

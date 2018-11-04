@@ -1,6 +1,4 @@
-/// <reference types="node" />
 import { Core } from '..';
-import { IncomingMessage, ServerResponse } from 'http';
 export interface Plugin {
     readonly uid?: string;
     init?(options: Core.Options): void;
@@ -9,6 +7,6 @@ export interface Plugin {
     handlerResponse?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
     handlerResponseAfter?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
     handlerResponded?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
-    handlerException?(err: Error, request?: IncomingMessage, response?: ServerResponse, configs?: Core.Configs): Promise<any>;
+    handlerException?(err: Error, ctx?: Core.Context): Promise<any>;
 }
 export declare type Plugins = Plugin[];

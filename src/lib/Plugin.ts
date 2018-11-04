@@ -9,7 +9,7 @@ export interface Plugin {
     handlerResponse?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
     handlerResponseAfter?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
     handlerResponded?(ctx: Core.Context, configs?: Core.Configs): Promise<any>;
-    handlerException?(err: Error, request?: IncomingMessage, response?: ServerResponse, configs?: Core.Configs): Promise<any>;
+    handlerException?(err: Error, ctx?: Core.Context): Promise<any>;
 }
 
 export type Plugins = Plugin[];

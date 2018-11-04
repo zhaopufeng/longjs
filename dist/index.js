@@ -193,9 +193,9 @@ class Server extends EventEmitter {
      * Application start method
      */
     async start(request, response) {
+        // Create http/https context
+        const context = this.createContext(request, response);
         try {
-            // Create http/https context
-            const context = this.createContext(request, response);
             // Run plugin request
             const { plugins = [] } = this.options;
             for (let plugin of plugins) {
@@ -243,13 +243,13 @@ class Server extends EventEmitter {
         }
         catch (error) {
             // Handler exception
-            this.exception(response, error);
-            this.emit('exception', error);
+            this.exception(context, error);
+            this.emit('exception', [error, context]);
             const { plugins = [] } = this.options;
             for (let plugin of plugins) {
                 const configs = this.options.pluginConfigs[plugin.uid];
                 if (typeof plugin.handlerException === 'function')
-                    await plugin.handlerException(error, request, response, configs);
+                    await plugin.handlerException(error, context);
             }
         }
     }
@@ -306,7 +306,7 @@ class Server extends EventEmitter {
      * exception
      * Exception handler method
      */
-    exception(response, error) {
+    exception(context, error) {
         let status;
         // If not number
         if (error.statusCode) {
@@ -320,21 +320,14 @@ class Server extends EventEmitter {
         }
         if ('development' === this.env && !status)
             console.log(error);
-        if (!response.finished) {
+        if (!context.finished) {
             status = status || 500;
             let data = statuses[status];
             if (error.errors)
-                data = JSON.stringify(error.errors);
-            response.setHeader('Content-Length', Buffer.byteLength(data));
-            if (error.type === 'html') {
-                response.setHeader('Content-Type', 'text/html');
-            }
-            else {
-                response.setHeader('Content-Type', 'application/json');
-            }
-            response.statusMessage = error.message || statuses[status];
-            response.statusCode = status;
-            response.end(data);
+                data = error.errors;
+            context.res.statusMessage = error.message || statuses[status];
+            context.status = status;
+            context.body = data;
         }
     }
     /**

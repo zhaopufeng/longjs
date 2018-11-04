@@ -174,7 +174,7 @@ function createHttpExceptionCaptureDecorator() {
             }
             catch (error) {
                 if (HttpExceptionCapture) {
-                    throw HttpExceptionCapture(error);
+                    throw new HttpExceptionCapture(error);
                 }
                 else {
                     throw error;

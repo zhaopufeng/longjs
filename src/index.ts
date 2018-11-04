@@ -358,19 +358,11 @@ export default class Server extends EventEmitter {
 
         if (!context.finished) {
             status = status || 500
-            let message: string = statuses[status]
-            let data: any;
-            if (error.data) {
-                data = error.data
-            } else {
-                data = statuses[status]
-            }
-            if (error.message) {
-                if (error.message.length > 0) message = error.message;
-            }
-            context.message = message
+            const data = error.data || statuses[status]
             context.status = status
-            context.length = data.length
+            if (error.message) {
+                if (error.message.length > 0) context.message = error.message
+            }
             context.body = data
             this.respond(context)
         }

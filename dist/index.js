@@ -322,21 +322,12 @@ class Server extends EventEmitter {
             console.log(error);
         if (!context.finished) {
             status = status || 500;
-            let message = statuses[status];
-            let data;
-            if (error.data) {
-                data = error.data;
-            }
-            else {
-                data = statuses[status];
-            }
+            const data = error.data || statuses[status];
+            context.status = status;
             if (error.message) {
                 if (error.message.length > 0)
-                    message = error.message;
+                    context.message = error.message;
             }
-            context.message = message;
-            context.status = status;
-            context.length = data.length;
             context.body = data;
             this.respond(context);
         }

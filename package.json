@@ -1,6 +1,6 @@
 {
   "name": "@longjs/decorators",
-  "version": "1.0.0-beta.1.9",
+  "version": "1.0.0-beta.2.0",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {

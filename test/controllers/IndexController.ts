@@ -1,4 +1,4 @@
-import { Controller, Get, Session, Post, Body, Query, Catch } from '@longjs/decorators'
+import { Controller, Get, Session, Post, Body, Query, Catch, Headers } from '@longjs/decorators'
 import { TestService } from '../services/TestService'
 import { Database } from '@longjs/database'
 import { CustomHttpException } from '../HttpException/CustomHttpException';
@@ -13,10 +13,11 @@ export class IndexController {
 
     @Get('/')
     public async index() {
-        if (!this.session.users) {
-            this.session.users = await this.db('users').select()
-        }
-        return 'xx'
+        console.log(this.session)
+        // if (!this.session.users) {
+        //     this.session.users = await this.db('users').select()
+        // }
+        // return 'xx'
     }
 
     @Get('/user')
@@ -29,14 +30,9 @@ export class IndexController {
 
     @Get
     @Catch(CustomHttpException)
-    public async test(@Query({
-        username: {
-            rules: 'required',
-            message: {
-                required: '老子错误了'
-            }
-        }
-    }) query: Query) {
-       return query
+    public async test(@Headers({
+        'content-length': '100'
+    }) h: Headers) {
+       return h
     }
 }

@@ -2,11 +2,11 @@ import { HttpException, Core } from '@longjs/core'
 
 export class CustomHttpException extends HttpException {
     public message: string;
-    constructor(error: HttpException) {
-        console.log(error)
+    constructor(error: HttpException, context: any) {
         super(error.message)
-        this.errors = error.errors
+        this.message = error.message
+        this.errors = error as any
         this.type = 'json'
-        this.statusCode = 200
+        this.statusCode = 404
     }
 }

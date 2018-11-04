@@ -25,9 +25,9 @@
   "repository": "ranyunlong/longjs",
   "dependencies": {
     "@longjs/body-parser": "^1.0.0",
-    "@longjs/core": "^1.0.0-beta.4.1",
+    "@longjs/core": "^1.0.0-beta.4.6",
     "@longjs/database": "^1.0.0-beta.0.2",
-    "@longjs/decorators": "^1.0.0-beta.1.7",
+    "@longjs/decorators": "^1.0.0-beta.1.9",
     "@longjs/proxy": "^1.0.0",
     "@longjs/session": "^1.0.0",
     "@longjs/static": "^1.0.0",

@@ -326,7 +326,17 @@ class Server extends EventEmitter {
             let data = statuses[status];
             if (error.data)
                 data = error.data;
-            context.message = error.message || statuses[status];
+            if (error.message) {
+                if (error.message.length > 0) {
+                    context.message = error.message;
+                }
+                else {
+                    context.message = statuses[status];
+                }
+            }
+            else {
+                context.message = statuses[status];
+            }
             context.status = status;
             context.body = data;
             this.respond(context);

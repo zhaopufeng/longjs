@@ -38,12 +38,14 @@ function createMethodDecorator(callback) {
             return (target, propertyKey, descriptor) => {
                 const [key, value] = args;
                 const options = target.____$options || {};
+                // Reset options
                 target.____$options = callback(options, [target, propertyKey, descriptor], key, value);
             };
         }
         else {
             const [target, propertyKey, descriptor] = args;
             const options = target.____$options || {};
+            // Reset options
             target.____$options = callback(options, [target, propertyKey, descriptor]);
         }
     }
@@ -56,12 +58,14 @@ function createPropertyDecorator(callback) {
             return (target, propertyKey) => {
                 const [arg] = args;
                 const options = target.____$options || {};
+                // Reset options
                 target.____$options = callback(options, [target, propertyKey], arg);
             };
         }
         else {
             const [target, propertyKey] = args;
             const options = target.____$options || {};
+            // Reset options
             target.____$options = callback(options, [target, propertyKey]);
         }
     }
@@ -74,12 +78,14 @@ function createParameterDecorator(callback) {
             return (target, propertyKey, parameterIndex) => {
                 const [key, value] = args;
                 const options = target.____$options || {};
+                // Reset options
                 target.____$options = callback(options, [target, propertyKey, parameterIndex], key, value);
             };
         }
         else {
             const [target, propertyKey, parameterIndex] = args;
             const options = target.____$options || {};
+            // Reset options
             target.____$options = callback(options, [target, propertyKey, parameterIndex]);
         }
     }
@@ -108,6 +114,8 @@ function createPropertyAndParameterDecorator(id, callback) {
                     value,
                     id
                 };
+                // Reset options
+                target.____$options = options;
             }
             else {
                 const options = target.____$options || {};
@@ -115,6 +123,8 @@ function createPropertyAndParameterDecorator(id, callback) {
                 const property = propertys[propertyKey] = propertys[propertyKey] || {};
                 property.callback = callback;
                 property.value = value;
+                // Reset options
+                target.____$options = options;
             }
         }
     }

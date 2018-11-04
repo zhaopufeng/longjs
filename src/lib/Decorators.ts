@@ -112,11 +112,14 @@ export function createMethodDecorator<K, V = any, D = MethodDecoratorInterface<K
             return (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> | void => {
                 const [key, value] = args
                 const options: ControllerOptions = target.____$options || {}
+                // Reset options
                 target.____$options = callback(options, [target, propertyKey, descriptor], key, value)
             }
         } else {
             const [ target, propertyKey, descriptor ] = args
             const options: ControllerOptions = target.____$options || {}
+
+            // Reset options
             target.____$options = callback(options, [target, propertyKey, descriptor])
         }
     }
@@ -138,11 +141,13 @@ export function createPropertyDecorator<K, D = PropertyDecoratorInterface<K>>(ca
             return (target: any, propertyKey: string): void => {
                 const [arg] = args
                 const options: ControllerOptions = target.____$options || {}
+                // Reset options
                 target.____$options = callback(options, [target, propertyKey], arg)
             }
         } else {
             const [ target, propertyKey ] = args
             const options: ControllerOptions = target.____$options || {}
+            // Reset options
             target.____$options = callback(options, [target, propertyKey])
         }
     }
@@ -164,11 +169,13 @@ export function createParameterDecorator<K, V = any, D = ParameterDecoratorInter
             return (target: any, propertyKey: string, parameterIndex: number): void => {
                 const [key, value] = args
                 const options: ControllerOptions = target.____$options || {}
+                // Reset options
                 target.____$options = callback(options, [target, propertyKey, parameterIndex], key, value)
             }
         } else {
             const [ target, propertyKey, parameterIndex ] = args
             const options: ControllerOptions = target.____$options || {}
+            // Reset options
             target.____$options = callback(options, [target, propertyKey, parameterIndex])
         }
     }
@@ -202,12 +209,16 @@ export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterD
                     value,
                     id
                 }
+                // Reset options
+                target.____$options = options
             } else {
                 const options: ControllerOptions = target.____$options || {}
                 const propertys = options.propertys = options.propertys || {}
                 const property = propertys[propertyKey] = propertys[propertyKey] || {}
                 property.callback = callback
                 property.value = value
+                // Reset options
+                target.____$options = options
             }
         }
     }

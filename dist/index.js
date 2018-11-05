@@ -27,6 +27,10 @@ class BodyParser {
         this.urlencoded = opts.urlencoded || true;
         this.strict = opts.strict || true;
     }
+    init(options) {
+        options.configs = options.configs || {};
+        options.configs.body = this.opts;
+    }
     /**
      * parse
      * Parser body request and file request

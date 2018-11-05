@@ -25,6 +25,7 @@ export default class BodyParser implements Plugin {
      * @param opts Options
      */
     constructor(opts?: BodyParser.Options);
+    init(options: Core.Options): void;
     /**
      * parse
      * Parser body request and file request

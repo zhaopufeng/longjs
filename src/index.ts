@@ -63,6 +63,10 @@ export default class BodyParser implements Plugin {
         this.urlencoded = opts.urlencoded ||  true
         this.strict = opts.strict || true
     }
+    public init(options: Core.Options) {
+        options.configs = options.configs || {}
+        options.configs.body = this.opts
+    }
 
     /**
      * parse

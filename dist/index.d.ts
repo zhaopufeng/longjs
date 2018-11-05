@@ -11,6 +11,7 @@ export default class Session implements Plugin {
     opts: SessionOpts;
     sessions: any;
     constructor(opts?: SessionOpts);
+    init(options: Core.Options): void;
     handlerRequest(ctx: Core.Context, configs: any): Promise<void>;
     handlerResponseAfter(ctx: Core.Context): Promise<void>;
 }

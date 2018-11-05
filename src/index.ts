@@ -16,8 +16,11 @@ export default class Session implements Plugin {
         opts.key = opts.key || 'ssid'
         opts.store = opts.store || new SessionStorage()
     }
+    public init(options: Core.Options) {
+        options.configs = options.configs = {}
+        options.configs.session = this.opts
+    }
     public async handlerRequest(ctx: Core.Context, configs: any) {
-        if (!configs)  configs = this.opts
         const {  opts } = this;
         const { key, store } = opts
         // Get Sid from cookies

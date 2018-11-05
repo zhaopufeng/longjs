@@ -18,9 +18,11 @@ class Session {
         opts.key = opts.key || 'ssid';
         opts.store = opts.store || new SessionStorage_1.SessionStorage();
     }
+    init(options) {
+        options.configs = options.configs = {};
+        options.configs.session = this.opts;
+    }
     async handlerRequest(ctx, configs) {
-        if (!configs)
-            configs = this.opts;
         const { opts } = this;
         const { key, store } = opts;
         // Get Sid from cookies

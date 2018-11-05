@@ -1,6 +1,18 @@
-import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers } from '@longjs/decorators'
+import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers, ValidatorKeys, Status, Type, Header, Params } from '@longjs/decorators'
 import { HttpException } from '@longjs/core'
 import { TestHttpException } from '../exception/TestException';
+
+const testRule: ValidatorKeys = {
+    username: {
+        rules: {
+            required: true,
+            length: {
+                max: 5,
+                min: 3
+            }
+        }
+    }
+}
 
 @Controller('/')
 export class IndexController {
@@ -15,7 +27,28 @@ export class IndexController {
     @Get
     @Post
     @Catch(TestHttpException)
-    public async test() {
-       return 'xx'
+    @Status(200)
+    @Header({
+        'content-type': 'text/html'
+    })
+    public async test(
+        @Query(testRule) query: Query<Test>,
+        @Headers({
+            'content-type': 'application/x-www-form-urlencoded'
+        }) headers: Headers,
+        @Params({
+            id: {
+                rules: {
+                    required: true,
+                    string: true
+                }
+            }
+        }) params: Params
+    ) {
+       return headers
     }
+}
+
+interface Test {
+    username: string;
 }

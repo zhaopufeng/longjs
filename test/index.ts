@@ -1,4 +1,4 @@
-import Server from '@longjs/core'
+import Server, { Plugin, Core, Controller } from '@longjs/core'
 import StaticServer from '@longjs/static'
 import Proxy from '@longjs/proxy'
 import BodyParser from '@longjs/body-parser'
@@ -7,12 +7,64 @@ import { resolve } from 'path'
 import { IndexController } from './controllers/IndexController'
 import Database from '@longjs/database';
 
+class TestPlugin implements Plugin {
+    public init(options: Core.Options, globalConfigs: Core.Configs) {
+        const data: any = []
+        if (Array.isArray(options.controllers)) {
+            options.controllers.forEach((Controller: Controller) => {
+                const { routes = {}, route, status = {}, headers = {}, parameters = {} } = Controller.prototype.____$options
+                const routers: any = {}
+                Object.keys(routes).forEach((type) => {
+                    if (Array.isArray(routes[type])) {
+                        routes[type].forEach((router) => {
+                            const { routePath, propertyKey } = router
+                            const rt = routers[routePath] = routers[routePath] || {}
+                            rt.method = rt.method || []
+                            rt.query = rt.query || {}
+                            rt.body = rt.body ||  {}
+                            rt.method.push(type)
+                            rt.successStatus = status[propertyKey]
+                            rt.responseHeaders = headers[propertyKey]
+
+                            if (parameters) {
+                                if (parameters[propertyKey]) {
+                                    const p = parameters[propertyKey]
+                                    if (Array.isArray(p)) {
+                                        p.forEach((keys) => {
+                                            if (keys.id === 'Query') {
+                                                rt.query = keys.value
+                                            } else if (keys.id === 'Body') {
+                                                rt.body = keys.value
+                                            } else if (keys.id === 'Headers') {
+                                                rt.requestHeaders = keys.value
+                                            } else if (keys.id === 'Params') {
+                                                rt.params = keys.value
+                                            }
+                                        })
+                                    }
+                                }
+                            }
+                        })
+                    }
+                })
+                data.push({
+                    contrlName: Controller.name,
+                    route,
+                    routers
+                })
+            })
+        }
+
+        console.log(data[0].routers)
+    }
+}
 new Server({
     port: 3000,
     controllers: [
         IndexController
     ],
     plugins: [
+        new TestPlugin(),
         new Database({
             client: 'mysql',
             connection: {

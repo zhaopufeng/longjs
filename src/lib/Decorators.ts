@@ -61,6 +61,9 @@ export interface ControllerOptions {
         [key: string]: number;
     };
     methods?: Methods;
+    responseTypes?: {
+        [key: string]: string;
+    }
     target?: Controller;
     routes?: {
         [key: string]: Router[]

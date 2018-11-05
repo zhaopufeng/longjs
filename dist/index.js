@@ -97,7 +97,7 @@ class Server extends EventEmitter {
             // Map controllers
             for (let Controller of controllers) {
                 const options = Controller.prototype.____$options || {};
-                const { routes = {}, parameters = {}, propertys = {}, methods = {} } = options;
+                const { routes = {}, parameters = {}, propertys = {}, methods = {}, responseTypes = {} } = options;
                 const matchRoutes = routes[method];
                 // Check matchRoutes is Array
                 if (Array.isArray(matchRoutes)) {
@@ -174,6 +174,15 @@ class Server extends EventEmitter {
                                 const data = await instance[propertyKey](...injectParameters);
                                 if (data && context.writable) {
                                     context.body = data;
+                                }
+                                // Set response Type
+                                // context.body response auto set type
+                                // The code Be used  response type for mandatory settings
+                                if (responseTypes) {
+                                    const responseType = responseTypes[propertyKey];
+                                    if (responseType) {
+                                        context.type = responseType;
+                                    }
                                 }
                             }
                         }

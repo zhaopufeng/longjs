@@ -25,37 +25,37 @@ export declare const Headers: PropertyDecorator & ParameterDecorator & HeadersFn
  * Body
  */
 export declare type Body<T = any> = T;
-export declare const Body: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
+export declare const Body: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Query
  */
 export declare type Query<T = any> = T;
-export declare const Query: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
+export declare const Query: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Params<T = any> = T;
-export declare const Params: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
+export declare const Params: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Session
  */
 export declare type Session<T = any> = T;
-export declare const Session: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Session: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Request = Core.Request;
-export declare const Request: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Request: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Response = Core.Response;
-export declare const Response: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Response: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Files
@@ -63,7 +63,7 @@ export declare const Response: ParameterDecorator & MethodDecorator & import("@l
 export interface Files {
     [key: string]: any;
 }
-export declare const Files: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Files: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<string[]>;
 /**
  * MethodDecorators
  * Catch

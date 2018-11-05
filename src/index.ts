@@ -23,6 +23,11 @@ export default class StaticServer implements Plugin {
         if (opts.index !== false) this.opts.index = opts.index || 'index.html'
     }
 
+    public init(options: Core.Options) {
+        options.configs = options.configs || {}
+        options.configs.static = this.opts
+    }
+
     // Run before controller runs
     public async handlerRequest(ctx: Core.Context) {
         if (this.opts.defer) return;

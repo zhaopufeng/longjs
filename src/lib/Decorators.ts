@@ -198,9 +198,12 @@ export function createParameterDecorator<K, V = any, D = ParameterDecoratorInter
  * createPropertyAndParameterDecorator
  * 创建同时能兼容参数装饰器和属性装饰器方法
  */
-export type PropertyAndParameterDecorator = ParameterDecorator & MethodDecorator
-export type FnPropertyAndParameterDecorator<V> = (arg: V) => ParameterDecorator
-export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: MethodDecoratorHttpCallback): D {
+export interface PropertyAndParameterDecorator<V> {
+    (args: V): ParameterDecorator;
+    (target: Object, propertyKey: string): void;
+    (target: Object, propertyKey: string, parameterIndex: number): void;
+}
+export function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator<V>>(id: string, callback: MethodDecoratorHttpCallback): D {
     function decorator(...args: any[]) {
         if (args.length === 1) {
             const [ arg ] = args

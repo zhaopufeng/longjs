@@ -121,9 +121,12 @@ export declare function createParameterDecorator<K, V = any, D = ParameterDecora
  * createPropertyAndParameterDecorator
  * 创建同时能兼容参数装饰器和属性装饰器方法
  */
-export declare type PropertyAndParameterDecorator = ParameterDecorator & MethodDecorator;
-export declare type FnPropertyAndParameterDecorator<V> = (arg: V) => ParameterDecorator;
-export declare function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator & FnPropertyAndParameterDecorator<V>>(id: string, callback: MethodDecoratorHttpCallback): D;
+export interface PropertyAndParameterDecorator<V> {
+    (args: V): ParameterDecorator;
+    (target: Object, propertyKey: string): void;
+    (target: Object, propertyKey: string, parameterIndex: number): void;
+}
+export declare function createPropertyAndParameterDecorator<V, D = PropertyAndParameterDecorator<V>>(id: string, callback: MethodDecoratorHttpCallback): D;
 /**
  * RequestMethodDecorator
  * 创建http请求方式装饰器

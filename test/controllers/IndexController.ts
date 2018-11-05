@@ -1,4 +1,4 @@
-import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers, ValidatorKeys, Status, Type, Header, Params } from '@longjs/decorators'
+import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers, ValidatorKeys, Status, Type, Header, Params, Files } from '@longjs/decorators'
 import { HttpException } from '@longjs/core'
 import { TestHttpException } from '../exception/TestException';
 
@@ -31,21 +31,9 @@ export class IndexController {
     @Header({
         'content-type': 'text/html'
     })
-    public async test(
-        @Query(testRule) query: Query<Test>,
-        @Headers({
-            'content-type': 'application/x-www-form-urlencoded'
-        }) headers: Headers,
-        @Params({
-            id: {
-                rules: {
-                    required: true,
-                    string: true
-                }
-            }
-        }) params: Params
-    ) {
-       return headers
+    public async test(@Files files: any) {
+        console.log(typeof files['a'][0])
+       return 'test'
     }
 }
 

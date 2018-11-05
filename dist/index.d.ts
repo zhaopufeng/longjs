@@ -9,11 +9,13 @@ import * as knex from 'knex';
 export default class Databases implements Plugin {
     options: Config;
     constructor(options: Config);
-    handlerRequest(ctx: Core.Context, configs: any): Promise<void>;
+    init(options: Core.Options, pluginConfigs: any): void;
 }
 export declare type Database = knex & QueryInterface;
-export declare const Database: {
-    (target: any, propertyKey: string, parameterIndex: number): void;
-    (target: any, propertyKey: string | symbol): void;
-    (arg: String): (target: Object, propertyKey: string | symbol, parameterIndex?: number) => void;
-};
+interface DatabseInterface {
+    (table: string): DatabseInterface;
+    (target: Object, propertyKey: string): void;
+    (target: Object, propertyKey: string, parameterIndex: number): void;
+}
+export declare const Database: DatabseInterface;
+export {};

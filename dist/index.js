@@ -12,21 +12,16 @@ class Databases {
     constructor(options) {
         this.options = options;
     }
-    async handlerRequest(ctx, configs) {
-        if (!configs.options)
-            configs.options = this.options;
+    init(options, pluginConfigs) {
+        pluginConfigs.configs = this.options;
     }
 }
 exports.default = Databases;
-exports.Database = core_1.createPropertyAndParameterDecorator((ctx, args) => {
+exports.Database = core_1.createPropertyAndParameterDecorator('Database', (ctx, data) => {
     const uid = ctx.app.getPluginID(Databases);
-    let configs;
-    assert(uid, 'Your must be used @longjs/database plugin');
-    assert(ctx.app.options, 'Server options is not define');
-    assert(ctx.app.options.pluginConfigs, 'Your must be used @longjs/database plugin');
-    assert(ctx.app.options.pluginConfigs[uid], 'Your must be used @longjs/database plugin');
-    assert(ctx.app.options.pluginConfigs[uid].options, 'Your must be used @longjs/database plugin');
-    if (args)
-        return knex(ctx.app.options.pluginConfigs[uid].options)(args);
-    return knex(ctx.app.options.pluginConfigs[uid].options);
+    const configs = ctx.app.options.pluginConfigs[uid].configs;
+    assert(configs, 'Your must be used @longjs/database module plugin `Databases`.');
+    if (data)
+        return knex(configs)(data);
+    return knex(configs);
 });

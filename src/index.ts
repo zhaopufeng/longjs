@@ -11,20 +11,21 @@ import * as assert from 'assert'
 
 export default class Databases implements Plugin {
     constructor(public options: Config) {}
-    public async handlerRequest(ctx: Core.Context, configs: any) {
-        if (!configs.options) configs.options = this.options
+    public init(options: Core.Options, pluginConfigs: any) {
+        pluginConfigs.configs = this.options
     }
 }
 
 export type Database = knex & QueryInterface
-export const Database = createPropertyAndParameterDecorator<String>((ctx, args) => {
+interface DatabseInterface {
+    (table: string): DatabseInterface;
+    (target: Object, propertyKey: string): void;
+    (target: Object, propertyKey: string, parameterIndex: number): void;
+}
+export const Database = createPropertyAndParameterDecorator<string, DatabseInterface>('Database', (ctx: Core.Context, data: any) => {
     const uid = ctx.app.getPluginID(Databases)
-    let configs: any;
-    assert(uid, 'Your must be used @longjs/database plugin')
-    assert(ctx.app.options, 'Server options is not define')
-    assert(ctx.app.options.pluginConfigs, 'Your must be used @longjs/database plugin')
-    assert(ctx.app.options.pluginConfigs[uid], 'Your must be used @longjs/database plugin')
-    assert(ctx.app.options.pluginConfigs[uid].options, 'Your must be used @longjs/database plugin')
-    if (args) return knex(ctx.app.options.pluginConfigs[uid].options)(args)
-    return knex(ctx.app.options.pluginConfigs[uid].options)
+    const configs = ctx.app.options.pluginConfigs[uid].configs
+    assert(configs, 'Your must be used @longjs/database module plugin `Databases`.')
+    if (data) return knex(configs)(data)
+    return knex(configs)
 })

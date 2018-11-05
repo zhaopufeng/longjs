@@ -15,6 +15,7 @@ require("validator");
 require("reflect-metadata");
 const lib_1 = require("./lib");
 const assert = require("assert");
+const files_1 = require("./lib/files");
 /**
  * Controller Decorator
  * @param path
@@ -60,9 +61,10 @@ exports.Body = Core_1.createPropertyAndParameterDecorator('Body', (ctx, validate
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request Body data is not valid.');
-            error.data = errors;
-            throw error;
+            throw new Core_1.HttpException({
+                data: errors,
+                message: 'Request Body data is not valid.'
+            });
         }
         return data;
     }
@@ -76,9 +78,10 @@ exports.Query = Core_1.createPropertyAndParameterDecorator('Query', (ctx, valida
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request query string data is not valid.');
-            error.data = errors;
-            throw error;
+            throw new Core_1.HttpException({
+                data: errors,
+                message: 'Request query string data is not valid.'
+            });
         }
         return data;
     }
@@ -92,9 +95,10 @@ exports.Params = Core_1.createPropertyAndParameterDecorator('Params', (ctx, vali
         });
         const errors = lib_1.default(data, validateKeys);
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Request path parameter data is not valid.');
-            error.data = errors;
-            throw error;
+            throw new Core_1.HttpException({
+                data: errors,
+                message: 'Request path parameter data is not valid.'
+            });
         }
         return data;
     }
@@ -130,13 +134,41 @@ exports.Response = Core_1.createPropertyAndParameterDecorator('Response', (ctx, 
     }
     return ctx.response;
 });
-exports.Files = Core_1.createPropertyAndParameterDecorator('Files', (ctx, args) => {
-    if (Array.isArray(args)) {
-        const data = {};
-        args.forEach((k) => {
-            data[k] = ctx.files[k];
-        });
-        return data;
+/**
+ * Parameter && Property Decorator
+ * Files
+ */
+exports.Files = Core_1.createPropertyAndParameterDecorator('Files', (ctx, fieldRules) => {
+    if (fieldRules) {
+        const result = files_1.filesFieldRulesValidate(ctx.files || {}, fieldRules);
+        if (Object.keys(result.errors).length > 0) {
+            throw new Core_1.HttpException({
+                message: 'The uploaded file Invalid.',
+                data: result.errors
+            });
+        }
+        else {
+            return result.datas;
+        }
+    }
+    return ctx.files;
+});
+/**
+ * Parameter && Property Decorator
+ * Files
+ */
+exports.File = Core_1.createPropertyAndParameterDecorator('Files', (ctx, fieldRules) => {
+    if (fieldRules) {
+        const result = files_1.fileFieldRulesValidate(ctx.files || {}, fieldRules);
+        if (Object.keys(result.errors).length > 0) {
+            throw new Core_1.HttpException({
+                message: 'The uploaded file Invalid.',
+                data: result.errors
+            });
+        }
+        else {
+            return result.datas;
+        }
     }
     return ctx.files;
 });
@@ -282,3 +314,4 @@ exports.Porpfind = Core_1.createRequestMethodDecorator('PORPFIND');
  */
 exports.View = Core_1.createRequestMethodDecorator('VIEW');
 __export(require("./lib"));
+__export(require("./lib/files"));

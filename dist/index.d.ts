@@ -11,6 +11,7 @@ import 'validator';
 import 'reflect-metadata';
 import { ValidatorKeys, MimeDbTypes } from './lib';
 import { IncomingHttpHeaders } from 'http';
+import { FilesFieldRules, FileFieldRules, BaseFile } from './lib/files';
 /**
  * Controller Decorator
  * @param path
@@ -56,14 +57,22 @@ export declare const Request: import("@longjs/Core/dist/lib/Decorators").Propert
  */
 export declare type Response = Core.Response;
 export declare const Response: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<string[]>;
+export interface Files {
+    [key: string]: BaseFile[];
+}
 /**
  * Parameter && Property Decorator
  * Files
  */
-export interface Files {
-    [key: string]: any;
+export declare const Files: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<FilesFieldRules>;
+export interface File {
+    [key: string]: BaseFile;
 }
-export declare const Files: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<string[]>;
+/**
+ * Parameter && Property Decorator
+ * Files
+ */
+export declare const File: import("@longjs/Core/dist/lib/Decorators").PropertyAndParameterDecorator<FileFieldRules>;
 /**
  * MethodDecorators
  * Catch
@@ -180,3 +189,4 @@ export declare const Porpfind: import("@longjs/Core/dist/lib/Decorators").Reques
  */
 export declare const View: import("@longjs/Core/dist/lib/Decorators").RequestMethodDecorator;
 export * from './lib';
+export * from './lib/files';

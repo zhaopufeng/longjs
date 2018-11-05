@@ -15,13 +15,16 @@ import {
     createHttpExceptionCaptureDecorator,
     createPropertyAndParameterDecorator,
     Core,
-    ControllerOptions
+    ControllerOptions,
+    HttpException
 } from '@longjs/Core'
 import 'validator'
 import 'reflect-metadata'
 import validateParams, { ValidatorKeys, MimeDbTypes } from './lib';
 import { IncomingHttpHeaders } from 'http';
 import * as assert from 'assert'
+import { extname } from 'path';
+import { FileRule, FilesFieldRules, FileFieldRules, fileFieldRulesValidate, filesFieldRulesValidate, BaseFile } from './lib/files';
 
 /**
  * Controller Decorator
@@ -82,9 +85,10 @@ export const Body = createPropertyAndParameterDecorator<ValidatorKeys>('Body', (
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request Body data is not valid.')
-            error.data = errors
-            throw error
+            throw new HttpException({
+                data: errors,
+                message: 'Request Body data is not valid.'
+            })
         }
         return data
     }
@@ -105,9 +109,10 @@ export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query',
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request query string data is not valid.')
-            error.data = errors
-            throw error
+            throw new HttpException({
+                data: errors,
+                message: 'Request query string data is not valid.'
+            })
         }
         return data
     }
@@ -127,9 +132,10 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
         })
         const errors = validateParams(data, validateKeys)
         if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request path parameter data is not valid.')
-            error.data = errors
-            throw error
+            throw new HttpException({
+                data: errors,
+                message: 'Request path parameter data is not valid.'
+            })
         }
         return data
     }
@@ -184,20 +190,46 @@ export const Response = createPropertyAndParameterDecorator<string[]>('Response'
     return ctx.response
 })
 
+export interface Files {
+    [key: string]: BaseFile[];
+}
 /**
  * Parameter && Property Decorator
  * Files
  */
-export interface Files {
-    [key: string]: any;
+export const Files = createPropertyAndParameterDecorator<FilesFieldRules>('Files', (ctx: Core.Context, fieldRules: FilesFieldRules) => {
+    if (fieldRules) {
+        const result = filesFieldRulesValidate(ctx.files || {}, fieldRules)
+        if (Object.keys(result.errors).length > 0) {
+            throw new HttpException({
+                message: 'The uploaded file Invalid.',
+                data: result.errors
+            })
+        } else {
+            return result.datas
+        }
+    }
+    return ctx.files
+})
+
+export interface File {
+    [key: string]: BaseFile;
 }
-export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx: Core.Context, args: string[]) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = ctx.files[k]
-        })
-        return data
+/**
+ * Parameter && Property Decorator
+ * Files
+ */
+export const File = createPropertyAndParameterDecorator<FileFieldRules>('Files', (ctx: Core.Context, fieldRules: FileFieldRules) => {
+    if (fieldRules) {
+        const result = fileFieldRulesValidate(ctx.files || {}, fieldRules)
+        if (Object.keys(result.errors).length > 0) {
+            throw new HttpException({
+                message: 'The uploaded file Invalid.',
+                data: result.errors
+            })
+        } else {
+            return result.datas
+        }
     }
     return ctx.files
 })
@@ -384,3 +416,4 @@ export const Porpfind = createRequestMethodDecorator('PORPFIND')
 export const View = createRequestMethodDecorator('VIEW')
 
 export * from './lib'
+export * from './lib/files'

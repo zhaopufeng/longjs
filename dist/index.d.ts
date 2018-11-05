@@ -14,7 +14,7 @@ import { Socket } from 'net';
 import { ListenOptions } from 'net';
 import { IncomingMessage, ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { Plugins } from './lib/Plugin';
+import { Plugin } from './lib/Plugin';
 export default class Server extends EventEmitter {
     options: Core.Options;
     proxy: boolean;
@@ -73,6 +73,14 @@ export * from './lib/Decorators';
 export * from './lib/Plugin';
 export * from './lib/HttpException';
 export declare namespace Core {
+    interface Plugins extends Array<Plugin> {
+        handlerRequests?: Plugin[];
+        handlerRequesteds?: Plugin[];
+        handlerResponses?: Plugin[];
+        handlerResponseAfters?: Plugin[];
+        handlerRespondeds?: Plugin[];
+        handlerExceptions?: Plugin[];
+    }
     interface HttpException {
         statusCode?: number;
         message?: string;

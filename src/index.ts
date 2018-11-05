@@ -22,7 +22,7 @@ import { CreateResponse } from './lib/CreateResponse'
 import { CreateRequest } from './lib/CreateRequest'
 import { Stream } from 'stream'
 import { isJSON } from './lib/utils'
-import { Plugins } from './lib/Plugin'
+import { Plugins, Plugin } from './lib/Plugin'
 import { Controller, ControllerConstructor } from './lib/Decorators'
 import { randomBytes } from 'crypto'
 
@@ -67,12 +67,44 @@ export default class Server extends EventEmitter {
         }
 
         const { plugins = [] } = this.options
-            // Plugin register uid
-            plugins.forEach((plugin, i) => {
+        this.options.plugins = plugins
+        // Plugin register uid
+        plugins.handlerRequests = []
+        plugins.handlerRequesteds = []
+        plugins.handlerResponses = []
+        plugins.handlerRespondeds = []
+        plugins.handlerResponseAfters = []
+        plugins.handlerExceptions = []
+        plugins.forEach((plugin, i) => {
             const uid = randomBytes(24).toString('hex')
-            if (typeof plugin.init === 'function') plugin.init(this.options, this.options.configs)
+            const pluginConfig = {}
+            if (typeof plugin.init === 'function') plugin.init(this.options, pluginConfig, this.options.configs)
             ; (plugin as any).uid = uid
-            options.pluginConfigs[uid] = {}
+            // 1. handlerRequest
+            if (typeof plugin.handlerRequest === 'function') {
+                plugins.handlerRequests.push(plugin)
+            }
+            // 2. handlerRequested
+            if (typeof plugin.handlerRequested === 'function') {
+                plugins.handlerRequesteds.push(plugin)
+            }
+            // 3. handlerResponse
+            if (typeof plugin.handlerResponse === 'function') {
+                plugins.handlerResponses.push(plugin)
+            }
+            // 4. handlerRequested
+            if (typeof plugin.handlerRequested === 'function') {
+                plugins.handlerRespondeds.push(plugin)
+            }
+            // 5. handlerResponseAfter
+            if (typeof plugin.handlerResponseAfter === 'function') {
+                plugins.handlerResponseAfters.push(plugin)
+            }
+            // 6. handlerException
+            if (typeof plugin.handlerException === 'function') {
+                plugins.handlerExceptions.push(plugin)
+            }
+            options.pluginConfigs[uid] = pluginConfig
         })
 
         // Start server listen port
@@ -240,41 +272,34 @@ export default class Server extends EventEmitter {
         // Create http/https context
         const context = this.createContext(request, response)
         try {
+            const { plugins } = this.options
+            const { handlerRequests, handlerRequesteds, handlerResponses, handlerResponseAfters, handlerRespondeds } = plugins
+
             // Run plugin request
-            const { plugins = [] } = this.options
-            for (let plugin of plugins) {
-                const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerRequest === 'function')  await plugin.handlerRequest(context, configs)
+            for (let plugin of handlerRequests) {
+                await plugin.handlerRequest(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
-
             // Run plugin requested
-            for (let plugin of plugins) {
-                const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerRequested === 'function')  await plugin.handlerRequested(context, configs)
+            for (let plugin of handlerRequesteds) {
+                await plugin.handlerRequested(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
-
             // Run plugin response
-            for (let plugin of plugins) {
-                const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerResponse === 'function')  await plugin.handlerResponse(context, configs)
+            for (let plugin of handlerResponses) {
+                await plugin.handlerResponse(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
-
             // Responses
             await this.handleResponse(context)
-
             // Before controllors response run handlerResponseAfter plugin hooks
-            for (let plugin of plugins) {
-                const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerResponseAfter === 'function')  await plugin.handlerResponseAfter(context, configs)
+            for (let plugin of handlerResponseAfters) {
+                await plugin.handlerResponseAfter(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
 
             // Core run respond
             await this.respond(context)
 
             // Run plugin responded
-            for (let plugin of plugins) {
-                const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerResponded === 'function')  await plugin.handlerResponded(context, configs)
+            for (let plugin of handlerRespondeds) {
+                await plugin.handlerResponded(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
             /**
              * Handler not found
@@ -289,10 +314,9 @@ export default class Server extends EventEmitter {
             // Handler exception
             this.exception(context, error)
             this.emit('exception', [error, context])
-            const { plugins = [] } = this.options
-            for (let plugin of plugins) {
-                const configs = this.options.pluginConfigs[plugin.uid]
-                if (typeof plugin.handlerException === 'function')  await plugin.handlerException(error, context, configs)
+            const { handlerExceptions  } = this.options.plugins
+            for (let plugin of handlerExceptions) {
+                await plugin.handlerException(error, context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
         }
     }
@@ -404,6 +428,14 @@ export * from './lib/Plugin'
 export * from './lib/HttpException'
 
 export namespace Core {
+    export interface Plugins extends Array<Plugin> {
+        handlerRequests?: Plugin[];
+        handlerRequesteds?: Plugin[];
+        handlerResponses?: Plugin[];
+        handlerResponseAfters?: Plugin[];
+        handlerRespondeds?: Plugin[];
+        handlerExceptions?: Plugin[];
+    }
 
     export interface HttpException {
         statusCode?: number;

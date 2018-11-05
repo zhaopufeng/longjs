@@ -22,6 +22,10 @@ class StaticServer {
         if (opts.index !== false)
             this.opts.index = opts.index || 'index.html';
     }
+    init(options) {
+        options.configs = options.configs || {};
+        options.configs.static = this.opts;
+    }
     // Run before controller runs
     async handlerRequest(ctx) {
         if (this.opts.defer)

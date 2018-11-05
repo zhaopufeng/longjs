@@ -12,6 +12,7 @@ import { Core, Plugin } from '@longjs/core';
 export default class StaticServer implements Plugin {
     opts: StaticServe.Opts;
     constructor(opts: StaticServe.Opts);
+    init(options: Core.Options): void;
     handlerRequest(ctx: Core.Context): Promise<void>;
     handlerResponseAfter(ctx: Core.Context): Promise<void>;
 }

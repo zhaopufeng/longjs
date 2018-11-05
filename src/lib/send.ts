@@ -106,21 +106,40 @@ export default async function(ctx: Core.Context, path: string, opts: Options = {
     }
 
     if (setHeaders) setHeaders(ctx.res as ServerResponse, path, stats)
-
     // stream
-    ctx.set('Content-Length', stats.size.toString())
 
-    if (!ctx.response.get('Last-Modified')) ctx.set('Last-Modified', stats.mtime.toUTCString())
-    if (!ctx.response.get('Cache-Control')) {
-        const directives = ['max-age=' + (maxage / 1000 | 0)]
-        if (immutable) {
-        directives.push('immutable')
+    // media
+    const range: string = ctx.request.get('range') as string
+    if (range) {
+        let parts = range.replace(/bytes=/, '').split('-');
+        let  [rangeStart, rangeEnd] = parts
+        let start: number = Number(rangeStart)
+        let end =  stats.size - 1
+        let chunksize = stats.size - start
+        ctx.set('Content-Range', `bytes ${start}-${end}/${stats.size}`)
+        ctx.set('Accept-Ranges', 'bytes')
+        ctx.status = 206
+        ctx.body = fs.createReadStream(path, {
+            start,
+            end
+        })
+        ctx.length = chunksize
+        if (!ctx.type)  ctx.type = type(path, encodingExt)
+    } else {
+        ctx.set('Content-Length', stats.size.toString())
+
+        if (!ctx.response.get('Last-Modified')) ctx.set('Last-Modified', stats.mtime.toUTCString())
+        if (!ctx.response.get('Cache-Control')) {
+            const directives = ['max-age=' + (maxage / 1000 | 0)]
+            if (immutable) {
+            directives.push('immutable')
+            }
+            ctx.set('Cache-Control', directives.join(','))
         }
-        ctx.set('Cache-Control', directives.join(','))
-    }
 
-    if (!ctx.type) ctx.type = type(path, encodingExt)
-    ctx.body = fs.createReadStream(path)
+        if (!ctx.type) ctx.type = type(path, encodingExt)
+        ctx.body = fs.createReadStream(path)
+    }
 
     return path
 }

@@ -1,6 +1,7 @@
-import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers, ValidatorKeys, Status, Type, Header, Params, Files } from '@longjs/decorators'
+import { Controller, Get, Session, Post, Body, Query, Catch, Exception, Headers, ValidatorKeys, Status, Type, Header, Params, Files, File } from '@longjs/decorators'
 import { HttpException } from '@longjs/core'
 import { TestHttpException } from '../exception/TestException';
+import { Database } from '@longjs/database';
 
 const testRule: ValidatorKeys = {
     username: {
@@ -21,7 +22,13 @@ export class IndexController {
     @Get('/')
     public async index() {
         throw new Error('')
-        return 'xx'
+    }
+
+    @Get
+    @Type('text/html')
+    @Status(400)
+    public async getusers(@Database('users') users: Database) {
+        return users.select()
     }
 
     @Get
@@ -31,8 +38,17 @@ export class IndexController {
     @Header({
         'content-type': 'text/html'
     })
-    public async test(@Files files: any) {
-        console.log(typeof files['a'][0])
+    public async test(@File({
+        a: {
+            // type: 'text/html',
+            size: {
+                min: 20,
+                max: 50000
+            },
+            // extname: 'txt'
+        }
+    }) file: File) {
+        console.log(file)
        return 'test'
     }
 }

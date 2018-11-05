@@ -55,7 +55,7 @@ class TestPlugin implements Plugin {
             })
         }
 
-        console.log(data[0].routers)
+        // console.log(data[0].routers)
     }
 }
 new Server({

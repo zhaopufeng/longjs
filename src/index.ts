@@ -19,7 +19,7 @@ import {
 } from '@longjs/Core'
 import 'validator'
 import 'reflect-metadata'
-import validateParams, { ValidatorKeys } from './lib';
+import validateParams, { ValidatorKeys, MimeDbTypes } from './lib';
 import { IncomingHttpHeaders } from 'http';
 import * as assert from 'assert'
 
@@ -40,18 +40,16 @@ export function Controller(path: string): ClassDecorator {
 /**
  * HeadersDecorator
  */
-export interface Headers {
-    [key: string]: any;
-}
+type Headers = IncomingHttpHeaders;
 type HeadersDecorator = PropertyDecorator & ParameterDecorator
 interface HeadersFnDecorator {
-    (key: { [K in keyof IncomingHttpHeaders]: string }): ParameterDecorator
+    (key: IncomingHttpHeaders ): ParameterDecorator
 }
 export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator & HeadersFnDecorator>('Headers', (ctx: Core.Context, value: { [K in keyof IncomingHttpHeaders]: string }) => {
     if (typeof value === 'object') {
         assert(!Array.isArray(value), 'Headers decorator parameter is not a object.')
         const { headers } = ctx
-        const data: { [K in keyof IncomingHttpHeaders]: string } = {}
+        const data: IncomingHttpHeaders = {}
         const errors: any = {}
         Object.keys(value).forEach((k) => {
             if (headers[k] !== value[k]) {
@@ -142,9 +140,7 @@ export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params
  * Parameter && Property Decorator
  * Session
  */
-export interface Session {
-    [key: string]: any;
-}
+export type Session<T = any>  = T;
 export const Session = createPropertyAndParameterDecorator<string[]>('Session', (ctx: Core.Context, args: string[]) => {
     if (Array.isArray(args)) {
         const data: any = {}
@@ -223,7 +219,7 @@ export const Exception = createHttpExceptionCaptureDecorator<Core.HttpException>
  * Header
  */
 interface StatusDecorator {
-    (statusCode: number): any;
+    (statusCode: number): MethodDecorator;
 }
 export const Status = createMethodDecorator<any, any, StatusDecorator>((options, decorator, status) => {
     assert(typeof status === 'number', 'StatusCode is not an number.')
@@ -246,14 +242,14 @@ export const Status = createMethodDecorator<any, any, StatusDecorator>((options,
  * Type
  */
 interface TypeDecorator {
-    (type: string): any;
+    (type: MimeDbTypes): any;
 }
 export const Type = createMethodDecorator<any, any, TypeDecorator>((options, decorator, type) => {
     assert(typeof type === 'string', 'Response type is not an string.')
     const [ target, PropertyKey ] = decorator
     options.methods = options.methods = {}
     options.methods[PropertyKey] = options.methods[PropertyKey] = []
-    const responseTypes = options.responseType = options.responseType || {}
+    const responseTypes = options.responseTypes = options.responseTypes || {}
     if (!responseTypes[PropertyKey]) responseTypes[PropertyKey] = type
     options.methods[PropertyKey].push({
         callback(ctx) {
@@ -268,9 +264,9 @@ export const Type = createMethodDecorator<any, any, TypeDecorator>((options, dec
  * MethodDecorators
  * Header
  */
-type Header = { [K in keyof IncomingHttpHeaders]: string; }
+type Header = IncomingHttpHeaders
 interface HeaderDecorator {
-    (header: Header): any;
+    (header: Header): MethodDecorator;
 }
 export const Header = createMethodDecorator<any, any, HeaderDecorator>((options, decorator, headers) => {
     assert(!Array.isArray(headers), 'Header cannot be an array.')

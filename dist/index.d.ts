@@ -9,23 +9,15 @@
 import { Core } from '@longjs/Core';
 import 'validator';
 import 'reflect-metadata';
-import { ValidatorKeys } from './lib';
+import { ValidatorKeys, MimeDbTypes } from './lib';
 import { IncomingHttpHeaders } from 'http';
 /**
  * Controller Decorator
  * @param path
  */
 export declare function Controller(path: string): ClassDecorator;
-/**
- * HeadersDecorator
- */
-export interface Headers {
-    [key: string]: any;
-}
 interface HeadersFnDecorator {
-    (key: {
-        [K in keyof IncomingHttpHeaders]: string;
-    }): ParameterDecorator;
+    (key: IncomingHttpHeaders): ParameterDecorator;
 }
 export declare const Headers: PropertyDecorator & ParameterDecorator & HeadersFnDecorator;
 /**
@@ -33,39 +25,37 @@ export declare const Headers: PropertyDecorator & ParameterDecorator & HeadersFn
  * Body
  */
 export declare type Body<T = any> = T;
-export declare const Body: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
+export declare const Body: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Query
  */
 export declare type Query<T = any> = T;
-export declare const Query: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
+export declare const Query: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Params<T = any> = T;
-export declare const Params: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
+export declare const Params: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<ValidatorKeys>;
 /**
  * Parameter && Property Decorator
  * Session
  */
-export interface Session {
-    [key: string]: any;
-}
-export declare const Session: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare type Session<T = any> = T;
+export declare const Session: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Request = Core.Request;
-export declare const Request: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Request: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Request
  */
 export declare type Response = Core.Response;
-export declare const Response: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Response: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * Parameter && Property Decorator
  * Files
@@ -73,7 +63,7 @@ export declare const Response: ParameterDecorator & PropertyDecorator & import("
 export interface Files {
     [key: string]: any;
 }
-export declare const Files: ParameterDecorator & PropertyDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
+export declare const Files: ParameterDecorator & MethodDecorator & import("@longjs/Core/dist/lib/Decorators").FnPropertyAndParameterDecorator<string[]>;
 /**
  * MethodDecorators
  * Catch
@@ -89,7 +79,7 @@ export declare const Exception: import("@longjs/Core/dist/lib/Decorators").HttpE
  * Header
  */
 interface StatusDecorator {
-    (statusCode: number): any;
+    (statusCode: number): MethodDecorator;
 }
 export declare const Status: StatusDecorator;
 /**
@@ -97,18 +87,16 @@ export declare const Status: StatusDecorator;
  * Type
  */
 interface TypeDecorator {
-    (type: string): any;
+    (type: MimeDbTypes): any;
 }
 export declare const Type: TypeDecorator;
 /**
  * MethodDecorators
  * Header
  */
-declare type Header = {
-    [K in keyof IncomingHttpHeaders]: string;
-};
+declare type Header = IncomingHttpHeaders;
 interface HeaderDecorator {
-    (header: Header): any;
+    (header: Header): MethodDecorator;
 }
 export declare const Header: HeaderDecorator;
 /**

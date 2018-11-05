@@ -171,7 +171,7 @@ exports.Type = Core_1.createMethodDecorator((options, decorator, type) => {
     const [target, PropertyKey] = decorator;
     options.methods = options.methods = {};
     options.methods[PropertyKey] = options.methods[PropertyKey] = [];
-    const responseTypes = options.responseType = options.responseType || {};
+    const responseTypes = options.responseTypes = options.responseTypes || {};
     if (!responseTypes[PropertyKey])
         responseTypes[PropertyKey] = type;
     options.methods[PropertyKey].push({

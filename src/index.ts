@@ -44,7 +44,7 @@ export default class Server extends EventEmitter {
         this.subdomainOffset = options.subdomainOffset || 2
         this.env = process.env.NODE_ENV as  Core.Env || 'development'
 
-        const { plugins } = this.options
+        const { plugins = [] } = this.options
         this.use(...plugins)
 
         // Start server listen port
@@ -146,8 +146,8 @@ export default class Server extends EventEmitter {
         const context = this.createContext(request, response)
         const data: { [key: string]: any } = {}
         try {
-            const { plugins } = this.options
-            const { handlerRequests, handlerRequesteds, handlerResponses, handlerCloses, handlerRespondeds } = plugins
+            const { _plugins } = this
+            const { handlerRequests, handlerRequesteds, handlerResponses, handlerCloses, handlerRespondeds } = _plugins
             // Run plugin request
             for (let plugin of handlerRequests) {
                 await plugin.handlerRequest(context, this.options.pluginConfigs[plugin.uid], data)

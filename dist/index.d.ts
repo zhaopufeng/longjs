@@ -44,7 +44,6 @@ export default class Server extends EventEmitter {
     listen(options: ListenOptions, listeningListener?: () => void): this;
     listen(handle: any, backlog?: number, listeningListener?: () => void): this;
     listen(handle: any, listeningListener?: () => void): this;
-    private handleResponse;
     getPluginID(pluginConstructor: {
         new (...args: any[]): any;
     }): string;
@@ -69,7 +68,6 @@ export default class Server extends EventEmitter {
      */
     protected createContext(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse): Core.Context;
 }
-export * from './lib/Decorators';
 export * from './lib/Plugin';
 export * from './lib/HttpException';
 export declare namespace Core {
@@ -106,10 +104,6 @@ export declare namespace Core {
         subdomainOffset?: number;
         silent?: boolean;
         plugins?: Plugins;
-        controllers?: Array<{
-            new (...args: any[]): any;
-        }>;
-        routeStrict?: boolean;
     }
     interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {
         /**

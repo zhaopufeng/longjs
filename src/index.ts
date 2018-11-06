@@ -23,7 +23,6 @@ import { CreateRequest } from './lib/CreateRequest'
 import { Stream } from 'stream'
 import { isJSON } from './lib/utils'
 import { Plugins, Plugin } from './lib/Plugin'
-import { Controller, ControllerConstructor } from './lib/Decorators'
 import { randomBytes } from 'crypto'
 
 export default class Server extends EventEmitter {
@@ -43,28 +42,6 @@ export default class Server extends EventEmitter {
         this.keys = options.keys || ['long:sess']
         this.subdomainOffset = options.subdomainOffset || 2
         this.env = process.env.NODE_ENV as  Core.Env || 'development'
-         // Map controllers
-        if (Array.isArray(options.controllers)) {
-            const controllers  = options.controllers
-            controllers.forEach((Controller: Controller) => {
-                Controller.prototype.$app = this;
-                if (typeof Controller.prototype.____$options !== 'object' || !Controller.prototype.____$options) Controller.prototype.____$options = {}
-                const { routes = {}, route = ''} = Controller.prototype.____$options
-                if (routes) {
-                    Object.keys(routes).forEach((key: string) => {
-                        if (Array.isArray(routes[key])) {
-                            routes[key].forEach((iRoute) => {
-                                iRoute.keys = []
-                                iRoute.routePath = (route + iRoute.routePath).replace(/[\/]{2,}/g, '/')
-                                iRoute.RegExp = pathToRegExp(iRoute.routePath, iRoute.keys, {
-                                    strict: options.routeStrict
-                                })
-                            })
-                        }
-                    })
-                }
-            })
-        }
 
         const { plugins = [] } = this.options
         this.options.plugins = plugins
@@ -146,112 +123,6 @@ export default class Server extends EventEmitter {
         return this;
     }
 
-    private async handleResponse(context: Core.Context) {
-        if (!context.finished ) {
-            const { controllers = [] } = this.options
-            const { path, method } = context
-
-            // Map controllers
-            for (let Controller of controllers) {
-                const options = (Controller as ControllerConstructor).prototype.____$options || {}
-                const { routes = {}, parameters = {}, propertys = {}, methods = {}, responseTypes = {} } = options
-                const matchRoutes = routes[method]
-                // Check matchRoutes is Array
-                if (Array.isArray(matchRoutes)) {
-                    // Merge routes
-                    if (Array.isArray(routes['ALL'])) matchRoutes.push(...routes['ALL'])
-                    const matches = matchRoutes.filter((matchRoute) => {
-                        return matchRoute.RegExp.test(path)
-                    })
-
-                    // matches routes
-                    if (matches.length > 0) {
-                        // Inject propertys
-                        if (propertys) {
-                            Object.keys(propertys).forEach((key: string) => {
-                                const property = propertys[key]
-                                const { callback, value } = property
-                                if (typeof callback === 'function')
-                                (Controller as any).prototype[key] = callback(context, value)
-                            })
-                        }
-
-                        // Map metadata
-                        let { metadatas } = Controller.prototype.____$options
-                        if (Array.isArray(metadatas)) {
-                            metadatas = metadatas.map((K) => {
-                                return new K(context, this.options.configs)
-                            })
-                        }
-                        // new Controller
-                        const instance = new (Controller as ControllerConstructor)(...metadatas)
-                        // Map mathces route
-                        for (let matchRoute of matches) {
-                            if (!context.finished && !context.headerSent) {
-                                const { keys, RegExp, propertyKey } = matchRoute
-                                // Match path params
-                                keys.forEach((item, index) => {
-                                    const { name } = item
-                                    const params = RegExp.exec(path)
-                                    context.params[name] = params[index + 1]
-                                })
-
-                                // Inject method decorator
-                                if (methods) {
-                                    const method = methods[propertyKey]
-                                    if (Array.isArray(method)) {
-                                        method.forEach((key) => {
-                                            const { callback, value } = key
-                                            if (typeof callback === 'function') {
-                                                callback(context, value)
-                                            }
-                                        })
-                                    }
-                                }
-                                // Inject parameter decorator
-                                let injectParameters: any = []
-                                if (parameters) {
-                                    const parameter = parameters[propertyKey]
-                                    if (parameter) {
-                                        injectParameters = parameters[propertyKey].map((parameter) => {
-                                            try {
-                                                const { value, callback } = parameter
-                                                if (typeof callback === 'function') {
-                                                    if (value) {
-                                                        return callback(context, value)
-                                                    }
-                                                    return callback(context)
-                                                }
-                                            } catch (error) {
-                                                return error
-                                            }
-                                        })
-                                    }
-                                }
-
-                                // Run response handler
-                                const data = await instance[propertyKey](...injectParameters)
-                                if (data && context.writable) {
-                                    context.body = data
-                                }
-
-                                // Set response Type
-                                // context.body response auto set type
-                                // The code Be used  response type for mandatory settings
-                                if (responseTypes) {
-                                    const responseType = responseTypes[propertyKey]
-                                    if (responseType) {
-                                        context.type = responseType
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public getPluginID(pluginConstructor: { new (...args: any[]): any}) {
         const { plugins = [] } = this.options
         let uid: string;
@@ -287,8 +158,7 @@ export default class Server extends EventEmitter {
             for (let plugin of handlerResponses) {
                 await plugin.handlerResponse(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
             }
-            // Responses
-            await this.handleResponse(context)
+
             // Before controllors response run handlerResponseAfter plugin hooks
             for (let plugin of handlerResponseAfters) {
                 await plugin.handlerResponseAfter(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
@@ -423,7 +293,6 @@ export default class Server extends EventEmitter {
     }
 }
 
-export * from './lib/Decorators'
 export * from './lib/Plugin'
 export * from './lib/HttpException'
 
@@ -466,8 +335,6 @@ export namespace Core {
         subdomainOffset?: number;
         silent?: boolean;
         plugins?: Plugins;
-        controllers?: Array<{ new (...args: any[]): any }>;
-        routeStrict?: boolean;
     }
 
     export interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {

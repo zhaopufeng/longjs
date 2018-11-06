@@ -144,25 +144,25 @@ export default class Server extends EventEmitter {
     private async start(request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse): Promise<any>  {
         // Create http/https context
         const context = this.createContext(request, response)
+        const data: { [key: string]: any } = {}
         try {
             const { plugins } = this.options
             const { handlerRequests, handlerRequesteds, handlerResponses, handlerCloses, handlerRespondeds } = plugins
-
             // Run plugin request
             for (let plugin of handlerRequests) {
-                await plugin.handlerRequest(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
+                await plugin.handlerRequest(context, this.options.pluginConfigs[plugin.uid], data)
             }
             // Run plugin requested
             for (let plugin of handlerRequesteds) {
-                await plugin.handlerRequested(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
+                await plugin.handlerRequested(context, this.options.pluginConfigs[plugin.uid], data)
             }
             // Run plugin response
             for (let plugin of handlerResponses) {
-                await plugin.handlerResponse(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
+                await plugin.handlerResponse(context, this.options.pluginConfigs[plugin.uid], data)
             }
             // Run plugin responded
             for (let plugin of handlerRespondeds) {
-                await plugin.handlerResponded(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
+                await plugin.handlerResponded(context, this.options.pluginConfigs[plugin.uid], data)
             }
 
             // Core run respond
@@ -170,7 +170,7 @@ export default class Server extends EventEmitter {
 
             // Before controllors response run handlerResponseAfter plugin hooks
             for (let plugin of handlerCloses) {
-                await plugin.handlerbeforeClose(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
+                await plugin.handlerbeforeClose(context, this.options.pluginConfigs[plugin.uid], data)
             }
             /**
              * Handler not found
@@ -187,7 +187,7 @@ export default class Server extends EventEmitter {
             this.emit('exception', [error, context])
             const { handlerExceptions  } = this.options.plugins
             for (let plugin of handlerExceptions) {
-                await plugin.handlerException(error, context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs)
+                await plugin.handlerException(error, context, this.options.pluginConfigs[plugin.uid], data)
             }
         }
     }

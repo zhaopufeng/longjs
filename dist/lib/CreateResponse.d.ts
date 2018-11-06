@@ -4,7 +4,6 @@
  * @license MIT
  * @copyright Ranyunlong 2018-09-23 1:18
  */
-/// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
 import { IncomingMessage, ServerResponse } from 'http';
 import { Http2ServerRequest, Http2ServerResponse } from 'http2';

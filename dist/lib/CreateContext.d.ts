@@ -4,7 +4,6 @@
  * @license MIT
  * @copyright Ranyunlong 2018-09-23 0:17
  */
-/// <reference path="../../node_modules/@types/node/index.d.ts" />
 /// <reference types="node" />
 import Server from '..';
 import * as Cookies from 'cookies';

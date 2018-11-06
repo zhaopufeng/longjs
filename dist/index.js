@@ -28,52 +28,14 @@ class Server extends EventEmitter {
         this.options = options;
         this.subdomainOffset = 2;
         this.env = process.env.NODE_ENV || 'development';
+        this._plugins = [];
         options.configs = options.configs || {};
         options.pluginConfigs = options.pluginConfigs || {};
         this.keys = options.keys || ['long:sess'];
         this.subdomainOffset = options.subdomainOffset || 2;
         this.env = process.env.NODE_ENV || 'development';
-        const { plugins = [] } = this.options;
-        this.options.plugins = plugins;
-        // Plugin register uid
-        plugins.handlerRequests = [];
-        plugins.handlerRequesteds = [];
-        plugins.handlerResponses = [];
-        plugins.handlerRespondeds = [];
-        plugins.handlerResponseAfters = [];
-        plugins.handlerExceptions = [];
-        plugins.forEach((plugin, i) => {
-            const uid = crypto_1.randomBytes(24).toString('hex');
-            const pluginConfig = {};
-            if (typeof plugin.init === 'function')
-                plugin.init(this.options, pluginConfig, this.options.configs);
-            plugin.uid = uid;
-            // 1. handlerRequest
-            if (typeof plugin.handlerRequest === 'function') {
-                plugins.handlerRequests.push(plugin);
-            }
-            // 2. handlerRequested
-            if (typeof plugin.handlerRequested === 'function') {
-                plugins.handlerRequesteds.push(plugin);
-            }
-            // 3. handlerResponse
-            if (typeof plugin.handlerResponse === 'function') {
-                plugins.handlerResponses.push(plugin);
-            }
-            // 4. handlerRequested
-            if (typeof plugin.handlerRequested === 'function') {
-                plugins.handlerRespondeds.push(plugin);
-            }
-            // 5. handlerResponseAfter
-            if (typeof plugin.handlerResponseAfter === 'function') {
-                plugins.handlerResponseAfters.push(plugin);
-            }
-            // 6. handlerException
-            if (typeof plugin.handlerException === 'function') {
-                plugins.handlerExceptions.push(plugin);
-            }
-            options.pluginConfigs[uid] = pluginConfig;
-        });
+        const { plugins } = this.options;
+        this.use(...plugins);
         // Start server listen port
         if (options.port) {
             if (options.host) {
@@ -93,21 +55,59 @@ class Server extends EventEmitter {
             this.start(request, response);
         };
     }
+    use(...plugins) {
+        const { _plugins = [] } = this;
+        // Plugin register uid
+        _plugins.handlerRequests = [];
+        _plugins.handlerRequesteds = [];
+        _plugins.handlerResponses = [];
+        _plugins.handlerRespondeds = [];
+        _plugins.handlerCloses = [];
+        _plugins.handlerExceptions = [];
+        plugins.forEach((plugin, i) => {
+            const uid = crypto_1.randomBytes(24).toString('hex');
+            const pluginConfig = {};
+            if (typeof plugin.init === 'function')
+                plugin.init(this.options);
+            plugin.uid = uid;
+            // 1. handlerRequest
+            if (typeof plugin.handlerRequest === 'function') {
+                _plugins.handlerRequests.push(plugin);
+            }
+            // 2. handlerRequested
+            if (typeof plugin.handlerRequested === 'function') {
+                _plugins.handlerRequesteds.push(plugin);
+            }
+            // 3. handlerResponse
+            if (typeof plugin.handlerResponse === 'function') {
+                _plugins.handlerResponses.push(plugin);
+            }
+            // 4. handlerRequested
+            if (typeof plugin.handlerRequested === 'function') {
+                _plugins.handlerRespondeds.push(plugin);
+            }
+            // 5. handlerResponseAfter
+            if (typeof plugin.handlerbeforeClose === 'function') {
+                _plugins.handlerCloses.push(plugin);
+            }
+            // 6. handlerException
+            if (typeof plugin.handlerException === 'function') {
+                _plugins.handlerExceptions.push(plugin);
+            }
+            this.options.pluginConfigs[uid] = pluginConfig;
+        });
+        return this;
+    }
     listen(...args) {
         http_1.createServer(this.callback())
             .listen(...args);
         return this;
     }
-    getPluginID(pluginConstructor) {
-        const { plugins = [] } = this.options;
-        let uid;
-        plugins.forEach((plugin) => {
-            if (plugin instanceof pluginConstructor) {
-                uid = plugin.uid;
-                return true;
-            }
-        });
-        return uid;
+    getPluginId(pluginConstructor) {
+        const plugin = this.options.plugins.filter((plugin) => plugin instanceof pluginConstructor);
+        if (plugin.length > 0) {
+            return plugin[0].uid;
+        }
     }
     /**
      * start
@@ -118,7 +118,7 @@ class Server extends EventEmitter {
         const context = this.createContext(request, response);
         try {
             const { plugins } = this.options;
-            const { handlerRequests, handlerRequesteds, handlerResponses, handlerResponseAfters, handlerRespondeds } = plugins;
+            const { handlerRequests, handlerRequesteds, handlerResponses, handlerCloses, handlerRespondeds } = plugins;
             // Run plugin request
             for (let plugin of handlerRequests) {
                 await plugin.handlerRequest(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs);
@@ -131,15 +131,15 @@ class Server extends EventEmitter {
             for (let plugin of handlerResponses) {
                 await plugin.handlerResponse(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs);
             }
-            // Before controllors response run handlerResponseAfter plugin hooks
-            for (let plugin of handlerResponseAfters) {
-                await plugin.handlerResponseAfter(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs);
-            }
-            // Core run respond
-            await this.respond(context);
             // Run plugin responded
             for (let plugin of handlerRespondeds) {
                 await plugin.handlerResponded(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs);
+            }
+            // Core run respond
+            await this.respond(context);
+            // Before controllors response run handlerResponseAfter plugin hooks
+            for (let plugin of handlerCloses) {
+                await plugin.handlerbeforeClose(context, this.options.pluginConfigs[plugin.uid], this.options.pluginConfigs);
             }
             /**
              * Handler not found

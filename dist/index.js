@@ -156,7 +156,7 @@ class Server extends EventEmitter {
             // Handler exception
             this.exception(context, error);
             this.emit('exception', [error, context]);
-            const { handlerExceptions } = this.options.plugins;
+            const { handlerExceptions } = this._plugins;
             for (let plugin of handlerExceptions) {
                 await plugin.handlerException(error, context, this.options.pluginConfigs[plugin.uid], data);
             }

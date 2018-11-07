@@ -1,311 +1,103 @@
 /**
- * Decorators
+ * Controller Plugin
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
  * @copyright Ranyunlong 2018-10-29 15:50
  * @export Decorators
  */
 
-import {
-    createClassDecorator,
-    createMethodDecorator,
-    createParameterDecorator,
-    createPropertyDecorator,
-    createRequestMethodDecorator,
-    createHttpExceptionCaptureDecorator,
-    createPropertyAndParameterDecorator,
-    Core,
-    ControllerOptions
-} from '@longjs/Core'
-import 'validator'
-import 'reflect-metadata'
-import validateParams, { ValidatorKeys } from './lib';
-import { IncomingHttpHeaders } from 'http';
-import * as assert from 'assert'
+import { Core, Plugin } from '@longjs/core';
+import { createClassDecorator, Options, IControllerConstructor } from './lib';
+import { Router } from './lib/Router'
+import { RouterOptions } from 'express';
+import { RegExpOptions } from 'path-to-regexp';
+import { Stack } from './lib/Router/Stack';
+import { Layer } from './lib/Router/Layer';
 
-/**
- * Controller Decorator
- * @param path
- */
-export function Controller(path: string): ClassDecorator {
-    return createClassDecorator((options) => {
-        const { target } = options
-        // Set options metadata
-        options.metadatas = Reflect.getMetadata('design:paramtypes', target) || []
-        // Set options route root path
-        options.route = (path + '/').replace(/[\/]{2,}/g, '/')
-    })
-}
+export default class ControllerPlugin implements Plugin {
+    public readonly strict: boolean;
+    public readonly router: Router;
+    constructor(options: ControllerPluginOptions) {
+        const { strict, controllers } = options;
+        this.strict = strict
+        this.router = new Router({
+            strict: true,
+            controllers
+        })
+    }
+    public init(options: Core.Options) {
+        options.configs.routerConfig = options
+    }
 
-/**
- * HeadersDecorator
- */
-export interface Headers {
-    [key: string]: any;
-}
-type HeadersDecorator = PropertyDecorator & ParameterDecorator
-interface HeadersFnDecorator {
-    (key: { [K in keyof IncomingHttpHeaders]: string }): ParameterDecorator
-}
-export const Headers = createPropertyAndParameterDecorator<any, HeadersDecorator & HeadersFnDecorator>('Headers', (ctx: Core.Context, value: { [K in keyof IncomingHttpHeaders]: string }) => {
-    if (typeof value === 'object') {
-        assert(!Array.isArray(value), 'Headers decorator parameter is not a object.')
-        const { headers } = ctx
-        const data: { [K in keyof IncomingHttpHeaders]: string } = {}
-        const errors: any = {}
-        Object.keys(value).forEach((k) => {
-            if (headers[k] !== value[k]) {
-                errors[k] = value[k]
-            } else {
-                data[k] = value[k]
+    public async handlerRequest(ctx: Core.Context, configs: any, data: IData) {
+        const routes =  data.routes = this.router.match(ctx)
+    }
+
+    public async handlerResponse(ctx: Core.Context, config: any, data: IData) {
+        const { routes } = data
+
+        for (let route of routes) {
+            const { layer, matches } = route
+            const { target, metadatas = [], propertys = {} } = layer
+            Object.keys(propertys).forEach((k) => {
+                if (propertys[k]) {
+                    Object.keys(propertys[k]).forEach((key) => {
+                        if (propertys[k][key]) {
+                            const { callback, values } = propertys[k][key]
+                            if (typeof callback === 'function') {
+                                if (typeof (target as any).prototype[k] !== 'function' ) {
+                                    (target as any).prototype[k] = callback(ctx, values)
+                                }
+                            }
+                        }
+                    })
+                }
+            })
+            const controller = new target(...metadatas.map((K) => new K(ctx)))
+            for (let matche of matches) {
+                const { propertyKey, statusCode, responseType, statusMessage, headers = {}, parameters = {}, exceptioncapture = {} } = matche
+                try {
+                    const injectParameters: any = []
+                    Object.keys(parameters).forEach((k) => {
+                        injectParameters[parameters[k].index] = parameters[k].callback(ctx, parameters[k].values)
+                    })
+                    let data = await controller[propertyKey](...injectParameters)
+                    if (data) {
+                        if (statusCode) ctx.status = statusCode
+                        if (responseType) ctx.type = responseType
+                        if (statusMessage) ctx.response.message = statusMessage
+                        ctx.body = data
+                    }
+                    if (headers) {
+                        Object.keys(headers).forEach((key) => {
+                            ctx.response.set(key, headers[key])
+                        })
+                    }
+                } catch (error) {
+                    const catchs = exceptioncapture['Catch']
+                    const exception = exceptioncapture['Exception']
+                    if (catchs) {
+                        catchs(error)
+                    } else if (exception) {
+                        exception(error)
+                    } else {
+                        throw error
+                    }
+                }
             }
-        })
-
-        if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Authentication Failed on http request headers.')
-            error.data = errors
-            throw error
         }
-        return data
     }
-    return ctx.headers
-})
-
-/**
- * Parameter && Property Decorator
- * Body
- */
-export type Body<T = any> = T;
-export const Body = createPropertyAndParameterDecorator<number>('Body', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
-    const data: Body = {}
-    if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
-        Object.keys(validateKeys).forEach((k: string) => {
-            data[k] = ctx.body[k] || validateKeys[k].defalut
-        })
-        const errors = validateParams(data, validateKeys)
-        if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request Body data is not valid.')
-            error.data = errors
-            throw error
-        }
-        return data
-    }
-
-    return ctx.body
-})
-
-/**
- * Parameter && Property Decorator
- * Query
- */
-export type Query<T = any> = T;
-export const Query = createPropertyAndParameterDecorator<ValidatorKeys>('Query', (ctx: Core.Context, validateKeys: ValidatorKeys) => {
-    const data: Query = {}
-    if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
-        Object.keys(validateKeys).forEach((k: string) => {
-            data[k] = ctx.query[k] || validateKeys[k].defalut
-        })
-        const errors = validateParams(data, validateKeys)
-        if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request query string data is not valid.')
-            error.data = errors
-            throw error
-        }
-        return data
-    }
-    return ctx.query
-})
-
-/**
- * Parameter && Property Decorator
- * Request
- */
-export type Params<T = any> = T;
-export const Params = createPropertyAndParameterDecorator<ValidatorKeys>('Params', (ctx: Core.Context, validateKeys: ValidatorKeys): Params => {
-    const data: Params = {}
-    if (!Array.isArray(validateKeys) && typeof validateKeys ===  'object') {
-        Object.keys(validateKeys).forEach((k: string) => {
-            data[k] = ctx.params[k] || validateKeys[k].defalut
-        })
-        const errors = validateParams(data, validateKeys)
-        if (Object.keys(errors).length > 0) {
-            const error: Core.HttpException & Error = new Error('Request path parameter data is not valid.')
-            error.data = errors
-            throw error
-        }
-        return data
-    }
-    return ctx.params
-})
-
-/**
- * Parameter && Property Decorator
- * Session
- */
-export interface Session {
-    [key: string]: any;
 }
-export const Session = createPropertyAndParameterDecorator<string[]>('Session', (ctx: Core.Context, args: string[]) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = ctx.session[k]
-        })
-        return data
-    }
-    return ctx.session
-})
-
-/**
- * Parameter && Property Decorator
- * Request
- */
-export type Request = Core.Request
-export const Request = createPropertyAndParameterDecorator<string[]>('Request', (ctx: Core.Context, args: string[]) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = (ctx.request as any)[k]
-        })
-        return data
-    }
-    return ctx.request
-})
-
-/**
- * Parameter && Property Decorator
- * Request
- */
-export type Response = Core.Response
-export const Response = createPropertyAndParameterDecorator<string[]>('Response', (ctx: Core.Context, args: string[]) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = (ctx.response as any)[k]
-        })
-        return data
-    }
-    return ctx.response
-})
-
-/**
- * Parameter && Property Decorator
- * Files
- */
-export interface Files {
-    [key: string]: any;
-}
-export const Files = createPropertyAndParameterDecorator<string[]>('Files', (ctx: Core.Context, args: string[]) => {
-    if (Array.isArray(args)) {
-        const data: any = {}
-        args.forEach((k: string) => {
-            data[k] = ctx.files[k]
-        })
-        return data
-    }
-    return ctx.files
-})
-
-/**
- * MethodDecorators
- * Catch
- */
-export const Catch = createHttpExceptionCaptureDecorator<Core.HttpException>()
-
-/**
- * RequestMethodDecorators
- * Get
- */
-export const Get = createRequestMethodDecorator('GET')
-
-/**
- * RequestMethodDecorators
- * All
- */
-export const All = createRequestMethodDecorator('ALL')
-
-/**
- * RequestMethodDecorators
- * Delete
- */
-export const Delete = createRequestMethodDecorator('DELETE')
-
-/**
- * RequestMethodDecorators
- * Head
- */
-export const Head = createRequestMethodDecorator('HEAD')
-
-/**
- * RequestMethodDecorators
- * Options
- */
-export const Options = createRequestMethodDecorator('OPTIONS')
-
-/**
- * RequestMethodDecorators
- * Patch
- */
-export const Patch = createRequestMethodDecorator('PATCH')
-
-/**
- * RequestMethodDecorators
- * Post
- */
-export const Post = createRequestMethodDecorator('POST')
-
-/**
- * RequestMethodDecorators
- * Put
- */
-export const Put = createRequestMethodDecorator('PUT')
-
-/**
- * RequestMethodDecorators
- * Copy
- */
-export const Copy = createRequestMethodDecorator('COPY')
-
-/**
- * RequestMethodDecorators
- * Link
- */
-export const Link = createRequestMethodDecorator('LINK')
-
-/**
- * RequestMethodDecorators
- * Unlink
- */
-export const Unlink = createRequestMethodDecorator('UNLINK')
-
-/**
- * RequestMethodDecorators
- * Purge
- */
-export const Purge = createRequestMethodDecorator('PURGE')
-
-/**
- * RequestMethodDecorators
- * Lock
- */
-export const Lock = createRequestMethodDecorator('LOCK')
-
-/**
- * RequestMethodDecorators
- * Unlock
- */
-export const Unlock = createRequestMethodDecorator('UNLOCK')
-
-/**
- * RequestMethodDecorators
- * Porpfind
- */
-export const Porpfind = createRequestMethodDecorator('PORPFIND')
-
-/**
- * RequestMethodDecorators
- * View
- */
-export const View = createRequestMethodDecorator('VIEW')
 
 export * from './lib'
+
+export interface ControllerPluginOptions extends RegExpOptions {
+    controllers: Array<{ new(...args: any[]): any }>;
+}
+
+interface IData {
+    routes: Array<{
+        layer: Layer,
+        matches: Stack[]
+    }>;
+}

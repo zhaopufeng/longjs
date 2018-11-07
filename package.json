@@ -19,12 +19,13 @@
     "url": "https://www.ranyunlong.com"
   },
   "repository": "ranyunlong/longjs",
-  "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.4.8"
-  },
   "dependencies": {
     "@types/validator": "^9.4.2",
+    "path-to-regexp": "^2.4.0",
     "reflect-metadata": "^0.1.12",
     "validator": "^10.8.0"
+  },
+  "devDependencies": {
+    "@longjs/core": "^1.0.0-test.0.5"
   }
 }

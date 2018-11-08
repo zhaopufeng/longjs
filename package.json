@@ -1,6 +1,6 @@
 {
   "name": "@longjs/body-parser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "./dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -20,7 +20,7 @@
   },
   "repository": "ranyunlong/longjs",
   "devDependencies": {
-    "@longjs/core": "^1.0.0-beta.5.8"
+    "@longjs/core": "^1.0.0-test.0.5"
   },
   "dependencies": {
     "@types/co-body": "^0.0.3",

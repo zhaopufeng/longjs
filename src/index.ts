@@ -46,6 +46,8 @@ export default class BodyParser implements Plugin {
     // 开启严格模式 不解析GET HEAD DELETE请求 默认true
     public readonly strict: boolean;
 
+    public readonly uploadDir: string;
+
     /**
      * constructor
      * @param ctx Context
@@ -62,6 +64,7 @@ export default class BodyParser implements Plugin {
         this.multipart = opts.multipart || true
         this.urlencoded = opts.urlencoded ||  true
         this.strict = opts.strict || true
+        this.uploadDir = opts.uploadDir || os.tmpdir()
     }
     public init(options: Core.Options) {
         options.configs = options.configs || {}
@@ -121,7 +124,7 @@ export default class BodyParser implements Plugin {
                     if (hash) form.hash = hash
                     if (multiples) form.multiples = multiples
                 } else {
-                    form.uploadDir = os.tmpdir()
+                    form.uploadDir = this.uploadDir
                     form.multiples = true
                 }
 
@@ -155,6 +158,7 @@ export namespace BodyParser {
     }
 
     export interface Options {
+        uploadDir?: string;
         jsonLimit?: number;              // JSON正文的字节限制 默认值1mb
         formLimit?: number;              // 表单主体数据的限制 默认值56kb
         textLimit?: number;              // 文本正文的字节限制 默认值56kb

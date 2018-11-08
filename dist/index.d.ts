@@ -19,6 +19,7 @@ export default class BodyParser implements Plugin {
     readonly jsonStrict: boolean;
     readonly formidable: BodyParser.FormidableOptions;
     readonly strict: boolean;
+    readonly uploadDir: string;
     /**
      * constructor
      * @param ctx Context
@@ -58,6 +59,7 @@ export declare namespace BodyParser {
         files: any;
     }
     interface Options {
+        uploadDir?: string;
         jsonLimit?: number;
         formLimit?: number;
         textLimit?: number;

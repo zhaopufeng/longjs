@@ -26,6 +26,7 @@ class BodyParser {
         this.multipart = opts.multipart || true;
         this.urlencoded = opts.urlencoded || true;
         this.strict = opts.strict || true;
+        this.uploadDir = opts.uploadDir || os.tmpdir();
     }
     init(options) {
         options.configs = options.configs || {};
@@ -86,7 +87,7 @@ class BodyParser {
                         form.multiples = multiples;
                 }
                 else {
-                    form.uploadDir = os.tmpdir();
+                    form.uploadDir = this.uploadDir;
                     form.multiples = true;
                 }
                 form.encoding = this.encoding;

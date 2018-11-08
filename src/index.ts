@@ -10,8 +10,8 @@ import * as httpAssert from 'http-assert'
 import * as EventEmitter from 'events'
 import * as statuses from 'statuses'
 import * as Keygrip from 'keygrip'
-import * as accepts from 'accepts'
-import * as pathToRegExp from 'path-to-regexp'
+import * as typeIs from 'type-is'
+import * as parse from 'co-body'
 import * as Cookies from 'cookies'
 import { Socket } from 'net'
 import { ListenOptions } from 'net'
@@ -22,7 +22,7 @@ import { CreateResponse } from './lib/CreateResponse'
 import { CreateRequest } from './lib/CreateRequest'
 import { Stream } from 'stream'
 import { isJSON } from './lib/utils'
-import { Plugins, Plugin } from './lib/Plugin'
+import { Plugin } from './lib/Plugin'
 import { randomBytes } from 'crypto'
 
 export default class Server extends EventEmitter {
@@ -69,45 +69,25 @@ export default class Server extends EventEmitter {
 
     public use(...plugins: Plugin[]): this {
         const { _plugins = [] } = this
-        // Plugin register uid
-        _plugins.handlerRequests = []
-        _plugins.handlerRequesteds = []
-        _plugins.handlerResponses = []
-        _plugins.handlerRespondeds = []
-        _plugins.handlerCloses = []
-        _plugins.handlerExceptions = []
+        const { requests = [], responses = [], respondeds = [], closes = [], exceptions = [] } = _plugins
         plugins.forEach((plugin, i) => {
             const uid = randomBytes(24).toString('hex')
             const pluginConfig = {}
             if (typeof plugin.init === 'function') plugin.init(this.options)
-            ; (plugin as any).uid = uid
-            // 1. handlerRequest
-            if (typeof plugin.handlerRequest === 'function') {
-                _plugins.handlerRequests.push(plugin)
-            }
-            // 2. handlerRequested
-            if (typeof plugin.handlerRequested === 'function') {
-                _plugins.handlerRequesteds.push(plugin)
-            }
-            // 3. handlerResponse
-            if (typeof plugin.handlerResponse === 'function') {
-                _plugins.handlerResponses.push(plugin)
-            }
-            // 4. handlerRequested
-            if (typeof plugin.handlerRequested === 'function') {
-                _plugins.handlerRespondeds.push(plugin)
-            }
-            // 5. handlerResponseAfter
-            if (typeof plugin.handlerbeforeClose === 'function') {
-                _plugins.handlerCloses.push(plugin)
-            }
-            // 6. handlerException
-            if (typeof plugin.handlerException === 'function') {
-                _plugins.handlerExceptions.push(plugin)
-            }
+            ; (plugin as any)['uid'] = uid
+            if (typeof plugin.request === 'function') requests.push(plugin)
+            if (typeof plugin.response === 'function') responses.push(plugin)
+            if (typeof plugin.responded === 'function') respondeds.push(plugin)
+            if (typeof plugin.close === 'function') closes.push(plugin)
+            if (typeof plugin.exception === 'function') exceptions.push(plugin)
             this.options.pluginConfigs[uid] = pluginConfig
         })
-
+        _plugins.requests = requests
+        _plugins.responses = responses
+        _plugins.respondeds = respondeds
+        _plugins.closes = closes
+        _plugins.exceptions = exceptions
+        this._plugins = _plugins
         return this;
     }
 
@@ -144,33 +124,44 @@ export default class Server extends EventEmitter {
     private async start(request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse): Promise<any>  {
         // Create http/https context
         const context = this.createContext(request, response)
-        const data: { [key: string]: any } = {}
-        try {
-            const { _plugins } = this
-            const { handlerRequests, handlerRequesteds, handlerResponses, handlerCloses, handlerRespondeds } = _plugins
-            // Run plugin request
-            for (let plugin of handlerRequests) {
-                await plugin.handlerRequest(context, this.options.pluginConfigs[plugin.uid], data)
+        const { configs = {} } = this.options;
+        if (!/(GET|DELETE|HEAD|COPY|PURGE|UNLOCK)/.test(context.method)) {
+            // Parse body
+            const { body = {}, strict = true} = configs
+            const { limit = {} } = body
+            const request = context.req as IncomingMessage
+            if (typeIs(request, 'json') === 'json') {
+                context.request.body = await parse.json(request, { limit: limit.json, strict})
+            } else if (typeIs(request, 'urlencoded') === 'urlencoded') {
+                context.request.body = await parse.form(request, { limit: limit.form, strict})
+            } else if (typeIs(request, 'text') === 'text') {
+                context.request.body = await parse.text(request, { limit: limit.text, strict})
             }
-            // Run plugin requested
-            for (let plugin of handlerRequesteds) {
-                await plugin.handlerRequested(context, this.options.pluginConfigs[plugin.uid], data)
+        }
+        const data: { [key: string]: any } = {}
+        const { pluginConfigs } = this.options
+        try {
+            const { _plugins = [] } = this
+            const { requests = [], responses = [], closes = [], respondeds = [] } = _plugins
+            // Run plugin request
+            for (let plugin of requests) {
+                await plugin.request(context, pluginConfigs[plugin.uid], data)
             }
             // Run plugin response
-            for (let plugin of handlerResponses) {
-                await plugin.handlerResponse(context, this.options.pluginConfigs[plugin.uid], data)
+            for (let plugin of responses) {
+                await plugin.response(context, pluginConfigs[plugin.uid], data)
             }
             // Run plugin responded
-            for (let plugin of handlerRespondeds) {
-                await plugin.handlerResponded(context, this.options.pluginConfigs[plugin.uid], data)
+            for (let plugin of respondeds) {
+                await plugin.responded(context, pluginConfigs[plugin.uid], data)
             }
 
             // Core run respond
             await this.respond(context)
 
-            // Before controllors response run handlerResponseAfter plugin hooks
-            for (let plugin of handlerCloses) {
-                await plugin.handlerbeforeClose(context, this.options.pluginConfigs[plugin.uid], data)
+            // respond
+            for (let plugin of closes) {
+                await plugin.close(context, pluginConfigs[plugin.uid], data)
             }
             /**
              * Handler not found
@@ -185,9 +176,9 @@ export default class Server extends EventEmitter {
             // Handler exception
             this.exception(context, error)
             this.emit('exception', [error, context])
-            const { handlerExceptions  } = this._plugins
-            for (let plugin of handlerExceptions) {
-                await plugin.handlerException(error, context, this.options.pluginConfigs[plugin.uid], data)
+            const { exceptions = [] } = this._plugins
+            for (let plugin of exceptions) {
+                await plugin.exception(error, context, pluginConfigs[plugin.uid], data)
             }
         }
     }
@@ -300,12 +291,11 @@ export * from './lib/HttpException'
 
 export namespace Core {
     export interface Plugins extends Array<Plugin> {
-        handlerRequests?: Plugin[];
-        handlerRequesteds?: Plugin[];
-        handlerResponses?: Plugin[];
-        handlerCloses?: Plugin[];
-        handlerRespondeds?: Plugin[];
-        handlerExceptions?: Plugin[];
+        requests?: Plugin[];
+        responses?: Plugin[];
+        closes?: Plugin[];
+        respondeds?: Plugin[];
+        exceptions?: Plugin[];
     }
 
     export interface HttpException {
@@ -323,6 +313,13 @@ export namespace Core {
     }
 
     export interface Configs {
+        body?: {
+            limit?: {
+                json?: number;
+                form?: number;
+                text?: number;
+            }
+        };
         [key: string]: any;
     }
 

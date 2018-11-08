@@ -74,12 +74,11 @@ export * from './lib/Plugin';
 export * from './lib/HttpException';
 export declare namespace Core {
     interface Plugins extends Array<Plugin> {
-        handlerRequests?: Plugin[];
-        handlerRequesteds?: Plugin[];
-        handlerResponses?: Plugin[];
-        handlerCloses?: Plugin[];
-        handlerRespondeds?: Plugin[];
-        handlerExceptions?: Plugin[];
+        requests?: Plugin[];
+        responses?: Plugin[];
+        closes?: Plugin[];
+        respondeds?: Plugin[];
+        exceptions?: Plugin[];
     }
     interface HttpException {
         statusCode?: number;
@@ -93,6 +92,13 @@ export declare namespace Core {
         (ctx?: Context): Promise<any>;
     }
     interface Configs {
+        body?: {
+            limit?: {
+                json?: number;
+                form?: number;
+                text?: number;
+            };
+        };
         [key: string]: any;
     }
     interface Options {

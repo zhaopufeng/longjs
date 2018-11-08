@@ -2,22 +2,18 @@ import { Core } from '..';
 export interface Plugin {
     readonly uid?: string;
     init?(options: Core.Options): void;
-    handlerRequest?(ctx: Core.Context, pluginConfig: PluginConfigs, globalConfigs?: Core.Configs): Promise<any>;
-    handlerRequested?(ctx: Core.Context, pluginConfig: {
+    request?: PluginCallback;
+    response?: PluginCallback;
+    responded?: PluginCallback;
+    close?: PluginCallback;
+    exception?(err: Error, ctx: Core.Context, pluginConfig: PluginConfigs, data?: {
         [key: string]: any;
-    }, globalConfigs?: Core.Configs): Promise<any>;
-    handlerResponse?(ctx: Core.Context, pluginConfig: {
+    }): Promise<any>;
+}
+interface PluginCallback {
+    (ctx: Core.Context, pluginConfig: PluginConfigs, data?: {
         [key: string]: any;
-    }, globalConfigs?: Core.Configs): Promise<any>;
-    handlerbeforeClose?(ctx: Core.Context, pluginConfig: {
-        [key: string]: any;
-    }, globalConfigs?: Core.Configs): Promise<any>;
-    handlerResponded?(ctx: Core.Context, pluginConfig: {
-        [key: string]: any;
-    }, globalConfigs?: Core.Configs): Promise<any>;
-    handlerException?(err: Error, ctx: Core.Context, pluginConfig: {
-        [key: string]: any;
-    }, globalConfigs?: Core.Configs): Promise<any>;
+    }): Promise<any>;
 }
 declare type PluginConfigs<T = {
     [key: string]: any;

@@ -5,9 +5,11 @@
  * @copyright Ranyunlong
  */
 import * as assert from 'assert'
-import { IControllerConstructor, IPropertys, IHandlers, RequestMethodType } from '../Decoraotors'
+import { IControllerConstructor, IPropertys, IHandler } from '../decoraotors'
 import { Stack } from './Stack'
 import { Core } from '@longjs/core';
+import { MatchLayer } from './MatchLayer';
+import { MatchStack } from './MatchStack';
 
 export class Layer {
     public readonly regexp: RegExp;
@@ -15,10 +17,10 @@ export class Layer {
     public readonly target: IControllerConstructor;
     public readonly stacks: Stack[] = []
     public readonly metadatas: Array<{ new(...args: any[]): any }>;
-    public readonly propertys: IPropertys;
+    public readonly propertys: Map<string, IPropertys>;
     private strict: boolean;
     constructor(options: ILayer) {
-        const { path = '', target, strict = false, metadatas = [], propertys = {}, handlers = {} } = options
+        const { path = '', target, strict = false, metadatas = [], propertys = new Map<string, IPropertys>(), handlers = new Map<string, IHandler>() } = options
         assert(path, 'Controller path Invalid: path is not defined.')
         assert(typeof path === 'string', 'Controller path Invalid: path is not string.')
         assert(path !== '', 'Controller path Invalid: path Cannot be empty.')
@@ -28,15 +30,14 @@ export class Layer {
         this.target = target
         this.metadatas = metadatas
         this.propertys = propertys
-        Object.keys(handlers).forEach((k) => {
-            const { routePath = [], methodTypes = [], parameters = {}, methods = {}, headers = {}, statusCode, statusMessage, responseType, exceptioncapture = {} } = handlers[k]
+        handlers.forEach((handler, propertyKey) => {
+            const { routePath, parameters, methods, headers, statusCode, statusMessage, responseType, exceptioncapture } = handler
             this.stacks.push(new Stack({
-                propertyKey: k,
+                propertyKey,
                 routePath,
                 strict,
                 methods,
                 parameters,
-                methodTypes,
                 root: path,
                 statusCode,
                 statusMessage,
@@ -48,7 +49,27 @@ export class Layer {
     }
 
     public matchRouter(ctx: Core.Context) {
-        return this.stacks.filter((k) => k.matchRoutePath(ctx))
+        const matches: MatchStack[] = []
+        const { path, strict, metadatas, propertys, target } = this
+        this.stacks.forEach((k) => {
+            const stack = k.matchRoutePath(ctx)
+            if (stack.length > 0) {
+                matches.push(...stack)
+            }
+            return;
+        })
+        if (matches.length > 0) {
+            return new MatchLayer({
+                stacks: matches,
+                path,
+                strict,
+                metadatas,
+                propertys,
+                target
+            })
+        } else {
+            return;
+        }
     }
 }
 
@@ -57,6 +78,6 @@ export interface ILayer {
     target: IControllerConstructor;
     strict: boolean;
     metadatas: Array<{ new(...args: any[]): any }>;
-    propertys: IPropertys;
-    handlers: IHandlers;
+    propertys: Map<string, IPropertys>;
+    handlers: Map<string, IHandler>;
 }

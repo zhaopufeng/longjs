@@ -5,14 +5,15 @@
  * @copyright Ranyunlong
  */
 
-import { IController, IControllerConstructor } from '../Decoraotors'
+import { IControllerConstructor } from '../decoraotors'
 import { Core } from '@longjs/core'
 import { Layer } from './Layer';
 import { RegExpOptions } from 'path-to-regexp';
 import { Stack } from './Stack';
+import { MatchLayer } from './MatchLayer';
 
 export class Router {
-    public layers: Layer[] = []
+    public layers: Map<string, Layer> = new Map()
     constructor(public options: RouterOptions) {
         const { controllers = [] } = options
         controllers.forEach((Controller) => {
@@ -24,7 +25,7 @@ export class Router {
         if (!options) return;
         const { target, path, handlers, metadatas, propertys } = options
         const { strict } = this.options
-        this.layers.push(new Layer({
+        this.layers.set(path, new Layer({
             strict,
             target,
             path,
@@ -34,20 +35,15 @@ export class Router {
         }))
     }
     public match(ctx: Core.Context) {
-        const routes: Array<{
-            layer: Layer,
-            matches: Stack[]
-        }> = []
-        this.layers.filter((layer) => {
-            const matches = layer.matchRouter(ctx)
-            if (matches.length > 0) {
-                routes.push({
-                    layer,
-                    matches
-                })
+        const layers: MatchLayer[] = []
+        this.layers.forEach((Layer) => {
+            const layer = Layer.matchRouter(ctx)
+            if (layer) {
+                layers.push(layer)
             }
         })
-        return routes
+
+        return layers
     }
  }
 

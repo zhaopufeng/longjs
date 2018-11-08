@@ -6,10 +6,8 @@
  * @export Decorators
  */
 
-import { Core, Plugin } from '@longjs/core';
-import { createClassDecorator, Options, IControllerConstructor } from './lib';
+import { Core, Plugin, HttpException } from '@longjs/core';
 import { Router } from './lib/Router'
-import { RouterOptions } from 'express';
 import { RegExpOptions } from 'path-to-regexp';
 import { Stack } from './lib/Router/Stack';
 import { Layer } from './lib/Router/Layer';
@@ -17,9 +15,11 @@ import { Layer } from './lib/Router/Layer';
 export default class ControllerPlugin implements Plugin {
     public readonly strict: boolean;
     public readonly router: Router;
+    public readonly fileParseOpts: FileParseOpts;
     constructor(options: ControllerPluginOptions) {
-        const { strict, controllers } = options;
+        const { strict, controllers = [], fileParseOpts = {} } = options;
         this.strict = strict
+        this.fileParseOpts = fileParseOpts;
         this.router = new Router({
             strict: true,
             controllers
@@ -29,59 +29,52 @@ export default class ControllerPlugin implements Plugin {
         options.configs.routerConfig = options
     }
 
-    public async handlerRequest(ctx: Core.Context, configs: any, data: IData) {
-        const routes =  data.routes = this.router.match(ctx)
-    }
-
-    public async handlerResponse(ctx: Core.Context, config: any, data: IData) {
-        const { routes } = data
-
+    public async response(ctx: Core.Context, config: any, data: IData) {
+        const routes = this.router.match(ctx)
         for (let route of routes) {
-            const { layer, matches } = route
-            const { target, metadatas = [], propertys = {} } = layer
-            Object.keys(propertys).forEach((k) => {
-                if (propertys[k]) {
-                    Object.keys(propertys[k]).forEach((key) => {
-                        if (propertys[k][key]) {
-                            const { callback, values } = propertys[k][key]
-                            if (typeof callback === 'function') {
-                                if (typeof (target as any).prototype[k] !== 'function' ) {
-                                    (target as any).prototype[k] = callback(ctx, values)
-                                }
-                            }
+            const { stacks, target, metadatas, propertys } = route
+            propertys.forEach((property, key) => {
+                const origin = target.prototype as any
+                property.forEach((item) => {
+                    const { callback, values } = item
+                    if (typeof callback === 'function') {
+                        origin[key] = callback(ctx, values)
+                    }
+                })
+            })
+            const controller = new target(...metadatas.map((Service) => new Service(ctx)))
+            for (let stack of stacks) {
+                const { headers = {}, propertyKey, exceptioncapture, responseType, statusCode, statusMessage, params, parameters } = stack
+                try {
+                    ctx.request.params = params || {}
+                    const injectParameters: any = []
+                    parameters.forEach((parameter) => {
+                        const { callback, index, values } = parameter
+                        if (typeof callback === 'function') {
+                            injectParameters[index] = callback(ctx, values)
                         }
                     })
-                }
-            })
-            const controller = new target(...metadatas.map((K) => new K(ctx)))
-            for (let matche of matches) {
-                const { propertyKey, statusCode, responseType, statusMessage, headers = {}, parameters = {}, exceptioncapture = {} } = matche
-                try {
-                    const injectParameters: any = []
-                    Object.keys(parameters).forEach((k) => {
-                        injectParameters[parameters[k].index] = parameters[k].callback(ctx, parameters[k].values)
-                    })
-                    let data = await controller[propertyKey](...injectParameters)
+                    const data = await controller[propertyKey](...injectParameters)
                     if (data) {
-                        if (statusCode) ctx.status = statusCode
-                        if (responseType) ctx.type = responseType
-                        if (statusMessage) ctx.response.message = statusMessage
                         ctx.body = data
                     }
-                    if (headers) {
-                        Object.keys(headers).forEach((key) => {
-                            ctx.response.set(key, headers[key])
-                        })
-                    }
+
+                    Object.keys(headers).forEach((key) => {
+                        ctx.response.set(key, headers[key])
+                    })
+
+                    if (statusCode) ctx.status = statusCode
+                    if (statusMessage) ctx.message = statusMessage
+                    if (responseType) ctx.type = responseType
                 } catch (error) {
-                    const catchs = exceptioncapture['Catch']
-                    const exception = exceptioncapture['Exception']
-                    if (catchs) {
-                        catchs(error)
-                    } else if (exception) {
-                        exception(error)
+                    if (exceptioncapture.has('Exception')) {
+                        const callback = exceptioncapture.get('Exception')
+                        callback(error)
+                    } else if (exceptioncapture.has('Catch')) {
+                        const callback = exceptioncapture.get('Catch')
+                        callback(error)
                     } else {
-                        throw error
+                        throw error;
                     }
                 }
             }
@@ -91,8 +84,25 @@ export default class ControllerPlugin implements Plugin {
 
 export * from './lib'
 
+export interface FileParseOpts {
+    highWaterMark?: number;
+    fileHwm?: number;
+    defCharset?: string;
+    preservePath?: boolean;
+    limits?: {
+        fieldNameSize?: number;
+        fieldSize?: number;
+        fields?: number;
+        fileSize?: number;
+        files?: number;
+        parts?: number;
+        headerPairs?: number;
+    };
+}
+
 export interface ControllerPluginOptions extends RegExpOptions {
-    controllers: Array<{ new(...args: any[]): any }>;
+    controllers?: Array<{ new(...args: any[]): any }>;
+    fileParseOpts?: FileParseOpts
 }
 
 interface IData {

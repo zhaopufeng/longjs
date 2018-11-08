@@ -1,54 +1,63 @@
 /**
- * @class Layer
+ * @class Stack
  * @author ranyunlong<549510622@qq.com>
  * @license MIT
  * @copyright Ranyunlong
  */
 import * as pathToRegExp from 'path-to-regexp'
 import { Core } from '@longjs/core';
-import { RequestMethodType, IMethods, IParameters, ExceptionCaptureCallback } from '../Decoraotors';
+import { RequestMethodType, IMethod, IParameter, ExceptionCaptureCallback } from '../decoraotors';
 import { IncomingHttpHeaders } from 'http';
+import { MatchStack } from './MatchStack';
 
 export interface IStack {
     propertyKey: string;
-    routePath?: string[];
+    routePath?: Map<string, Set<RequestMethodType>>;
     strict: boolean;
-    methodTypes: RequestMethodType[];
-    methods: IMethods;
-    parameters: IParameters;
+    methods: Map<string, IMethod>;
+    parameters: Map<string, IParameter>;
     root: string;
     statusCode: number;
     statusMessage: string;
     responseType: string;
     headers: IncomingHttpHeaders;
-    exceptioncapture: {
-        [id: string]: ExceptionCaptureCallback;
-    };
+    exceptioncapture: Map<string, ExceptionCaptureCallback>
 }
 
 export interface IStackPath {
-    regexp?: RegExp;
     routePath?: string;
     keys?: pathToRegExp.Key[];
+    methodTypes?: Set<RequestMethodType>;
 }
 
 export class Stack {
     public readonly propertyKey: string;
     public readonly root: string;
-    public readonly methodTypes: RequestMethodType[];
-    public readonly paths: IStackPath[] = []
-    public readonly methods: IMethods;
+    public readonly paths: Map<RegExp, IStackPath> = new Map()
+    public readonly methods: Map<string, IMethod>;
     public readonly statusCode: number;
     public readonly statusMessage: string;
     public readonly responseType: string;
-    public readonly exceptioncapture: { [id: string]: ExceptionCaptureCallback }
-    public readonly parameters: IParameters;
+    public readonly exceptioncapture: Map<string, ExceptionCaptureCallback>
+    public readonly parameters: Map<string, IParameter>;
     public readonly headers: IncomingHttpHeaders;
     private strict: boolean;
     constructor(options: IStack) {
-        const { propertyKey, routePath, strict, parameters, headers = {}, methodTypes, methods, statusCode, statusMessage, responseType, exceptioncapture } = options
-        this.propertyKey = options.propertyKey;
-        this.root = options.root;
+        const {
+            propertyKey,
+            routePath = new Map<string, Set<RequestMethodType>>(),
+            strict,
+            parameters = new Map<string, IParameter>(),
+            headers = {},
+            methods = new Map<string, IMethod>(),
+            statusCode,
+            statusMessage,
+            responseType,
+            exceptioncapture = new Map(),
+            root
+        } = options
+        this.propertyKey = propertyKey;
+        this.root = root;
         this.methods = methods
         this.statusMessage = statusMessage
         this.statusCode = statusCode
@@ -56,29 +65,49 @@ export class Stack {
         this.exceptioncapture = exceptioncapture
         this.parameters = parameters
         this.headers = headers
-        if (routePath.length === 0) options.routePath = [`/${propertyKey}`]
-        options.routePath.forEach((k) => {
-            if (!k || k === '') k = `/${propertyKey}`
-            let keys: any[] = []
-            let routePath = (this.root + k).replace(/[\/]{2,}/g, '/')
-            let regexp = pathToRegExp(routePath, [] , { strict } )
-            this.paths.push({
+        this.strict = strict
+        routePath.forEach((k, key) => {
+            if (!key || key === '') key = `/${propertyKey}`
+            key = (root + key).replace(/[\/]{2,}/g, '/')
+            const keys: pathToRegExp.Key[] = []
+            const regexp = pathToRegExp(key, keys, { strict })
+            this.paths.set(regexp, {
                 keys,
-                routePath,
-                regexp
+                routePath: key,
+                methodTypes: k
             })
         })
-        this.strict = strict
-        this.methodTypes = methodTypes
     }
 
-    public matchRoutePath(ctx: Core.Context): boolean {
+    public matchRoutePath(ctx: Core.Context): MatchStack[] {
         const { method, path } = ctx
-        const regexpFilters = this.paths.filter((k) => k.regexp.test(path))
-        return Boolean(regexpFilters.length) && this.matchRouteMethodType(method as RequestMethodType)
-    }
-
-    public matchRouteMethodType(method: RequestMethodType): boolean {
-        return !!~this.methodTypes.indexOf(method as RequestMethodType) || !!~this.methodTypes.indexOf('ALL')
+        const matches: MatchStack[] = []
+        const { methods, statusCode, responseType, exceptioncapture, parameters, headers, strict, propertyKey, statusMessage } = this
+        this.paths.forEach((k, regexp) => {
+            if (regexp.test(path)  && (k.methodTypes.has('ALL') || k.methodTypes.has(method as RequestMethodType))) {
+                const { keys, routePath } = k
+                const params: { [key: string]: any} = {}
+                const data = regexp.exec(path)
+                keys.forEach((k, i) => {
+                    params[k.name] = data[i]
+                })
+                matches.push(new MatchStack({
+                    params,
+                    regexp,
+                    path: routePath,
+                    keys: keys,
+                    methods,
+                    statusCode,
+                    responseType,
+                    exceptioncapture,
+                    parameters,
+                    statusMessage,
+                    propertyKey,
+                    headers,
+                    strict
+                }))
+            }
+        })
+        return matches
     }
 }

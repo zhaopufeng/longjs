@@ -22,37 +22,64 @@ import { CreateResponse } from './lib/CreateResponse'
 import { CreateRequest } from './lib/CreateRequest'
 import { Stream } from 'stream'
 import { isJSON } from './lib/utils'
-import { Plugin } from './lib/Plugin'
-import { randomBytes } from 'crypto'
+import { Upload, FileUploadOpts } from './lib/Upload'
+import Static, { StaticOpts } from './lib/Static'
+import { resolve } from 'path';
+import { existsSync, mkdirSync } from 'fs'
+import ProxyTable, { ProxyTableOptions, ProxyOptions } from './lib/Proxy';
+import Session, { SessionOpts } from './lib/Session';
+import { Router } from './lib/Router';
 
 export default class Server extends EventEmitter {
     public proxy: boolean;
     public subdomainOffset: number = 2
     public env: Core.Env = process.env.NODE_ENV as Core.Env || 'development'
     public silent: boolean
-    public keys: Keygrip | string[];
-    private _plugins: Core.Plugins = []
+    public keys: string[];
+    public router: Router;
+    public servlet: Core.Servlet = {}
 
     /**
      * constructor
      */
     constructor(public options: Core.Options = {}) {
         super()
-        options.configs = options.configs || {}
-        options.pluginConfigs = options.pluginConfigs || {}
-        this.keys = options.keys || ['long:sess']
-        this.subdomainOffset = options.subdomainOffset || 2
-        this.env = process.env.NODE_ENV as  Core.Env || 'development'
-
-        const { plugins = [] } = this.options
-        this.use(...plugins)
-
+        const { configs = {}, port, host, keys = ['long:sess'], subdomainOffset = 2, env = 'development', controllers = [] } = options
+        const { serveUpload, serveStatic, serveProxyTable = {} } = configs
+        this.keys = keys
+        this.subdomainOffset = subdomainOffset
+        this.env = env || process.env.NODE_ENV as  Core.Env
+        process.env.NODE_ENV = env
+        options.configs = configs
+        // session service
+        this.servlet.session = new Session({
+            key: this.keys[0],
+            ...configs.serveSession
+        })
+        // upload service
+        this.servlet.upload = new Upload(serveUpload || {})
+        // proxy service
+        if (Object.keys(serveProxyTable).length > 0) {
+            this.servlet.proxy = new ProxyTable(serveProxyTable)
+        }
+        // static service
+        if (serveStatic) {
+            this.servlet.static = new Static(serveStatic)
+        } else {
+            if (!existsSync(resolve('public'))) {
+                mkdirSync(resolve('public'))
+            }
+            this.servlet.static = new Static({
+                root: resolve('public')
+            })
+        }
+        this.router = new Router()
         // Start server listen port
-        if (options.port) {
-            if (options.host) {
-                this.listen(options.port, options.host)
+        if (port) {
+            if (host) {
+                this.listen(port, host)
             } else {
-                this.listen(options.port)
+                this.listen(port)
             }
         }
     }
@@ -65,30 +92,6 @@ export default class Server extends EventEmitter {
         return (request: IncomingMessage | Http2ServerRequest, response: ServerResponse | Http2ServerResponse) => {
             this.start(request, response)
         }
-    }
-
-    public use(...plugins: Plugin[]): this {
-        const { _plugins = [] } = this
-        const { requests = [], responses = [], respondeds = [], closes = [], exceptions = [] } = _plugins
-        plugins.forEach((plugin, i) => {
-            const uid = randomBytes(24).toString('hex')
-            const pluginConfig = {}
-            if (typeof plugin.init === 'function') plugin.init(this.options)
-            ; (plugin as any)['uid'] = uid
-            if (typeof plugin.request === 'function') requests.push(plugin)
-            if (typeof plugin.response === 'function') responses.push(plugin)
-            if (typeof plugin.responded === 'function') respondeds.push(plugin)
-            if (typeof plugin.close === 'function') closes.push(plugin)
-            if (typeof plugin.exception === 'function') exceptions.push(plugin)
-            this.options.pluginConfigs[uid] = pluginConfig
-        })
-        _plugins.requests = requests
-        _plugins.responses = responses
-        _plugins.respondeds = respondeds
-        _plugins.closes = closes
-        _plugins.exceptions = exceptions
-        this._plugins = _plugins
-        return this;
     }
 
     /**
@@ -108,13 +111,6 @@ export default class Server extends EventEmitter {
         createServer(this.callback())
         .listen(...args)
         return this;
-    }
-
-    public getPluginId(pluginConstructor: { new (...args: any[]): any}) {
-        const plugin = this.options.plugins.filter((plugin) => plugin instanceof pluginConstructor)
-        if (plugin.length > 0) {
-            return plugin[0].uid;
-        }
     }
 
     /**
@@ -138,31 +134,14 @@ export default class Server extends EventEmitter {
                 context.request.body = await parse.text(request, { limit: limit.text, strict})
             }
         }
-        const data: { [key: string]: any } = {}
-        const { pluginConfigs } = this.options
+        await this.servlet.session.handlerRequest(context)
+        await this.servlet.proxy.handlerRequest(context)
+        await this.servlet.static.handlerRequest(context)
+        await this.servlet.upload.parseRequest(context)
+        await this.servlet.static.handlerRequestDefer(context)
         try {
-            const { _plugins = [] } = this
-            const { requests = [], responses = [], closes = [], respondeds = [] } = _plugins
-            // Run plugin request
-            for (let plugin of requests) {
-                await plugin.request(context, pluginConfigs[plugin.uid], data)
-            }
-            // Run plugin response
-            for (let plugin of responses) {
-                await plugin.response(context, pluginConfigs[plugin.uid], data)
-            }
-            // Run plugin responded
-            for (let plugin of respondeds) {
-                await plugin.responded(context, pluginConfigs[plugin.uid], data)
-            }
-
-            // Core run respond
+            await this.router.handlerResponse(context)
             await this.respond(context)
-
-            // respond
-            for (let plugin of closes) {
-                await plugin.close(context, pluginConfigs[plugin.uid], data)
-            }
             /**
              * Handler not found
              * 1. Response is not finished
@@ -176,10 +155,6 @@ export default class Server extends EventEmitter {
             // Handler exception
             this.exception(context, error)
             this.emit('exception', [error, context])
-            const { exceptions = [] } = this._plugins
-            for (let plugin of exceptions) {
-                await plugin.exception(error, context, pluginConfigs[plugin.uid], data)
-            }
         }
     }
 
@@ -245,6 +220,7 @@ export default class Server extends EventEmitter {
      * Exception handler method
      */
     private exception(context: Core.Context, error: Core.HttpException & Error) {
+        console.log(this.listeners('err'))
         let status: number;
         // If not number
         if (error.statusCode) {
@@ -286,18 +262,16 @@ export default class Server extends EventEmitter {
     }
 }
 
-export * from './lib/Plugin'
 export * from './lib/HttpException'
+export * from './lib/Controller'
 
 export namespace Core {
-    export interface Plugins extends Array<Plugin> {
-        requests?: Plugin[];
-        responses?: Plugin[];
-        closes?: Plugin[];
-        respondeds?: Plugin[];
-        exceptions?: Plugin[];
+    export interface Servlet {
+        upload?: Upload;
+        static?: Static;
+        proxy?: ProxyTable;
+        session?: Session;
     }
-
     export interface HttpException {
         statusCode?: number;
         message?: string;
@@ -320,20 +294,23 @@ export namespace Core {
                 text?: number;
             }
         };
+        serveSession?: SessionOpts;
+        serveProxyTable?: ProxyTableOptions;
+        serveStatic?: StaticOpts;
+        serveUpload?: FileUploadOpts;
         [key: string]: any;
     }
 
     export interface Options {
+        controllers?: Array<{ new (...args: any): any; }>;
         port?: number;
         host?: string;
         configs?: Configs;
-        pluginConfigs?: Configs;
-        keys?: Keygrip | string[];
+        keys?: string[];
         env?: Env;
         proxy?: boolean;
         subdomainOffset?: number;
         silent?: boolean;
-        plugins?: Plugins;
     }
 
     export interface BaseContext extends ContextDelegatedRequest, ContextDelegatedResponse {
@@ -453,6 +430,17 @@ export namespace Core {
         request: Request;
     }
 
+    export interface File {
+        size?: number;
+        path?: string;
+        name?: string;
+        type?: string;
+        lastModifiedDate?: Date;
+        hash?: string;
+        save?: (path: string, name?: string) => void;
+        toJSON(): Object;
+    }
+
     export interface Context extends BaseContext {
         app: Server;
         request: Request;
@@ -461,7 +449,9 @@ export namespace Core {
         res: ServerResponse | Http2ServerResponse;
         originalUrl: string;
         cookies: Cookies;
-        files: any;
+        files: {
+            [key: string]: File | File[]
+        };
         session?: Session;
         _session?: string;
         /**
@@ -472,9 +462,6 @@ export namespace Core {
     }
 
     export interface Session {
-        refresh?(): void;
-        sid: string;
-        old?: string;
         [key: string]: any;
     }
 

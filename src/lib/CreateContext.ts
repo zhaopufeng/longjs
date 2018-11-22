@@ -8,17 +8,14 @@
 // dependencies
 
 import Server from '..'
-
 import * as util from 'util'
 import * as Cookies from 'cookies'
 import * as statuses from 'statuses'
 import * as httpAssert from 'http-assert'
 import * as httpErrors from 'http-errors'
-
 import { Core } from '..'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
-
 const COOKIES = Symbol('context#cookies');
 
 export class CreateContext implements Core.Context {
